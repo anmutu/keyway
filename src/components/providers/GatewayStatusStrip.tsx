@@ -67,7 +67,7 @@ export function GatewayStatusStrip() {
   return (
     <div className="space-y-2">
       {degraded.length > 0 && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300">
+        <div className="flex items-center gap-2 rounded-xl border border-amber-500/25 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>
             {t("gw.degraded", {

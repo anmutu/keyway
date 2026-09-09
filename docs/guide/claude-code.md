@@ -1,11 +1,11 @@
 # Claude Code 使用指南
 
-> 在 Conduit 中配置并管理 Anthropic Claude Code 的供应商:添加 Key、一键接管、免重启切换。
+> 在 Keyway 中配置并管理 Anthropic Claude Code 的供应商:添加 Key、一键接管、免重启切换。
 
 ## 它是怎么工作的
 
 ```
-claude CLI ──► Conduit 本地代理(127.0.0.1:9527)──► 当前供应商(转发 + 注入 Key)
+claude CLI ──► Keyway 本地代理(127.0.0.1:9527)──► 当前供应商(转发 + 注入 Key)
 ```
 
 - **接管**会把 `~/.claude/settings.json` 中 `env.ANTHROPIC_BASE_URL` 改写为 `http://127.0.0.1:9527`(改写前自动备份,可随时还原),`settings.json` 里的其他配置原样保留
@@ -18,7 +18,7 @@ claude CLI ──► Conduit 本地代理(127.0.0.1:9527)──► 当前供应�
 |---|---|
 | Claude Code CLI | 已安装并可运行 `claude` 命令 |
 | 一个 Anthropic 兼容供应商 | 供应商的 `base_url` + `API Key`(如 GLM Coding Plan、Kimi,见 `providers/` 目录) |
-| Conduit | 已启动,顶栏绿色「代理运行中」 |
+| Keyway | 已启动,顶栏绿色「代理运行中」 |
 
 ## 配置四步
 
@@ -38,7 +38,7 @@ claude CLI ──► Conduit 本地代理(127.0.0.1:9527)──► 当前供应�
 
 ### ④ 接管 — 顶栏「代理运行中」→ Claude 行 → 「接管」
 
-完成。**正在跑的 claude 会话直接继续用即可**,下一个请求已经走 Conduit。
+完成。**正在跑的 claude 会话直接继续用即可**,下一个请求已经走 Keyway。
 
 ## 日常使用
 

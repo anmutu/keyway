@@ -1,15 +1,15 @@
-# Conduit 设计文档
+# Keyway 设计文档
 
 > 面向个人开发者的本地 AI 代理 + 多 CLI 供应商管理器。竞品:CC Switch。
 
 ## 1. 一句话定位
 
-CC Switch 是"配置切换器,代理可选";**Conduit 是"本地代理优先,切换是代理的自然结果"**。
+CC Switch 是"配置切换器,代理可选";**Keyway 是"本地代理优先,切换是代理的自然结果"**。
 装上即全 CLI 热切换、API Key 不落盘明文。
 
 ## 2. 差异化主轴
 
-| 主轴 | CC Switch 现状(实证) | Conduit 做法 |
+| 主轴 | CC Switch 现状(实证) | Keyway 做法 |
 |---|---|---|
 | 真热切换 | Codex 必须重启;代理热切换要手动开 takeover | **默认代理接管**,切换只改 DB `is_current`,下个请求即生效 |
 | 凭证加密 | API Key 明文落 SQLite + 明文接管备份 | **OS keychain 存 Key + SQLCipher 整库加密**,主密钥也在 keychain |

@@ -8,7 +8,8 @@ import {
 
 export type Theme = "light" | "dark" | "system";
 
-const STORAGE_KEY = "conduit-theme";
+const STORAGE_KEY = "keyway-theme";
+const LEGACY_STORAGE_KEY = "conduit-theme";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -37,7 +38,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     const q = new URLSearchParams(location.search).get("theme") as Theme | null;
     if (q === "light" || q === "dark") return q;
-    const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    let saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    if (saved === null) {
+      // 旧键迁移:老版本用户的主题偏好不丢
+      saved = localStorage.getItem(LEGACY_STORAGE_KEY) as Theme | null;
+    }
     return saved === "light" || saved === "dark" || saved === "system"
       ? saved
       : "system";

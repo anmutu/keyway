@@ -1,10 +1,10 @@
-# Conduit 产品说明
+# Keyway 产品说明
 
 > AI CLI 的本地供应中心 —— 一个应用管住所有 AI 编程工具的供应商、密钥与用量。
 
 ---
 
-## 一、Conduit 解决什么问题
+## 一、Keyway 解决什么问题
 
 如果你同时用多个 AI 编程 CLI(Claude Code、Codex、Gemini CLI……),大概率撞过这些墙:
 
@@ -16,11 +16,11 @@
 | **多供应商管理乱** | 主力 + 备用 + 官方订阅 + 各家国产模型(GLM/Kimi),来回注释改配置 |
 | **花费看不清** | 每家供应商各用多少 token,没有统一账本 |
 
-**Conduit 的答案:本地代理优先。** 所有 CLI 的请求先经过 Conduit 的本地代理(`127.0.0.1:9527`),再转发到当前供应商——切换供应商变成"改一个指针",以上问题一次解决。
+**Keyway 的答案:本地代理优先。** 所有 CLI 的请求先经过 Keyway 的本地代理(`127.0.0.1:9527`),再转发到当前供应商——切换供应商变成"改一个指针",以上问题一次解决。
 
 ```
 Claude Code ┐
-Codex       │──► Conduit 本地代理 ──► 当前供应商(GLM / Kimi / 官方 / 任意中转)
+Codex       │──► Keyway 本地代理 ──► 当前供应商(GLM / Kimi / 官方 / 任意中转)
 Gemini CLI  │    (Key 从钥匙串注入)     ↑ 一键切换,免重启
 OpenCode    │
 OpenClaw    ┘
@@ -52,14 +52,14 @@ OpenClaw    ┘
 ## 三、怎么使用(5 分钟上手)
 
 ### 安装并启动
-下载安装包(macOS dmg / Windows / Linux,见官网),首次启动时 macOS 弹出钥匙串授权请选「**始终允许**」——那是 Conduit 在保存加密主密钥。
+下载安装包(macOS dmg / Windows / Linux,见官网),首次启动时 macOS 弹出钥匙串授权请选「**始终允许**」——那是 Keyway 在保存加密主密钥。
 
 ### 三步配置(以 Codex 为例,其他 CLI 同理)
 1. **添加供应商**:顶部切到 Codex 分组 → 右上 `+`(或 `⌘N`)→ 填名称、接口地址、API Key → 添加(Key 直接进钥匙串)
 2. **设为当前**:卡片上点「切换」
 3. **接管**:点顶栏绿色「代理运行中」→ 对应 CLI 行点「接管」
 
-之后正常使用 `codex` / `claude` / `gemini` 命令即可——流量已走 Conduit。
+之后正常使用 `codex` / `claude` / `gemini` 命令即可——流量已走 Keyway。
 
 > 没有现成供应商?看看 [GLM 接入](./providers/glm.md)、[Kimi 接入](./providers/kimi.md) 和 [CoderPlan 接入](./providers/coderplan.md),国产模型的 Coding 套餐和中转站都提供 Anthropic 兼容端点。
 
@@ -87,7 +87,7 @@ OpenClaw    ┘
 
 ## 五、与 CC Switch 对比
 
-| 能力 | Conduit | CC Switch |
+| 能力 | Keyway | CC Switch |
 |---|---|---|
 | Codex / Gemini 切换免重启 | ✅ 默认支持 | 需重启 / 手动开代理 |
 | API Key 存储 | 系统钥匙串 + 整库加密 | 明文数据库 |
@@ -96,21 +96,21 @@ OpenClaw    ┘
 | 用量统计 | 转发即计量(原生) | Lua 脚本二次请求 |
 | 多语言 | 中 / 英 | 中 / 英 / 日 |
 
-> 致敬 [cc-switch](https://github.com/farion1231/cc-switch)(MIT)——Conduit 的视觉体系参考了它。
+> 致敬 [cc-switch](https://github.com/farion1231/cc-switch)(MIT)——Keyway 的视觉体系参考了它。
 
 ## 六、常见问题
 
 **Q:接管会破坏我的现有配置吗?**
 不会。接管前原配置完整备份进加密库,「还原」随时恢复;Claude 的 `settings.json` 只动 `ANTHROPIC_BASE_URL` 一项,Codex 的 `config.toml` 保留全部注释。
 
-**Q:Conduit 没开,我的 CLI 还能用吗?**
-接管模式下 CLI 会指向本地代理,Conduit 未运行则请求失败——建议开启「开机自启」(设置里),或让 Conduit 驻留托盘。介意的话随时「还原」回直连。
+**Q:Keyway 没开,我的 CLI 还能用吗?**
+接管模式下 CLI 会指向本地代理,Keyway 未运行则请求失败——建议开启「开机自启」(设置里),或让 Keyway 驻留托盘。介意的话随时「还原」回直连。
 
 **Q:支持哪些供应商?**
 任何 Anthropic / OpenAI / Gemini 兼容的供应商:官方、GLM、Kimi、DeepSeek、各类中转站,或自建网关。
 
 **Q:和 cc-switch 能同时用吗?**
-不建议(都会改写同一批 CLI 配置文件,互相覆盖)。二选一即可;从 cc-switch 迁移:在 Conduit 里用「从现有 CLI 配置导入」一键带入。
+不建议(都会改写同一批 CLI 配置文件,互相覆盖)。二选一即可;从 cc-switch 迁移:在 Keyway 里用「从现有 CLI 配置导入」一键带入。
 
 ## 七、文档索引
 

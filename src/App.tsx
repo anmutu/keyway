@@ -14,7 +14,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ToastStack, type ToastItem, type ToastType } from "@/components/Toast";
 import { AboutDialog } from "@/components/AboutDialog";
 import { QuickSwitchPanel } from "@/components/QuickSwitchPanel";
-import { OnboardingDialog, ONBOARD_KEY } from "@/components/OnboardingDialog";
+import { OnboardingDialog, hasOnboarded } from "@/components/OnboardingDialog";
 import { TakeoverDialog } from "@/components/TakeoverDialog";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { UsagePage } from "@/components/usage/UsagePage";
@@ -29,17 +29,12 @@ import {
   saveLayout,
   loadApps,
   saveApps,
-  ALL_APPS,
+  loadLastApp,
   type LayoutMode,
 } from "@/lib/appPrefs";
 
-const STORAGE_KEY = "conduit-last-app";
-const VALID_APPS: AppType[] = ALL_APPS;
-
 function getInitialApp(): AppType {
-  const saved = localStorage.getItem(STORAGE_KEY) as AppType | null;
-  if (saved && VALID_APPS.includes(saved)) return saved;
-  return "claude";
+  return loadLastApp() ?? "claude";
 }
 
 /** 把底层错误串转成人话 */
@@ -365,7 +360,7 @@ function App() {
   // 首启向导:首次加载完成、无任何供应商、未看过 → 弹出 3 步向导
   useEffect(() => {
     if (IS_DEMO) return;
-    if (hasCache && providers.length === 0 && !localStorage.getItem(ONBOARD_KEY)) {
+    if (hasCache && providers.length === 0 && !hasOnboarded()) {
       setOnboardingOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

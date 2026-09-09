@@ -1,6 +1,6 @@
 # Kimi(Moonshot)接入指南
 
-> 把 Kimi / Moonshot 作为供应商接入 Conduit,供 Claude Code 调用。
+> 把 Kimi / Moonshot 作为供应商接入 Keyway,供 Claude Code 调用。
 
 ## 基本信息
 
@@ -14,7 +14,7 @@
 
 ## 接入 Claude Code
 
-1. Conduit 切到 **Claude** 分组 → `⌘N` 添加供应商:
+1. Keyway 切到 **Claude** 分组 → `⌘N` 添加供应商:
 
 | 字段 | 填 |
 |---|---|
@@ -32,7 +32,7 @@
 
 Moonshot 同样提供 OpenAI 兼容接口,需要时可在 Codex 分组用其 OpenAI 端点接入(地址见 Moonshot 开放平台文档),步骤同 [Codex 指南](../codex.md)。
 
-## 为什么要通过 Conduit 用 Kimi
+## 为什么要通过 Keyway 用 Kimi
 
 - GLM、Kimi、官方、其他中转**同时配好,一键互切**,`claude` 不用重启
 - **Key 进钥匙串**,不明文落盘

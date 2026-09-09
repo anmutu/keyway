@@ -1,10 +1,9 @@
 import { ProviderIcon } from "@/components/ProviderIcon";
-import { ALL_APPS } from "@/lib/appPrefs";
+import { ALL_APPS, saveLastApp } from "@/lib/appPrefs";
 import { cn } from "@/lib/utils";
 import type { AppType } from "@/types";
 
 // CLI 分组切换器;分组多时收起文字只留图标
-const STORAGE_KEY = "conduit-last-app";
 
 const appIconName: Record<AppType, string> = {
   claude: "claude",
@@ -48,7 +47,7 @@ export function AppSwitcher({
   const iconOnly = compact || visible.length > 5;
   const handleSwitch = (app: AppType) => {
     if (app === activeApp) return;
-    localStorage.setItem(STORAGE_KEY, app);
+    saveLastApp(app);
     onSwitch(app);
   };
   const iconSize = 20;

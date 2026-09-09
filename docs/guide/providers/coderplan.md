@@ -1,6 +1,6 @@
 # CoderPlan 接入指南
 
-> 把 [CoderPlan](https://coderplan.ai) 作为供应商接入 Conduit,供 Claude Code(及 Codex)调用。
+> 把 [CoderPlan](https://coderplan.ai) 作为供应商接入 Keyway,供 Claude Code(及 Codex)调用。
 
 ## 基本信息
 
@@ -15,7 +15,7 @@
 
 ## 接入 Claude Code(推荐,主用法)
 
-1. Conduit 切到 **Claude** 分组 → `⌘N` 添加供应商:
+1. Keyway 切到 **Claude** 分组 → `⌘N` 添加供应商:
 
 | 字段 | 填 |
 |---|---|
@@ -29,7 +29,7 @@
 
 详细流程见 [Claude Code 使用指南](../claude-code.md)。
 
-## 为什么要通过 Conduit 用 CoderPlan
+## 为什么要通过 Keyway 用 CoderPlan
 
 - **多供应商并存的切换键**:CoderPlan、GLM、Kimi、官方同时配好,卡片/托盘一键互切,`claude` 不用重启
 - **Key 进钥匙串**:不再以明文环境变量(`ANTHROPIC_AUTH_TOKEN`)形式留在 shell 配置里

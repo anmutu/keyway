@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { cn } from "@/lib/utils";
 import { ProviderIcon } from "@/components/ProviderIcon";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Boxes, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import { ProviderActions } from "@/components/providers/ProviderActions";
 import { useI18n } from "@/i18n";
 
@@ -125,21 +125,19 @@ export function ProviderCard({
                   </span>
                 ))}
               {bridged && (
-                <span className="inline-flex items-center rounded-md bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
-                  {t("provider.responsesBridgeBadge")}
+                <span
+                  title={t("provider.responsesBridgeBadge")}
+                  className="inline-flex items-center text-violet-600 dark:text-violet-400"
+                >
+                  <Sparkles className="h-3 w-3" />
                 </span>
               )}
-              {provider.models.slice(0, 3).map((m) => (
+              {provider.models.length > 0 && (
                 <span
-                  key={m}
-                  className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                  title={provider.models.join(", ")}
+                  className="inline-flex items-center text-muted-foreground"
                 >
-                  {m}
-                </span>
-              ))}
-              {provider.models.length > 3 && (
-                <span className="text-[10px] text-muted-foreground">
-                  +{provider.models.length - 3}
+                  <Boxes className="h-3 w-3" />
                 </span>
               )}
               {!provider.has_key && (

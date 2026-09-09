@@ -1,6 +1,6 @@
 # GLM(智谱)接入指南
 
-> 把 GLM Coding Plan / 智谱 Open Platform 作为供应商接入 Conduit,供 Claude Code(及 Codex)调用。
+> 把 GLM Coding Plan / 智谱 Open Platform 作为供应商接入 Keyway,供 Claude Code(及 Codex)调用。
 
 ## 基本信息
 
@@ -15,7 +15,7 @@
 
 ## 接入 Claude Code(推荐,主用法)
 
-1. Conduit 切到 **Claude** 分组 → `⌘N` 添加供应商:
+1. Keyway 切到 **Claude** 分组 → `⌘N` 添加供应商:
 
 | 字段 | 填 |
 |---|---|
@@ -41,7 +41,7 @@ GLM 也有 OpenAI 兼容端点,可同时接入 Codex 分组:
 
 > 注意:模型名需用该端点支持的型号;资源包计费在 Claude Code 端点与 OpenAI 端点的支持范围不同,以官方 FAQ 为准。
 
-## 为什么要通过 Conduit 用 GLM
+## 为什么要通过 Keyway 用 GLM
 
 - **多供应商并存的切换键**:GLM、Kimi、官方、其他中转同时配好,卡片/托盘一键互切,`claude` 不用重启
 - **Key 进钥匙串**:不再明文躺在 `settings.json` 里

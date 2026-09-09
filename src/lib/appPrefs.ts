@@ -7,8 +7,12 @@ import type { AppType } from "@/types";
 
 export type LayoutMode = "side" | "top" | "right" | "bottom";
 
-const LAYOUT_KEY = "conduit-layout";
-const APPS_KEY = "conduit-apps";
+const LAYOUT_KEY = "keyway-layout";
+const LEGACY_LAYOUT_KEY = "conduit-layout";
+const APPS_KEY = "keyway-apps";
+const LEGACY_APPS_KEY = "conduit-apps";
+const LAST_APP_KEY = "keyway-last-app";
+const LEGACY_LAST_APP_KEY = "conduit-last-app";
 
 export const ALL_LAYOUTS: LayoutMode[] = ["side", "top", "right", "bottom"];
 
@@ -30,7 +34,12 @@ export const DEFAULT_APPS: AppType[] = ALL_APPS.slice(0, 5);
 
 export function loadLayout(): LayoutMode {
   try {
-    const v = localStorage.getItem(LAYOUT_KEY) as LayoutMode | null;
+    let v = localStorage.getItem(LAYOUT_KEY) as LayoutMode | null;
+    if (v === null) {
+      // 旧键迁移:老版本用户的布局偏好不丢
+      v = localStorage.getItem(LEGACY_LAYOUT_KEY) as LayoutMode | null;
+      if (v && ALL_LAYOUTS.includes(v)) localStorage.setItem(LAYOUT_KEY, v);
+    }
     return v && ALL_LAYOUTS.includes(v) ? v : "side";
   } catch {
     return "side";
@@ -48,7 +57,12 @@ export function saveLayout(mode: LayoutMode) {
 /** 可见分组(有序);存储缺失/非法时回退默认 5 个 */
 export function loadApps(): AppType[] {
   try {
-    const raw = localStorage.getItem(APPS_KEY);
+    let raw = localStorage.getItem(APPS_KEY);
+    if (!raw) {
+      // 旧键迁移:老版本用户的分组显示/排序偏好不丢
+      raw = localStorage.getItem(LEGACY_APPS_KEY);
+      if (raw) localStorage.setItem(APPS_KEY, raw);
+    }
     if (!raw) return DEFAULT_APPS;
     const list = JSON.parse(raw) as string[];
     const valid = ALL_APPS.filter((a) => list.includes(a));
@@ -66,6 +80,29 @@ export function saveApps(apps: AppType[]) {
   }
 }
 
+/** 上次选中的 CLI 分组(启动时默认打开);存储缺失/非法时回退 null */
+export function loadLastApp(): AppType | null {
+  try {
+    let v = localStorage.getItem(LAST_APP_KEY) as AppType | null;
+    if (v === null) {
+      // 旧键迁移:老版本用户上次选中的分组不丢
+      v = localStorage.getItem(LEGACY_LAST_APP_KEY) as AppType | null;
+      if (v && ALL_APPS.includes(v)) localStorage.setItem(LAST_APP_KEY, v);
+    }
+    return v && ALL_APPS.includes(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastApp(app: AppType) {
+  try {
+    localStorage.setItem(LAST_APP_KEY, app);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** 预设选择器排序偏好:类别顺序 + 各分组内平台顺序(按名称) */
 export interface PresetOrderPrefs {
   /** 类别(大版块)顺序 */
@@ -74,11 +111,17 @@ export interface PresetOrderPrefs {
   presets: Record<string, string[]>;
 }
 
-const PRESET_KEY = "conduit-preset-order";
+const PRESET_KEY = "keyway-preset-order";
+const LEGACY_PRESET_KEY = "conduit-preset-order";
 
 export function loadPresetOrder(): PresetOrderPrefs {
   try {
-    const raw = localStorage.getItem(PRESET_KEY);
+    let raw = localStorage.getItem(PRESET_KEY);
+    if (!raw) {
+      // 旧键迁移:老版本用户的预设排序偏好不丢
+      raw = localStorage.getItem(LEGACY_PRESET_KEY);
+      if (raw) localStorage.setItem(PRESET_KEY, raw);
+    }
     if (!raw) return { categories: [], presets: {} };
     const v = JSON.parse(raw) as Partial<PresetOrderPrefs>;
     return {

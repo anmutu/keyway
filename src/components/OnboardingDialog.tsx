@@ -14,7 +14,16 @@ import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { AppType } from "@/types";
 
-export const ONBOARD_KEY = "conduit-onboarded";
+export const ONBOARD_KEY = "keyway-onboarded";
+const LEGACY_ONBOARD_KEY = "conduit-onboarded";
+
+// 旧键迁移:老版本用户已看过引导则不再重复打扰
+export function hasOnboarded(): boolean {
+  return (
+    localStorage.getItem(ONBOARD_KEY) === "1" ||
+    localStorage.getItem(LEGACY_ONBOARD_KEY) === "1"
+  );
+}
 
 interface TakeoverStatus {
   app: string;
@@ -176,7 +185,8 @@ export function OnboardingDialog({
               onClick={() => {
                 onAdd();
                 onOpenChange(false);
-                // 添加完成与否都算过关(用户可稍后再加),不写完成标记,交给 onDone 流程
+                // 点击即视为完成引导(即使后续在添加框里取消也不再打扰),
+                // 后台仍打开添加框供用户操作
                 localStorage.setItem(ONBOARD_KEY, "1");
               }}
             >

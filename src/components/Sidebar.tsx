@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { BarChart3, ScrollText, Plus, Plug, Sparkles, Settings } from "lucide-react";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
+import { saveLastApp } from "@/lib/appPrefs";
 import type { AppType } from "@/types";
 
 // 窄图标栏:80px 纯图标,悬停 tooltip 显示名称
-const STORAGE_KEY = "conduit-last-app";
+// 首次使用时给 Skills/MCP 一次性高亮提示,用户交互过一次后不再出现
+const TOUR_KEY = "keyway-sidebar-tour";
 
 const appIconName: Record<AppType, string> = {
   claude: "claude",
@@ -58,12 +61,14 @@ function RailItem({
   onClick,
   title,
   edge = "left",
+  highlight = false,
   children,
 }: {
   active: boolean;
   onClick: () => void;
   title: string;
   edge?: "left" | "right";
+  highlight?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -80,6 +85,13 @@ function RailItem({
       >
         {active && (
           <span className={cn("absolute top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-blue-500", edge === "right" ? "-right-2" : "-left-2")} />
+        )}
+        {/* 首次使用一次性高亮点:提示该图标值得探索,悬停/点击一次即消失 */}
+        {highlight && !active && (
+          <span className="absolute top-0.5 right-0.5 flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+          </span>
         )}
         {children}
       </button>
@@ -116,9 +128,19 @@ export function Sidebar({
   const { t } = useI18n();
 
   const switchApp = (app: AppType) => {
-    localStorage.setItem(STORAGE_KEY, app);
+    saveLastApp(app);
     onSwitchApp(app);
     onViewChange("providers");
+  };
+
+  // 首次使用一次性高亮:Skills/MCP 图标语义不直观,交互过一次后不再提示
+  const [tourSeen, setTourSeen] = useState(
+    () => localStorage.getItem(TOUR_KEY) === "1",
+  );
+  const dismissTour = () => {
+    if (tourSeen) return;
+    localStorage.setItem(TOUR_KEY, "1");
+    setTourSeen(true);
   };
 
   return (
@@ -153,6 +175,9 @@ export function Sidebar({
           <Plus className="w-[18px] h-[18px]" />
         </RailItem>
         <div className="my-1 mx-3 border-t border-border" />
+        <span className="px-1 pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/50">
+          {t("sidebar.section.cli")}
+        </span>
         {apps.map((app) => (
           <RailItem
             key={app}
@@ -174,6 +199,9 @@ export function Sidebar({
 
       {/* 二级导航 */}
       <nav className="flex flex-col gap-1 w-full shrink-0" data-tauri-no-drag>
+        <span className="px-1 pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/50">
+          {t("sidebar.section.general")}
+        </span>
         <RailItem
           active={currentView === "usage"}
           onClick={() => onViewChange("usage")}
@@ -190,22 +218,28 @@ export function Sidebar({
         >
           <ScrollText className="w-[18px] h-[18px]" />
         </RailItem>
-        <RailItem
-          active={currentView === "skills"}
-          onClick={() => onViewChange("skills")}
-          title={`${t("sk.title")} (⌘⇧S)`}
-          edge={edge}
-        >
-          <Sparkles className="w-[18px] h-[18px]" />
-        </RailItem>
-        <RailItem
-          active={currentView === "mcp"}
-          onClick={() => onViewChange("mcp")}
-          title={`${t("mcp.title")} (⌘⇧M)`}
-          edge={edge}
-        >
-          <Plug className="w-[18px] h-[18px]" />
-        </RailItem>
+        <div onMouseEnter={dismissTour} onClick={dismissTour}>
+          <RailItem
+            active={currentView === "skills"}
+            onClick={() => onViewChange("skills")}
+            title={`${t("sk.title")} (⌘⇧S)`}
+            edge={edge}
+            highlight={!tourSeen}
+          >
+            <Sparkles className="w-[18px] h-[18px]" />
+          </RailItem>
+        </div>
+        <div onMouseEnter={dismissTour} onClick={dismissTour}>
+          <RailItem
+            active={currentView === "mcp"}
+            onClick={() => onViewChange("mcp")}
+            title={`${t("mcp.title")} (⌘⇧M)`}
+            edge={edge}
+            highlight={!tourSeen}
+          >
+            <Plug className="w-[18px] h-[18px]" />
+          </RailItem>
+        </div>
         <RailItem
           active={currentView === "settings"}
           onClick={() => onViewChange("settings")}
