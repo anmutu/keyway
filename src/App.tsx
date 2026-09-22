@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { Activity, Boxes, CopyPlus, Download, Gauge, Plus, TriangleAlert } from "lucide-react";
+import { Activity, Boxes, CopyPlus, Download, Gauge, Plus, Search, TriangleAlert, X } from "lucide-react";
 import type { AppType, Provider, ProxyStatus, UsageSummary } from "@/types";
 import { APP_PROTOCOL } from "@/types";
 import { Sidebar } from "@/components/Sidebar";
@@ -30,6 +30,7 @@ import {
   loadApps,
   saveApps,
   loadLastApp,
+  saveLastApp,
   type LayoutMode,
 } from "@/lib/appPrefs";
 
@@ -120,10 +121,22 @@ const DEMO_PROVIDERS: Provider[] = [
   },
 ];
 
+function demoProvidersFor(app: AppType): Provider[] {
+  const protocol = APP_PROTOCOL[app];
+  return DEMO_PROVIDERS.map((provider) => ({
+    ...provider,
+    app_type: app,
+    endpoints: {
+      [protocol]: provider.endpoints[protocol] ?? provider.base_url,
+    },
+  }));
+}
+
 function App() {
   const { t, locale } = useI18n();
   const [activeApp, setActiveApp] = useState<AppType>(getInitialApp);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [providerQuery, setProviderQuery] = useState("");
   const [usageMap, setUsageMap] = useState<Record<string, UsageSummary>>({});
   const [hasCache, setHasCache] = useState(false); // 当前 app 是否已有可展示数据
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -134,7 +147,7 @@ function App() {
   const loadOtherGroups = async () => {
     if (copySrc) return setCopySrc(null);
     if (IS_DEMO) {
-      setCopySrc(DEMO_PROVIDERS.filter((p) => p.app_type !== activeApp));
+      setCopySrc(appsOrder.filter((app) => app !== activeApp).flatMap((app) => demoProvidersFor(app)));
       return;
     }
     const all: Provider[] = [];
@@ -188,6 +201,15 @@ function App() {
   const runTestAll = async () => {
     setTestingAll(true);
     try {
+      if (IS_DEMO) {
+        const map: Record<string, { ok: boolean; latency_ms: number; message: string }> = {};
+        providers.forEach((provider, index) => {
+          map[provider.id] = { ok: true, latency_ms: 118 + index * 37, message: "" };
+        });
+        setBatchResults(map);
+        toast("success", t("provider.testAllDone", { ok: providers.length, total: providers.length }));
+        return;
+      }
       const items = await invoke<{ provider_id: string; ok: boolean; latency_ms: number; message: string }[]>(
         "test_all_providers",
         { appType: activeApp },
@@ -239,7 +261,7 @@ function App() {
       return next;
     });
   };
-  const [currentView, setCurrentView] = useState<"providers" | "settings" | "usage" | "logs" | "mcp" | "skills">("usage");
+  const [currentView, setCurrentView] = useState<"providers" | "settings" | "usage" | "logs" | "mcp" | "skills">("providers");
   // 界面偏好:布局(左侧/顶部)+ 可见分组顺序,设置页可改
   const [layout, setLayoutState] = useState<LayoutMode>(loadLayout);
   const [appsOrder, setAppsOrder] = useState<AppType[]>(loadApps);
@@ -250,6 +272,29 @@ function App() {
   const updateApps = (apps: AppType[]) => {
     setAppsOrder(apps);
     saveApps(apps);
+  };
+  const switchApp = useCallback((app: AppType) => {
+    saveLastApp(app);
+    setActiveApp(app);
+    setCurrentView("providers");
+  }, []);
+  useEffect(() => {
+    setProviderQuery("");
+  }, [activeApp]);
+  const visibleProviders = providers.filter((provider) => {
+    const query = providerQuery.trim().toLowerCase();
+    if (!query) return true;
+    return [
+      provider.name,
+      provider.base_url,
+      ...Object.values(provider.endpoints ?? {}),
+      ...(provider.models ?? []),
+    ].some((value) => value?.toLowerCase().includes(query));
+  });
+  const latencyFor = (provider: Provider) => {
+    const result = batchResults[provider.id];
+    if (result) return result.ok ? result.latency_ms : Infinity;
+    return provider.last_test?.ok ? provider.last_test.latency_ms : Infinity;
   };
   const [takeoverOpen, setTakeoverOpen] = useState(false);
   // 首启向导:零供应商且未看过向导时触发
@@ -302,7 +347,7 @@ function App() {
   const refresh = useCallback(async (app: AppType) => {
     // 演示模式:不走 IPC,直接展示 mock 数据
     if (IS_DEMO) {
-      setProviders(DEMO_PROVIDERS);
+      setProviders(demoProvidersFor(app));
       setHasCache(true);
       setUsageMap({
         "demo-1": { requests: 128, input_tokens: 412_000, output_tokens: 1_260_000 },
@@ -463,8 +508,7 @@ function App() {
       const idx = Number(e.key) - 1;
       if (Number.isInteger(idx) && idx >= 0 && idx < appsOrder.length) {
         e.preventDefault();
-        setActiveApp(appsOrder[idx]);
-        setCurrentView("providers");
+        switchApp(appsOrder[idx]);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -537,9 +581,9 @@ function App() {
     if (!quickOpen) return;
     if (IS_DEMO) {
       setQsGroups(
-        [...new Set(DEMO_PROVIDERS.map((p) => p.app_type))].map((a) => ({
+        appsOrder.map((a) => ({
           app: a,
-          providers: DEMO_PROVIDERS.filter((p) => p.app_type === a),
+          providers: demoProvidersFor(a),
         })),
       );
       return;
@@ -564,7 +608,7 @@ function App() {
     return () => {
       alive = false;
     };
-  }, [quickOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [appsOrder, quickOpen]);
 
   /** 供应商变更后同步托盘菜单(演示模式无后端,跳过) */
   const syncTray = useCallback(() => {
@@ -586,13 +630,18 @@ function App() {
     // 记住切换前的当前供应商,支持 toast「撤销」一键切回
     const prev = cacheRef.current[app]?.find((p) => p.is_current);
     try {
+      if (IS_DEMO) {
+        setProviders((list) => list.map((item) => ({ ...item, is_current: item.id === provider.id })));
+        toast("success", t("toast.switched", { name: provider.name }));
+        return;
+      }
       await invoke("switch_provider", {
         id: provider.id,
         appType: app,
       });
       // 跨组切换:同时把界面切到对应分组,所见即所得
       if (app !== activeApp) {
-        setActiveApp(app);
+        switchApp(app);
       }
       toast(
         "success",
@@ -656,7 +705,7 @@ function App() {
         <Sidebar
           apps={appsOrder}
           activeApp={activeApp}
-          onSwitchApp={setActiveApp}
+          onSwitchApp={switchApp}
           currentView={currentView}
           onViewChange={setCurrentView}
           proxyOk={proxyOk}
@@ -664,6 +713,7 @@ function App() {
           onTakeover={() => setTakeoverOpen(true)}
           onAbout={() => setAboutOpen(true)}
           onAdd={() => setIsAddOpen(true)}
+          onQuickSwitch={() => setQuickOpen(true)}
           isMac={isMac}
         />
       )}
@@ -676,8 +726,9 @@ function App() {
           activeApp={activeApp}
           currentView={currentView}
           onViewChange={setCurrentView}
-          onSwitchApp={setActiveApp}
+          onSwitchApp={switchApp}
           onAdd={() => setIsAddOpen(true)}
+          onQuickSwitch={() => setQuickOpen(true)}
           proxyOk={proxyOk}
           proxyAddr={proxyAddr}
           onTakeover={() => setTakeoverOpen(true)}
@@ -697,7 +748,7 @@ function App() {
         data-tauri-drag-region
       >
         {currentView === "skills" && (
-          <div className="px-6 py-6 max-w-[760px] w-full mx-auto animate-fade-in">
+          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[760px] w-full mx-auto animate-fade-in">
             <SkillsPage
               onError={(m) => toast("error", humanizeError(m, t))}
               onSuccess={(m) => toast("success", m)}
@@ -705,7 +756,7 @@ function App() {
           </div>
         )}
         {currentView === "mcp" && (
-          <div className="px-6 py-6 max-w-[760px] w-full mx-auto animate-fade-in">
+          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[760px] w-full mx-auto animate-fade-in">
             <McpPage
               onError={(m) => toast("error", humanizeError(m, t))}
               onSuccess={(m) => toast("success", m)}
@@ -713,7 +764,7 @@ function App() {
           </div>
         )}
         {currentView === "settings" && (
-          <div className="px-6 py-6 max-w-[760px] w-full mx-auto animate-fade-in">
+          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[760px] w-full mx-auto animate-fade-in">
             <SettingsPage
               onError={(m) => toast("error", humanizeError(m, t))}
               onSuccess={(m) => toast("success", m)}
@@ -725,7 +776,7 @@ function App() {
           </div>
         )}
         {currentView === "usage" && (
-          <div className="px-6 py-6 max-w-[760px] w-full mx-auto my-auto animate-fade-in">
+          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[860px] w-full mx-auto animate-fade-in">
             <UsagePage
               app={activeApp}
               providers={providers}
@@ -735,7 +786,7 @@ function App() {
           </div>
         )}
         {currentView === "logs" && (
-          <div className="px-6 py-6 max-w-[860px] w-full mx-auto my-auto animate-fade-in">
+          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[860px] w-full mx-auto animate-fade-in">
             <LogsPage
               app={activeApp}
               providers={providers}
@@ -748,7 +799,21 @@ function App() {
         <div className="px-6 pt-6 flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
             <div className="max-w-[760px] mx-auto w-full h-full flex flex-col space-y-4 animate-fade-in" key={activeApp}>
-              <GatewayStatusStrip />
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
+                    {t("sidebar.providerList", { app: t(`app.${activeApp}`) })}
+                  </h1>
+                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                    {t("provider.pageDesc")}
+                  </p>
+                </div>
+                <Button size="sm" className="shrink-0" aria-label={t("common.add")} onClick={() => setIsAddOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t("common.add")}</span>
+                </Button>
+              </div>
+              <GatewayStatusStrip apps={appsOrder} />
               {/* 接管漂移:配置被外部覆盖,流量绕过了 Keyway(批 54) */}
               {groupDrift && (
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5">
@@ -854,7 +919,39 @@ function App() {
               )}
 
               {providers.length > 0 && (
-                <div className="flex items-center justify-end gap-1 -mb-2">
+                <div className="flex flex-wrap items-center gap-2 -mb-2">
+                  <div className="relative min-w-[180px] flex-1">
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="search"
+                      value={providerQuery}
+                      onChange={(event) => setProviderQuery(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape" && providerQuery) {
+                          event.stopPropagation();
+                          setProviderQuery("");
+                        }
+                      }}
+                      placeholder={t("provider.searchPh")}
+                      aria-label={t("provider.searchPh")}
+                      className="h-8 w-full appearance-none rounded-md border border-border bg-background pl-8 pr-8 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                    />
+                    {providerQuery && (
+                      <button
+                        type="button"
+                        aria-label={t("common.clear")}
+                        onClick={() => setProviderQuery("")}
+                        className="absolute right-1 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {providerQuery && (
+                    <span className="text-[11px] tabular-nums text-muted-foreground" aria-live="polite">
+                      {t("provider.searchCount", { shown: visibleProviders.length, total: providers.length })}
+                    </span>
+                  )}
                   <Button
                     variant={latencySort ? "secondary" : "ghost"}
                     size="sm"
@@ -871,13 +968,17 @@ function App() {
                 </div>
               )}
 
+              {visibleProviders.length === 0 && providers.length > 0 && (
+                <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                  {t("provider.noMatch")}
+                </div>
+              )}
+
               {(latencySort
-                ? [...providers].sort((a, b) => {
-                    const la = a.last_test?.ok ? a.last_test.latency_ms : Infinity;
-                    const lb = b.last_test?.ok ? b.last_test.latency_ms : Infinity;
-                    return la - lb;
+                ? [...visibleProviders].sort((a, b) => {
+                    return latencyFor(a) - latencyFor(b);
                   })
-                : providers
+                : visibleProviders
               ).map((p) => (
                 <div
                   key={p.id}
@@ -930,6 +1031,16 @@ function App() {
                     usage={usageMap[p.id]}
                     batchResult={batchResults[p.id] ?? null}
                     testedAt={p.last_test?.ts ?? null}
+                    onTestResult={(result) => {
+                      setBatchResults((prev) => ({
+                        ...prev,
+                        [p.id]: {
+                          ok: result.ok,
+                          latency_ms: result.latency_ms,
+                          message: result.message,
+                        },
+                      }));
+                    }}
                     onError={(m) => toast("error", humanizeError(m, t))}
                     onCopyUrl={(url) => {
                       navigator.clipboard
@@ -953,7 +1064,7 @@ function App() {
           apps={appsOrder}
           edge="right"
           activeApp={activeApp}
-          onSwitchApp={setActiveApp}
+          onSwitchApp={switchApp}
           currentView={currentView}
           onViewChange={setCurrentView}
           proxyOk={proxyOk}
@@ -961,6 +1072,7 @@ function App() {
           onTakeover={() => setTakeoverOpen(true)}
           onAbout={() => setAboutOpen(true)}
           onAdd={() => setIsAddOpen(true)}
+          onQuickSwitch={() => setQuickOpen(true)}
           isMac={isMac}
         />
       )}
@@ -973,8 +1085,9 @@ function App() {
           activeApp={activeApp}
           currentView={currentView}
           onViewChange={setCurrentView}
-          onSwitchApp={setActiveApp}
+          onSwitchApp={switchApp}
           onAdd={() => setIsAddOpen(true)}
+          onQuickSwitch={() => setQuickOpen(true)}
           proxyOk={proxyOk}
           proxyAddr={proxyAddr}
           onTakeover={() => setTakeoverOpen(true)}
@@ -993,6 +1106,7 @@ function App() {
         providers={providers}
         groups={qsGroups}
         onPick={(p, a) => void switchProvider(p, a)}
+        onAdd={() => setIsAddOpen(true)}
       />
 
       <OnboardingDialog

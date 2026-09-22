@@ -31,6 +31,7 @@ interface ProviderCardProps {
   /** 「全部测速」批量结果(常显徽章;与单卡 hover 测试互不影响) */
   batchResult?: { ok: boolean; latency_ms: number; message: string } | null;
   testedAt?: number | null;
+  onTestResult?: (result: { ok: boolean; latency_ms: number; message: string }) => void;
   /** 当前分组接管是否实际生效(false = 配置被外部覆盖,徽章降级为「未接管」) */
   takeoverEffective?: boolean;
 }
@@ -52,6 +53,7 @@ export function ProviderCard({
   onError,
   batchResult,
   testedAt,
+  onTestResult,
   takeoverEffective,
 }: ProviderCardProps) {
   const { t } = useI18n();
@@ -201,7 +203,7 @@ export function ProviderCard({
             </div>
           </div>
           <div
-            className="flex items-center gap-1.5 flex-shrink-0 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-200"
+            className="provider-action-group flex items-center gap-1.5 flex-shrink-0 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-200"
             onMouseUp={() => {
               // 鼠标点击会把焦点留在按钮上,操作组因 focus-within 常亮不再隐藏;
               // 点击后立即释放焦点恢复 hover 显隐(键盘 Tab 聚焦不受影响)
@@ -241,6 +243,7 @@ export function ProviderCard({
               onEdit={onEdit}
               onDuplicate={onDuplicate}
               onDelete={onDelete}
+              onTestResult={onTestResult}
               onError={(m) => onError?.(m)}
             />
           </div>

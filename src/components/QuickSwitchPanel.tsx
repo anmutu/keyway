@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CornerDownLeft } from "lucide-react";
+import { Check, CornerDownLeft, Plus, Search, X } from "lucide-react";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ export function QuickSwitchPanel({
   providers,
   groups,
   onPick,
+  onAdd,
 }: {
   open: boolean;
   onClose: () => void;
@@ -30,6 +31,7 @@ export function QuickSwitchPanel({
   providers: Provider[];
   groups?: { app: AppType; providers: Provider[] }[];
   onPick: (p: Provider, app: AppType) => void;
+  onAdd?: () => void;
 }) {
   const { t } = useI18n();
   const [idx, setIdx] = useState(0);
@@ -54,15 +56,17 @@ export function QuickSwitchPanel({
     ? groups.flatMap((g) => g.providers.map((p) => ({ p, app: g.app })))
     : providers.map((p) => ({ p, app }));
   const query = q.trim().toLowerCase();
+  const searchable = (p: Provider) =>
+    [p.name, p.base_url, ...p.models].join(" ").toLowerCase();
   const filtered = query
     ? flat
-        .map((e) => ({ e, hits: fuzzy(e.p.name, query) }))
+        .map((e) => ({ e, hits: fuzzy(searchable(e.p), query) }))
         .filter((x) => x.hits)
         .map((x) => x.e)
     : flat;
   const hitOf = (p: Provider): Set<number> => {
     if (!query) return new Set();
-    return new Set(fuzzy(p.name, query) ?? []);
+    return new Set(fuzzy(p.name.toLowerCase(), query) ?? []);
   };
 
   useEffect(() => {
@@ -138,28 +142,54 @@ export function QuickSwitchPanel({
         className="w-[92vw] max-w-[420px] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-          <span className="text-sm font-semibold">
-            {t("qs.title", { app: t(`app.${app}`) })}
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            ↑↓ · ⏎ · 1-9 · Esc
-          </span>
+        <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">
+              {t("qs.title", { app: t(`app.${app}`) })}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {filtered.length} · ↑↓ · ⏎ · 1-9
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={t("common.close")}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        <div className="px-3 py-2 border-b border-border">
+        <div className="px-3 py-2 border-b border-border relative">
+          <Search className="pointer-events-none absolute left-5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("qs.filterPh")}
-            className="w-full h-8 rounded-md bg-muted px-2.5 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
+            className="w-full h-8 rounded-md bg-muted pl-8 pr-2.5 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
           />
         </div>
         <div ref={listRef} className="max-h-[46vh] overflow-y-auto py-1.5">
           {filtered.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-              {flat.length === 0 ? t("qs.empty") : t("qs.noMatch")}
-            </p>
+            <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                {flat.length === 0 ? t("qs.empty") : t("qs.noMatch")}
+              </p>
+              {flat.length === 0 && onAdd && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onAdd();
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t("common.add")}
+                </button>
+              )}
+            </div>
           )}
           {(() => {
             // 按分组分段渲染:遇到新分组先输出小标题(首组不重复标题)
@@ -226,7 +256,8 @@ export function QuickSwitchPanel({
                 </span>
               )}
               {p.is_current && (
-                <span className="text-[10px] rounded bg-blue-500/15 px-1.5 py-px text-blue-600 dark:text-blue-400">
+                <span className="inline-flex items-center gap-0.5 text-[10px] rounded bg-blue-500/15 px-1.5 py-px text-blue-600 dark:text-blue-400">
+                  <Check className="h-3 w-3" />
                   {t("qs.current")}
                 </span>
               )}

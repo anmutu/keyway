@@ -3,6 +3,7 @@ import {
   Plus,
   ScrollText,
   Settings as SettingsIcon,
+  Search,
   Sparkles,
   Plug,
 } from "lucide-react";
@@ -27,6 +28,7 @@ export function AppHeaderBar({
   onViewChange,
   onSwitchApp,
   onAdd,
+  onQuickSwitch,
   proxyOk,
   proxyAddr,
   onTakeover,
@@ -39,6 +41,7 @@ export function AppHeaderBar({
   onViewChange: (v: View) => void;
   onSwitchApp: (app: AppType) => void;
   onAdd: () => void;
+  onQuickSwitch: () => void;
   proxyOk: boolean | null;
   proxyAddr: string;
   onTakeover: () => void;
@@ -78,6 +81,16 @@ export function AppHeaderBar({
           onClick={onAdd}
         >
           <Plus className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          title={`${t("qs.open")} (⌘⇧K)`}
+          aria-label={t("qs.open")}
+          onClick={onQuickSwitch}
+        >
+          <Search className="w-4 h-4" />
         </Button>
       </div>
       <div className="flex items-center gap-1.5 pr-3" data-tauri-no-drag>

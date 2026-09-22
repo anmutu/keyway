@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, ScrollText, Plus, Plug, Sparkles, Settings } from "lucide-react";
+import { BarChart3, ScrollText, Plus, Plug, Search, Sparkles, Settings } from "lucide-react";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,7 @@ interface SidebarProps {
   onAbout: () => void;
   /** 添加供应商(⌘N),入口放在 CLI 分组标题行 */
   onAdd: () => void;
+  onQuickSwitch: () => void;
   isMac: boolean;
   /** 渲染在左侧还是右侧(影响描边方向) */
   edge?: "left" | "right";
@@ -60,6 +61,7 @@ function RailItem({
   active,
   onClick,
   title,
+  label,
   edge = "left",
   highlight = false,
   children,
@@ -67,6 +69,7 @@ function RailItem({
   active: boolean;
   onClick: () => void;
   title: string;
+  label?: string;
   edge?: "left" | "right";
   highlight?: boolean;
   children: React.ReactNode;
@@ -76,8 +79,10 @@ function RailItem({
       <button
         type="button"
         onClick={onClick}
+        aria-label={title}
+        aria-current={active ? "page" : undefined}
         className={cn(
-          "relative flex items-center justify-center h-9 w-9 mx-auto rounded-lg transition-all duration-150",
+          "relative flex items-center justify-center h-9 w-9 mx-auto rounded-lg transition-all duration-150 lg:w-auto lg:mx-2 lg:px-3 lg:justify-start lg:gap-2",
           active
             ? "bg-background text-foreground shadow-sm ring-1 ring-border"
             : "text-muted-foreground hover:text-foreground hover:bg-background/70",
@@ -94,12 +99,13 @@ function RailItem({
           </span>
         )}
         {children}
+        {label && <span className="hidden lg:block truncate text-xs font-medium">{label}</span>}
       </button>
       {/* 悬停提示:靠内容区一侧浮出 */}
       <span
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute top-1/2 -translate-y-1/2 z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md opacity-0 scale-95 transition-all duration-100 group-hover:opacity-100 group-hover:scale-100",
+          "pointer-events-none absolute top-1/2 -translate-y-1/2 z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md opacity-0 scale-95 transition-all duration-100 group-hover:opacity-100 group-hover:scale-100 lg:hidden",
           edge === "right"
             ? "right-full mr-2 origin-right"
             : "left-full ml-2 origin-left",
@@ -122,6 +128,7 @@ export function Sidebar({
   onTakeover,
   onAbout,
   onAdd,
+  onQuickSwitch,
   isMac,
   edge = "left",
 }: SidebarProps) {
@@ -146,13 +153,13 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "shrink-0 w-[80px] h-full flex flex-col items-center bg-muted select-none",
+        "shrink-0 w-14 sm:w-[80px] lg:w-[176px] h-full flex flex-col items-center lg:items-stretch bg-muted select-none",
         edge === "right" ? "border-l border-border" : "border-r border-border",
       )}
       data-tauri-drag-region
     >
       {/* 品牌:macOS Overlay 红绿灯占据左上,向下避让 */}
-      <div className={cn("flex flex-col items-center gap-0.5 pb-2 shrink-0", isMac ? "pt-10" : "pt-3")} data-tauri-no-drag>
+      <div className={cn("flex flex-col items-center gap-0.5 pb-2 shrink-0 lg:flex-row lg:items-center lg:gap-2 lg:px-4", isMac ? "pt-10 lg:pt-10" : "pt-3")} data-tauri-no-drag>
         <button
           type="button"
           onClick={onAbout}
@@ -161,7 +168,7 @@ export function Sidebar({
         >
           <img src="icons/keyway-logo.svg?v=3" alt="Keyway" width={28} height={28} className="rounded-[7px]" />
         </button>
-        <span className="text-[9px] font-semibold tracking-wide text-muted-foreground/70">Keyway</span>
+        <span className="hidden sm:block text-[9px] font-semibold tracking-wide text-muted-foreground/70 lg:text-xs">Keyway</span>
       </div>
 
       {/* CLI 分组导航(⌘1..5,悬停显示名称)+ 添加;分组多时此区可滚,下方导航钉住不被挤走 */}
@@ -170,12 +177,22 @@ export function Sidebar({
           active={false}
           onClick={onAdd}
           title={`${t("common.add")} (⌘N)`}
+          label={t("common.add")}
           edge={edge}
         >
           <Plus className="w-[18px] h-[18px]" />
         </RailItem>
+        <RailItem
+          active={false}
+          onClick={onQuickSwitch}
+          title={`${t("qs.open")} (⌘⇧K)`}
+          label={t("qs.open")}
+          edge={edge}
+        >
+          <Search className="w-[18px] h-[18px]" />
+        </RailItem>
         <div className="my-1 mx-3 border-t border-border" />
-        <span className="px-1 pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/50">
+        <span className="hidden sm:block px-1 pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/50 lg:px-4 lg:text-left">
           {t("sidebar.section.cli")}
         </span>
         {apps.map((app) => (
@@ -184,6 +201,7 @@ export function Sidebar({
             active={currentView === "providers" && activeApp === app}
             onClick={() => switchApp(app)}
             title={`${appDisplayName[app]}(⌘${apps.indexOf(app) + 1})`}
+            label={appDisplayName[app]}
             edge={edge}
           >
             <ProviderIcon
@@ -199,13 +217,14 @@ export function Sidebar({
 
       {/* 二级导航 */}
       <nav className="flex flex-col gap-1 w-full shrink-0" data-tauri-no-drag>
-        <span className="px-1 pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/50">
+        <span className="hidden sm:block px-1 pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/50 lg:px-4 lg:text-left">
           {t("sidebar.section.general")}
         </span>
         <RailItem
           active={currentView === "usage"}
           onClick={() => onViewChange("usage")}
           title={t("dash.title")}
+          label={t("dash.title")}
           edge={edge}
         >
           <BarChart3 className="w-[18px] h-[18px]" />
@@ -214,6 +233,7 @@ export function Sidebar({
           active={currentView === "logs"}
           onClick={() => onViewChange("logs")}
           title={t("logs.title")}
+          label={t("logs.title")}
           edge={edge}
         >
           <ScrollText className="w-[18px] h-[18px]" />
@@ -223,6 +243,7 @@ export function Sidebar({
             active={currentView === "skills"}
             onClick={() => onViewChange("skills")}
             title={`${t("sk.title")} (⌘⇧S)`}
+            label={t("sk.title")}
             edge={edge}
             highlight={!tourSeen}
           >
@@ -234,6 +255,7 @@ export function Sidebar({
             active={currentView === "mcp"}
             onClick={() => onViewChange("mcp")}
             title={`${t("mcp.title")} (⌘⇧M)`}
+            label={t("mcp.title")}
             edge={edge}
             highlight={!tourSeen}
           >
@@ -244,6 +266,7 @@ export function Sidebar({
           active={currentView === "settings"}
           onClick={() => onViewChange("settings")}
           title={t("common.settings")}
+          label={t("common.settings")}
           edge={edge}
         >
           <Settings className="w-[18px] h-[18px]" />
@@ -262,25 +285,29 @@ export function Sidebar({
             <button
               type="button"
               onClick={onTakeover}
+              aria-label={proxyOk ? t("takeover.proxyTipOn", { addr: proxyAddr }) : t("takeover.proxyTipOff")}
               className={cn(
-                "flex items-center justify-center h-9 w-9 rounded-lg transition-opacity hover:opacity-80 cursor-pointer",
+                "flex items-center justify-center h-9 w-9 rounded-lg transition-opacity hover:opacity-80 cursor-pointer lg:w-auto lg:mx-2 lg:px-3 lg:justify-start lg:gap-2",
                 proxyOk
                   ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
                   : "text-red-600 dark:text-red-400 bg-red-500/10",
               )}
-            >
+              >
               <span
                 className={cn(
                   "h-2 w-2 rounded-full",
                   proxyOk ? "bg-emerald-500" : "bg-red-500",
                 )}
-              />
-            </button>
+                />
+                <span className="hidden lg:inline text-xs font-medium">
+                  {proxyOk ? t("takeover.proxyOn") : t("takeover.proxyOff")}
+                </span>
+              </button>
             {/* 悬停提示:靠内容区一侧浮出 */}
             <span
               role="tooltip"
               className={cn(
-                "pointer-events-none absolute top-1/2 -translate-y-1/2 z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md opacity-0 scale-95 transition-all duration-100 group-hover:opacity-100 group-hover:scale-100",
+                "pointer-events-none absolute top-1/2 -translate-y-1/2 z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md opacity-0 scale-95 transition-all duration-100 group-hover:opacity-100 group-hover:scale-100 lg:hidden",
                 edge === "right"
                   ? "right-full mr-2 origin-right"
                   : "left-full ml-2 origin-left",

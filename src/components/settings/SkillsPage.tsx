@@ -27,6 +27,11 @@ const TARGET_APPS = [
   { key: "codex", label: "Codex" },
   { key: "opencode", label: "OpenCode" },
 ];
+const IS_DEMO = new URLSearchParams(location.search).has("demo");
+const DEMO_SKILLS: SkillEntry[] = [
+  { id: "review-pr", name: "Review PR", description: "检查变更、风险与测试覆盖", apps: ["claude", "codex"], has_files: true },
+  { id: "ship-checklist", name: "Ship Checklist", description: "发布前执行一组稳定性检查", apps: ["claude", "codex", "opencode"], has_files: false },
+];
 
 /** Skills 统一管理:vault(~/.keyway/skills)为源,同步复制到各 CLI 的 skills 目录。 */
 export function SkillsPage({
@@ -45,6 +50,10 @@ export function SkillsPage({
   const [syncing, setSyncing] = useState(false);
 
   const reload = useCallback(() => {
+    if (IS_DEMO) {
+      setSkills(DEMO_SKILLS);
+      return;
+    }
     invoke<SkillEntry[]>("list_skills")
       .then(setSkills)
       .catch(() => setSkills([]));
@@ -59,6 +68,16 @@ export function SkillsPage({
       onError(t("sk.needFm"));
       return;
     }
+    if (IS_DEMO) {
+      setSkills((current) => {
+        const name = s.content.match(/^name:\s*["']?(.+?)["']?\s*$/m)?.[1] ?? s.id;
+        const description = s.content.match(/^description:\s*["']?(.+?)["']?\s*$/m)?.[1] ?? "";
+        const next = current.filter((item) => item.id !== s.id);
+        return [...next, { id: s.id, name, description, apps: s.apps, has_files: false }];
+      });
+      onSuccess(t("sk.saved"));
+      return;
+    }
     invoke("save_skill", s)
       .then(() => {
         reload();
@@ -68,6 +87,11 @@ export function SkillsPage({
   };
 
   const remove = (s: SkillEntry) => {
+    if (IS_DEMO) {
+      setSkills((current) => current.filter((item) => item.id !== s.id));
+      onSuccess(t("sk.deleted"));
+      return;
+    }
     invoke("delete_skill", { id: s.id })
       .then(() => {
         reload();
@@ -77,6 +101,10 @@ export function SkillsPage({
   };
 
   const syncNow = () => {
+    if (IS_DEMO) {
+      onSuccess(t("sk.demoSynced"));
+      return;
+    }
     setSyncing(true);
     invoke<string[]>("sync_skills")
       .then((r) => onSuccess(r.join("; ")))
@@ -86,6 +114,10 @@ export function SkillsPage({
 
   const openImport = () => {
     setImportOpen(true);
+    if (IS_DEMO) {
+      setImportSrc({ claude: ["commit-message"], codex: ["release-notes"], opencode: [] });
+      return;
+    }
     for (const a of TARGET_APPS) {
       invoke<string[]>("scan_cli_skills", { app: a.key })
         .then((ids) => setImportSrc((prev) => ({ ...prev, [a.key]: ids })))
@@ -94,6 +126,14 @@ export function SkillsPage({
   };
 
   const doImport = (app: string, id: string) => {
+    if (IS_DEMO) {
+      setSkills((current) => [
+        ...current,
+        { id, name: id, description: "Imported from an existing CLI", apps: [app], has_files: true },
+      ]);
+      onSuccess(t("sk.imported"));
+      return;
+    }
     invoke("import_skill", { app, id })
       .then(() => {
         reload();
@@ -104,7 +144,7 @@ export function SkillsPage({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Sparkles className="w-5 h-5 text-blue-500" />
@@ -112,7 +152,7 @@ export function SkillsPage({
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t("sk.desc")}</p>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
           <Button variant="outline" size="sm" onClick={openImport}>
             <Download className="w-4 h-4 mr-1" />
             {t("sk.import")}
@@ -121,7 +161,9 @@ export function SkillsPage({
             variant="outline"
             size="sm"
             onClick={() =>
-              invoke("open_skills_vault").catch((e) => onError(String(e)))
+              IS_DEMO
+                ? onSuccess(t("sk.demoVault"))
+                : invoke("open_skills_vault").catch((e) => onError(String(e)))
             }
           >
             <FolderOpen className="w-4 h-4" />
@@ -150,7 +192,7 @@ export function SkillsPage({
           {skills.map((s) => (
             <div
               key={s.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
+              className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
             >
               <BookOpen className="w-4 h-4 text-muted-foreground shrink-0" />
               <div className="min-w-0 flex-1">
@@ -165,7 +207,7 @@ export function SkillsPage({
                   {s.description || "—"}
                 </div>
               </div>
-              <div className="flex gap-1 shrink-0">
+              <div className="ml-auto flex gap-1 shrink-0">
                 {TARGET_APPS.map((a) => {
                   const on = s.apps.includes(a.key);
                   return (

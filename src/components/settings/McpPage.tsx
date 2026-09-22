@@ -34,6 +34,25 @@ const TARGET_APPS = [
   { key: "claude", label: "Claude Code" },
   { key: "codex", label: "Codex" },
 ];
+const IS_DEMO = new URLSearchParams(location.search).has("demo");
+const DEMO_SERVERS: McpServer[] = [
+  {
+    id: "context7",
+    name: "Context7",
+    config: { command: "npx", args: ["-y", "@upstash/context7-mcp"] },
+    apps: ["claude", "codex"],
+    enabled: true,
+    created_at: 0,
+  },
+  {
+    id: "browser-tools",
+    name: "Browser Tools",
+    config: { type: "http", url: "http://127.0.0.1:3000/mcp" },
+    apps: ["claude"],
+    enabled: false,
+    created_at: 0,
+  },
+];
 
 /** MCP 统一管理:一处定义,同步写入各 CLI 配置(Claude ~/.claude.json / Codex config.toml)。 */
 export function McpPage({
@@ -49,6 +68,11 @@ export function McpPage({
   const test = async (id: string) => {
     setTesting(id);
     try {
+      if (IS_DEMO) {
+        await new Promise((resolve) => window.setTimeout(resolve, 350));
+        onSuccess(t("mcp.testOk"));
+        return;
+      }
       const msg = await invoke<string>("test_mcp_server", { id });
       onSuccess(msg);
     } catch (e) {
@@ -63,6 +87,10 @@ export function McpPage({
   const [pendingDelete, setPendingDelete] = useState<McpServer | null>(null);
 
   const reload = useCallback(() => {
+    if (IS_DEMO) {
+      setServers(DEMO_SERVERS.map((s) => ({ ...s, config: { ...s.config }, apps: [...s.apps] })));
+      return;
+    }
     invoke<McpServer[]>("list_mcp_servers")
       .then(setServers)
       .catch(() => setServers([]));
@@ -71,6 +99,14 @@ export function McpPage({
   useEffect(() => reload(), [reload]);
 
   const save = (s: McpServer) => {
+    if (IS_DEMO) {
+      setServers((current) => {
+        const next = current.filter((item) => item.id !== s.id);
+        return [...next, s];
+      });
+      onSuccess(t("mcp.saved"));
+      return;
+    }
     invoke("save_mcp_server", { server: s })
       .then(() => {
         reload();
@@ -80,12 +116,21 @@ export function McpPage({
   };
 
   const toggle = (s: McpServer, enabled: boolean) => {
+    if (IS_DEMO) {
+      setServers((current) => current.map((item) => item.id === s.id ? { ...item, enabled } : item));
+      return;
+    }
     invoke("set_mcp_server_enabled", { id: s.id, enabled })
       .then(reload)
       .catch((e) => onError(String(e)));
   };
 
   const remove = (s: McpServer) => {
+    if (IS_DEMO) {
+      setServers((current) => current.filter((item) => item.id !== s.id));
+      onSuccess(t("mcp.deleted"));
+      return;
+    }
     invoke("delete_mcp_server", { id: s.id })
       .then(() => {
         reload();
@@ -95,6 +140,10 @@ export function McpPage({
   };
 
   const syncNow = () => {
+    if (IS_DEMO) {
+      onSuccess(t("mcp.demoSynced"));
+      return;
+    }
     setSyncing(true);
     invoke<string[]>("sync_mcp_servers")
       .then((report) => onSuccess(report.join("; ") || t("mcp.noTarget")))
@@ -104,7 +153,7 @@ export function McpPage({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Plug className="w-5 h-5 text-blue-500" />
@@ -112,7 +161,7 @@ export function McpPage({
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t("mcp.desc")}</p>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
           <Button variant="outline" size="sm" onClick={syncNow} disabled={syncing}>
             <RefreshCw className={cn("w-4 h-4 mr-1", syncing && "animate-spin")} />
             {t("mcp.sync")}
@@ -133,7 +182,7 @@ export function McpPage({
           {servers.map((s) => (
             <div
               key={s.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
+              className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
             >
               <Server className="w-4 h-4 text-muted-foreground shrink-0" />
               <div className="min-w-0 flex-1">
@@ -154,7 +203,7 @@ export function McpPage({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 text-muted-foreground hover:text-foreground"
+                className="ml-auto h-8 px-2 text-muted-foreground hover:text-foreground"
                 disabled={testing === s.id}
                 onClick={() => void test(s.id)}
                 title={t("mcp.test")}

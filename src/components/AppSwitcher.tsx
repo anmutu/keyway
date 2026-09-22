@@ -60,6 +60,8 @@ export function AppSwitcher({
           type="button"
           onClick={() => handleSwitch(app)}
           title={`${appDisplayName[app]}(⌘${visible.indexOf(app) + 1})`}
+          aria-label={appDisplayName[app]}
+          aria-current={activeApp === app ? "page" : undefined}
           className={cn(
             "group inline-flex items-center h-8 rounded-md text-sm font-medium transition-all duration-200",
             iconOnly ? "w-9 justify-center" : "px-3",

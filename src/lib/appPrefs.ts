@@ -65,7 +65,10 @@ export function loadApps(): AppType[] {
     }
     if (!raw) return DEFAULT_APPS;
     const list = JSON.parse(raw) as string[];
-    const valid = ALL_APPS.filter((a) => list.includes(a));
+    const valid = list.filter(
+      (app, index): app is AppType =>
+        ALL_APPS.includes(app as AppType) && list.indexOf(app) === index,
+    );
     return valid.length > 0 ? valid : DEFAULT_APPS;
   } catch {
     return DEFAULT_APPS;

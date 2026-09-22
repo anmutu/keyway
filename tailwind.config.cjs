@@ -112,8 +112,8 @@ module.exports = {
       },
       keyframes: {
         fadeIn: {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
+          "0%": { transform: "translateY(4px)" },
+          "100%": { transform: "translateY(0)" },
         },
         slideUp: {
           "0%": { transform: "translateY(20px)", opacity: "0" },

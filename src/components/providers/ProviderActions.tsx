@@ -19,6 +19,7 @@ interface ProviderActionsProps {
   onDuplicate: (provider: Provider) => void;
   onDelete: (provider: Provider) => void;
   onError: (msg: string) => void;
+  onTestResult?: (result: TestResult) => void;
 }
 
 interface Balance {
@@ -44,6 +45,7 @@ export function ProviderActions({
   onDuplicate,
   onDelete,
   onError,
+  onTestResult,
 }: ProviderActionsProps) {
   const { t } = useI18n();
   const iconButtonClass = "h-8 w-8 p-1";
@@ -63,6 +65,7 @@ export function ProviderActions({
         appType: app,
       });
       setResult(r);
+      onTestResult?.(r);
     } catch (e) {
       onError(String(e));
     } finally {

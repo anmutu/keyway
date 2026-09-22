@@ -228,11 +228,13 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
               <div
                 key={r.id}
                 className={cn(
-                  "flex items-center gap-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs",
+                  "flex flex-wrap items-center gap-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs",
                   !r.enabled && "opacity-55",
                 )}
               >
-                <code className="font-mono">{r.pattern}</code>
+                <code className="min-w-0 max-w-[45%] truncate font-mono" title={r.pattern}>
+                  {r.pattern}
+                </code>
                 <span className="text-[10px] text-muted-foreground">
                   {r.match_type === "starts_with"
                     ? t("route.matchStartsWith")
@@ -287,18 +289,18 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
                 </button>
               </div>
             ))}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
               <Input
                 value={pattern}
                 onChange={(e) => setPattern(e.target.value)}
                 placeholder={t("route.patternPh")}
-                className="h-8 text-xs flex-1"
+                className="h-8 text-xs sm:flex-1"
                 onKeyDown={(e) => e.key === "Enter" && void add()}
               />
               <select
                 value={matchType}
                 onChange={(e) => setMatchType(e.target.value)}
-                className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs sm:max-w-[150px]"
                 title={t("route.matchTypeTitle")}
               >
                 <option value="contains">{t("route.matchContains")}</option>
@@ -307,7 +309,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
               <select
                 value={providerId}
                 onChange={(e) => setProviderId(e.target.value)}
-                className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs sm:max-w-[150px]"
               >
                 <option value="">{t("route.pickProvider")}</option>
                 {providers.map((p) => (

@@ -65,8 +65,8 @@ function fmtCost(n: number): string {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border p-4 bg-card text-center">
-      <div className="text-2xl font-bold tabular-nums">{value}</div>
+    <div className="rounded-xl border border-border p-3 sm:p-4 bg-card text-center">
+      <div className="text-xl sm:text-2xl font-bold tabular-nums">{value}</div>
       <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
@@ -217,9 +217,18 @@ export function UsagePage({
   const dayMax = Math.max(...(data?.by_day.map((d) => d.tokens) ?? [1]), 1);
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-5 sm:space-y-6 w-full">
+      <div className="flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
+          <BarChart3 className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="text-base font-semibold">{t("dash.title")}</h2>
+          <p className="text-xs text-muted-foreground">{t("dash.note")}</p>
+        </div>
+      </div>
       {/* 总览 */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         <StatCard label={t("dash.requests")} value={fmt(data?.total.requests ?? 0)} />
         <StatCard label={t("dash.input")} value={`↓ ${fmt(data?.total.input_tokens ?? 0)}`} />
         <StatCard label={t("dash.output")} value={`↑ ${fmt(data?.total.output_tokens ?? 0)}`} />

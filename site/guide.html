@@ -18,7 +18,7 @@
       "name": "Keyway 使用指南",
       "description": "从安装到进阶:接管 AI CLI、免重启切换供应商、模型路由、故障转移与日志。",
       "step": [
-        { "@type": "HowToStep", "name": "下载与安装", "text": "从 GitHub Releases 下载 dmg,拖入应用程序,首次打开在系统设置中允许。" },
+        { "@type": "HowToStep", "name": "下载与安装", "text": "从 GitHub Releases 下载对应平台的安装包。macOS 拖入应用程序,Windows 运行安装程序,Linux 使用 AppImage 或 deb/rpm 包。" },
         { "@type": "HowToStep", "name": "添加供应商", "text": "预设直选、从现有 CLI 配置导入或自定义 Base URL 与 API Key。" },
         { "@type": "HowToStep", "name": "一键接管 CLI", "text": "接管前自动备份原配置,代理 127.0.0.1:9527 开始转发。" },
         { "@type": "HowToStep", "name": "切换秒生效", "text": "主界面或菜单栏切换供应商,下一个请求立即生效,会话无需重启。" },
@@ -159,10 +159,14 @@
         <span class="stepnum">1</span>
         <div class="kicker" data-i18n="gS1k">准备</div>
         <h2 data-i18n="gS1h2">下载与安装</h2>
-        <p data-i18n="gS1p">Keyway 是一个免费的 macOS 桌面应用。点下方按钮直接下载对应芯片的 <code>.dmg</code>(Apple 芯片约 9 MB),打开后拖入「应用程序」即可,无需其他依赖。</p>
+        <p data-i18n="gS1p">Keyway 是一个免费的跨平台桌面应用。macOS 用户下载对应芯片的 <code>.dmg</code>,Windows 用户下载安装程序,Linux 用户可使用 AppImage;无需其他依赖。</p>
         <p style="margin-top:14px;">
           <a class="dl-btn dl-direct" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_aarch64.dmg" data-i18n="gS1dl">下载 for Apple 芯片(M1/M2/M3/M4)</a>
           <a class="dl-alt dl-direct-x64" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64.dmg" data-i18n="gS1dlAlt">Intel 芯片版</a>
+          <a class="dl-alt" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64-setup.exe" data-i18n="gS1dlWin">Windows 版</a>
+          <a class="dl-alt" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_amd64.AppImage" data-i18n="gS1dlLinux">Linux AppImage</a>
+          <a class="dl-alt" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_amd64.deb" data-i18n="gS1dlDeb">Linux .deb</a>
+          <a class="dl-alt" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway-0.2.12-1.x86_64.rpm" data-i18n="gS1dlRpm">Linux .rpm</a>
           <a class="dl-alt" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="gS1dlAll">全部平台安装包 ›</a>
         </p>
         <ul>
@@ -301,14 +305,14 @@
           gToc1: "Download & install", gToc2: "Add providers", gToc3: "One-click takeover",
           gToc4: "Switch instantly, no restarts", gToc5: "Advanced: routing · failover · logs · profiles", gToc6: "Troubleshooting",
           gS1k: "Get ready", gS1h2: "Download & install",
-          gS1p: "Keyway is a free macOS desktop app. Grab the .dmg for your chip below (about 9 MB on Apple silicon), open it and drag Keyway into Applications — no other dependencies.",
-          gS1dl: "Download for Apple silicon (M1–M4)",
+          gS1p: "Keyway is a free desktop app for macOS, Windows and Linux. Download the installer for your platform below — no other dependencies required.",
+          gS1dl: "Download for Apple silicon (M1–M4)", gS1dlWin: "Windows", gS1dlLinux: "Linux AppImage", gS1dlDeb: "Linux .deb", gS1dlRpm: "Linux .rpm",
           gS1dlAlt: "Intel version",
           gS1dlAll: "All platforms ›",
-          gS1l0: "Look for the file name Keyway_0.2.12_aarch64.dmg (about 9 MB). If double-clicking it says “no application can open it”, the download was most likely incomplete — delete it and download again.",
-          gS1l1: "If macOS says the developer cannot be verified: right-click Keyway in Applications and choose Open; or open System Settings → Privacy & Security and click “Open Anyway”.",
-          gS1l2: "Keyway lives in the menu bar (tray); closing the window keeps the proxy running.",
-          gS1l3: "The local proxy listens on 127.0.0.1:9527 and accepts local requests only.",
+          gS1l0: "On macOS, look for the file name Keyway_0.2.12_aarch64.dmg (about 9 MB). If it says “no application can open it”, delete the incomplete download and download again.",
+          gS1l1: "On macOS, if the developer cannot be verified, right-click Keyway in Applications and choose Open; on Windows, choose “More info” → “Run anyway” if SmartScreen appears.",
+          gS1l2: "On Linux, make the AppImage executable before opening it (for example, chmod +x Keyway_0.2.12_amd64.AppImage).",
+          gS1l3: "Keyway lives in the menu bar or system tray; closing the window keeps the local proxy running on 127.0.0.1:9527.",
           gTip1: "How does it work? After taking over each CLI's API endpoint, every request hits the local proxy first, then forwards to your chosen provider. Switching only changes local state — no CLI config rewriting. That's why there are no restarts.",
           gS2k: "Set up", gS2h2: "Add providers",
           gS2p: "Open the main window and add model providers per CLI group (Claude Code, Codex, Gemini CLI and more):",

@@ -154,6 +154,13 @@ html.dark {
   @apply outline-2 outline-blue-500 outline-offset-2;
 }
 
+@media (hover: none), (pointer: coarse) {
+  .provider-action-group {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 @layer utilities {
   /* 新建/更新供应商后的短暂高亮 */
   @keyframes highlightFlash {

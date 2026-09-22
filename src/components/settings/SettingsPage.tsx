@@ -22,6 +22,7 @@ import {
   Save,
   Layers,
   Sun,
+  Settings2,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,15 @@ interface AppSettings {
   proxy_addr: string;
 }
 
+const IS_DEMO = new URLSearchParams(location.search).has("demo");
+const DEMO_SETTINGS: AppSettings = {
+  autostart: false,
+  retention_days: 30,
+  days_since_backup: null,
+  db_path: "~/.keyway/keyway.db",
+  proxy_addr: "127.0.0.1:9527",
+};
+
 function Row({
   icon,
   title,
@@ -55,7 +65,7 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-border p-4 bg-card">
+    <div className="flex flex-col items-stretch gap-3 rounded-xl border border-border p-4 bg-card sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex items-start gap-3 min-w-0">
         <div className="mt-0.5 text-muted-foreground">{icon}</div>
         <div className="min-w-0">
@@ -63,7 +73,7 @@ function Row({
           <div className="text-xs text-muted-foreground break-all">{desc}</div>
         </div>
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className="shrink-0 self-end sm:self-auto">{children}</div>
     </div>
   );
 }
@@ -90,6 +100,10 @@ export function SettingsPage({
   const [healthMin, setHealthMin] = useState(0);
 
   useEffect(() => {
+    if (IS_DEMO) {
+      setHealthMin(0);
+      return;
+    }
     invoke<number | null>("get_health_interval")
       .then((v) => setHealthMin(v ?? 0))
       .catch(() => setHealthMin(0));
@@ -99,6 +113,7 @@ export function SettingsPage({
   const [activeProfile, setActiveProfile] = useState("");
   const [profileName, setProfileName] = useState("");
   useEffect(() => {
+    if (IS_DEMO) return;
     invoke<string[]>("list_profiles").then(setProfileList).catch(() => {});
   }, []);
   // 分组拖拽排序状态
@@ -108,6 +123,11 @@ export function SettingsPage({
   const { t, setting: localeSetting, setSetting: setLocale } = useI18n();
 
   useEffect(() => {
+    if (IS_DEMO) {
+      setSettings(DEMO_SETTINGS);
+      setVersion(t("about.demoVersion"));
+      return;
+    }
     invoke<AppSettings>("get_app_settings")
       .then(setSettings)
       .catch((e) => onError(String(e)));
@@ -122,6 +142,11 @@ export function SettingsPage({
       onError(t("settings.retentionBad"));
       return;
     }
+    if (IS_DEMO) {
+      setSettings((s) => (s ? { ...s, retention_days: days } : s));
+      onSuccess(t("settings.retentionSaved", { n: days }));
+      return;
+    }
     try {
       await invoke("set_usage_retention", { days });
       setSettings((s) => (s ? { ...s, retention_days: days } : s));
@@ -132,6 +157,11 @@ export function SettingsPage({
   };
 
   const toggleAutostart = async (enabled: boolean) => {
+    if (IS_DEMO) {
+      setSettings((s) => (s ? { ...s, autostart: enabled } : s));
+      onSuccess(enabled ? t("settings.autostartOn") : t("settings.autostartOff"));
+      return;
+    }
     try {
       await invoke("set_autostart", { enabled });
       setSettings((s) => (s ? { ...s, autostart: enabled } : s));
@@ -176,6 +206,15 @@ export function SettingsPage({
 
   return (
     <div className="space-y-4 w-full">
+      <div className="flex items-start gap-2 pb-1">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
+          <Settings2 className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold">{t("common.settings")}</h2>
+          <p className="text-xs text-muted-foreground">{t("settings.pageDesc")}</p>
+        </div>
+      </div>
       <Row
         icon={<Power className="w-4 h-4" />}
         title={t("settings.autostart")}
@@ -212,7 +251,7 @@ export function SettingsPage({
         title={t("settings.appearance")}
         desc={t("settings.appearanceDesc")}
       >
-        <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+        <div className="flex flex-wrap items-center gap-1 p-1 bg-muted rounded-lg max-w-full">
           {themeOptions.map(({ value, label, icon: Icon }) => (
             <button
               key={value}
@@ -237,7 +276,7 @@ export function SettingsPage({
         title={t("settings.language")}
         desc={t("settings.languageDesc")}
       >
-        <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+        <div className="flex flex-wrap items-center gap-1 p-1 bg-muted rounded-lg max-w-full">
           {([
             { value: "zh", label: t("settings.langZh"), Flag: FlagCN },
             { value: "en", label: t("settings.langEn"), Flag: FlagGB },
@@ -267,7 +306,7 @@ export function SettingsPage({
         title={t("settings.layout")}
         desc={t("settings.layoutDesc")}
       >
-        <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+        <div className="flex flex-wrap items-center gap-1 p-1 bg-muted rounded-lg max-w-full">
           {layoutOptions.map(({ value, label, icon: Icon }) => (
             <button
               key={value}

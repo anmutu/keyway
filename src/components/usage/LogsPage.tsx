@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
-import { ScrollText, Search, Download, Trash2, X } from "lucide-react";
+import { Activity, RefreshCw, ScrollText, Search, Download, Trash2, X } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -23,6 +23,30 @@ interface UsageEntry {
 
 const IS_DEMO = new URLSearchParams(location.search).has("demo");
 
+function demoEntries(providers: Provider[]): UsageEntry[] {
+  const now = Math.floor(Date.now() / 1000);
+  const rows = [
+    { model: "glm-4.6", status: 200, input: 1820, output: 6340, duration: 1240 },
+    { model: "claude-sonnet-4.5", status: 200, input: 940, output: 2880, duration: 980 },
+    { model: "kimi-k2", status: 429, input: 620, output: 0, duration: 412, error: "Rate limit reached" },
+    { model: "glm-4.6", status: 200, input: 2180, output: 7210, duration: 1530 },
+    { model: "gpt-5", status: 200, input: 760, output: 1940, duration: 810 },
+    { model: "kimi-k2", status: 503, input: 480, output: 0, duration: 3000, error: "Upstream unavailable" },
+  ];
+  return rows.map((row, index) => ({
+    id: index + 1,
+    provider_id: providers[index % Math.max(providers.length, 1)]?.id ?? "demo-1",
+    model: row.model,
+    input_tokens: row.input,
+    output_tokens: row.output,
+    status: row.status,
+    rule_pattern: index === 1 ? "*sonnet*" : null,
+    duration_ms: row.duration,
+    error_note: row.error ?? null,
+    created_at: now - index * 930,
+  }));
+}
+
 /** 请求日志浏览器:最近 100 条请求(时间/供应商/模型/tokens/状态) */
 export function LogsPage({
   app,
@@ -42,6 +66,7 @@ export function LogsPage({
   const [prov, setProv] = useState("");
   const [onlyErrors, setOnlyErrors] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const exportCsv = async () => {
     try {
@@ -51,6 +76,7 @@ export function LogsPage({
         defaultPath: `keyway-usage-${ts}.csv`,
         filters: [{ name: "CSV", extensions: ["csv"] }],
       });
+      if (!target) return;
       const r = await invoke<{ path: string; count: number }>(
         "export_usage_csv",
         { appType: app, target },
@@ -91,14 +117,27 @@ export function LogsPage({
   const [limit, setLimit] = useState(100);
   useEffect(() => setLimit(100), [app]);
 
-  useEffect(() => {
-    if (IS_DEMO) {
-      setEntries([]);
-      return;
+  const reload = async () => {
+    setRefreshing(true);
+    try {
+      if (IS_DEMO) {
+        setEntries(demoEntries(providers));
+      } else {
+        setEntries(await invoke<UsageEntry[]>("get_recent_usage", { appType: app, limit }));
+      }
+    } catch (e) {
+      onError(String(e));
+    } finally {
+      setRefreshing(false);
     }
-    invoke<UsageEntry[]>("get_recent_usage", { appType: app, limit })
-      .then(setEntries)
-      .catch((e) => onError(String(e)));
+  };
+
+  useEffect(() => {
+    setLimit(100);
+  }, [app]);
+
+  useEffect(() => {
+    void reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app, limit]);
 
@@ -136,14 +175,28 @@ export function LogsPage({
   return (
     <div className="space-y-4 w-full">
       <div className="rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h3 className="text-sm font-semibold">{t("logs.title")}</h3>
-          <span className="text-xs text-muted-foreground">
-            {t("logs.count", {
-              n: filtered?.length ?? 0,
-              total: entries?.length ?? 0,
-            })}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-blue-500" />
+            <h3 className="text-sm font-semibold">{t("logs.title")}</h3>
+            <span className="text-xs text-muted-foreground">
+              {t("logs.count", {
+                n: filtered?.length ?? 0,
+                total: entries?.length ?? 0,
+              })}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            onClick={() => void reload()}
+            disabled={refreshing}
+            title={t("logs.refresh")}
+          >
+            <RefreshCw className={`mr-1 h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {t("logs.refresh")}
+          </Button>
         </div>
         {/* 筛选行:关键词 / 供应商 / 仅看失败 */}
         {entries !== null && entries.length > 0 && (

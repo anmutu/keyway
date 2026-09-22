@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "@/i18n";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AppType } from "@/types";
 
 interface Degraded {
   id: string;
@@ -28,7 +29,7 @@ function fmtTokens(n: number): string {
 }
 
 /** 网关状态条(Docker Desktop 式状态感):绿点 + 地址 + 各分组当前出口 + 今日用量。 */
-export function GatewayStatusStrip() {
+export function GatewayStatusStrip({ apps }: { apps: AppType[] }) {
   const { t } = useI18n();
   const [st, setSt] = useState<GatewayStatus | null>(null);
   const [degraded, setDegraded] = useState<Degraded[]>([]);
@@ -37,8 +38,8 @@ export function GatewayStatusStrip() {
     if (IS_DEMO) {
       setSt({
         proxy_addr: "127.0.0.1:9527",
-        version: "0.2.0",
-        current: { claude: "Relay A", codex: "官方", gemini: null },
+        version: "0.2.12",
+        current: { claude: "Relay A", codex: "官方", gemini: null, opencode: "Relay A", openclaw: null },
         today_tokens: 123_400,
         today_requests: 18,
       });
@@ -90,7 +91,7 @@ export function GatewayStatusStrip() {
         {st.proxy_addr} · v{st.version}
       </span>
       <span className="h-4 w-px bg-border" />
-      {(["claude", "codex", "gemini"] as const).map((k) => (
+      {apps.map((k) => (
         <span key={k} className="flex items-center gap-1.5 text-xs">
           <span className="text-muted-foreground">{t(`app.${k}`)}</span>
           <span
