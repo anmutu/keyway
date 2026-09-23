@@ -1,8 +1,8 @@
 //! 供应商业务逻辑。
 //!
 //! 命令层调用这里的函数。核心职责:
-//! - CRUD 时同步管理 keychain 中的 API Key
-//! - 列表/查询时填充 `has_key`(查 keychain 是否存在,不暴露 Key 本身)
+//! - CRUD 时同步管理 SQLCipher 加密库中的 API Key
+//! - 列表/查询时填充 `has_key`(不暴露 Key 本身)
 //! - 切换(`switch`)只改 DB 的 `is_current`,代理在转发时按它选供应商 → 天然免重启
 
 use anyhow::Result;
@@ -11,7 +11,7 @@ use crate::db::{api_key_dao, provider_dao, Pool};
 use crate::types::{AppType, Protocol, Provider, ProviderInput};
 
 /// 填充 `has_key`:优先 meta 落库值;未知时查加密库 api_keys;
-/// 仍未知且为旧数据时查一次 keychain 并迁移落库,此后不再触碰 keychain。
+/// 仍未知且为旧数据时从旧 keychain 迁移一次,此后使用加密库。
 fn fill_has_key(pool: &Pool, list: &mut [Provider]) {
     for p in list.iter_mut() {
         match p.meta_has_key {
@@ -54,7 +54,7 @@ pub fn get_current(pool: &Pool, app: AppType) -> Result<Option<Provider>> {
 }
 
 /// 创建供应商;若同名供应商已存在则**合并**:只追加当前分组协议的端点(不新建)。
-/// 提供了 API Key 时写入 keychain(已有 Key 且新值为空则保留旧 Key)。
+/// 提供了 API Key 时写入加密库(已有 Key 且新值为空则保留旧 Key)。
 pub fn create(pool: &Pool, input: ProviderInput) -> Result<Provider> {
     // 同名合并:补端点即可
     if let Some(existing) = provider_dao::find_by_name(pool, &input.name)? {
@@ -84,7 +84,7 @@ pub fn create(pool: &Pool, input: ProviderInput) -> Result<Provider> {
     }
 
     let id = uuid::Uuid::new_v4().to_string();
-    // keychain 引用 id 与 provider id 一致,便于定位
+    // 保留稳定关联 id,兼容旧版 keychain 迁移
     let keychain_id = Some(id.clone());
 
     if let Some(key) = &input.api_key {

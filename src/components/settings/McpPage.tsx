@@ -84,6 +84,7 @@ export function McpPage({
   const [servers, setServers] = useState<McpServer[]>([]);
   const [editing, setEditing] = useState<McpServer | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<McpServer | null>(null);
 
   const reload = useCallback(() => {
@@ -99,20 +100,25 @@ export function McpPage({
   useEffect(() => reload(), [reload]);
 
   const save = (s: McpServer) => {
+    if (saving) return;
     if (IS_DEMO) {
       setServers((current) => {
         const next = current.filter((item) => item.id !== s.id);
         return [...next, s];
       });
       onSuccess(t("mcp.saved"));
+      setEditing(null);
       return;
     }
+    setSaving(true);
     invoke("save_mcp_server", { server: s })
       .then(() => {
+        setEditing(null);
         reload();
         onSuccess(t("mcp.saved"));
       })
-      .catch((e) => onError(String(e)));
+      .catch((e) => onError(String(e)))
+      .finally(() => setSaving(false));
   };
 
   const toggle = (s: McpServer, enabled: boolean) => {
@@ -246,11 +252,9 @@ export function McpPage({
 
       <McpEditDialog
         server={editing}
-        onClose={() => setEditing(null)}
-        onSave={(s) => {
-          save(s);
-          setEditing(null);
-        }}
+        saving={saving}
+        onClose={() => { if (!saving) setEditing(null); }}
+        onSave={save}
         exists={servers.some((x) => x.id === editing?.id)}
       />
     </div>
@@ -273,11 +277,13 @@ function McpEditDialog({
   onClose,
   onSave,
   exists,
+  saving,
 }: {
   server: McpServer | null;
   onClose: () => void;
   onSave: (s: McpServer) => void;
   exists: boolean;
+  saving: boolean;
 }) {
   const { t } = useI18n();
   const [draft, setDraft] = useState<McpServer | null>(server);
@@ -285,8 +291,7 @@ function McpEditDialog({
   if (!draft) return null;
 
   const set = (patch: Partial<McpServer>) => setDraft({ ...draft, ...patch });
-  const isRemote = !!draft.config.url;
-  const argsText = (draft.config.args ?? []).join(" ");
+  const isRemote = draft.config.type === "http" || draft.config.type === "sse" || draft.config.url !== undefined;
   const envText = Object.entries(draft.config.env ?? {})
     .map(([k, v]) => `${k}=${v}`)
     .join("\n");
@@ -307,10 +312,7 @@ function McpEditDialog({
         ? { type: draft.config.type ?? "http", url: draft.config.url }
         : {
             command: draft.config.command?.trim(),
-            args: argsText
-              .split(/\s+/)
-              .filter(Boolean)
-              .map((a) => a.replace(/^"(.*)"$/, "$1")),
+            args: [...(draft.config.args ?? [])],
             env: draft.config.env,
           },
     });
@@ -318,11 +320,11 @@ function McpEditDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{exists ? t("mcp.edit") : t("mcp.add")}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+        <fieldset disabled={saving} className="min-w-0 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>{t("mcp.fId")}</Label>
@@ -393,13 +395,35 @@ function McpEditDialog({
               </div>
               <div className="space-y-1.5">
                 <Label>{t("mcp.fArgs")}</Label>
-                <Input
-                  defaultValue={argsText}
-                  placeholder="-y @modelcontextprotocol/server-filesystem /tmp"
-                  onChange={(e) =>
-                    set({ config: { ...draft.config, args: e.target.value.split(/\s+/) } })
-                  }
-                />
+                <div className="space-y-2">
+                  {(draft.config.args ?? []).map((argument, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <span aria-hidden="true" className="w-5 shrink-0 pt-2 text-right text-xs tabular-nums text-muted-foreground">{index + 1}</span>
+                      <textarea
+                        rows={1}
+                        value={argument}
+                        aria-label={t("mcp.argument", { n: index + 1 })}
+                        placeholder={t("mcp.emptyArgument")}
+                        spellCheck={false}
+                        className="min-w-0 flex-1 resize-y rounded-md border border-input bg-background px-3 py-2 font-mono text-xs"
+                        onChange={(event) => set({ config: { ...draft.config, args: draft.config.args?.map((value, argumentIndex) => argumentIndex === index ? event.target.value : value) } })}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t("mcp.removeArgument", { n: index + 1 })}
+                        onClick={() => set({ config: { ...draft.config, args: draft.config.args?.filter((_, argumentIndex) => argumentIndex !== index) } })}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => set({ config: { ...draft.config, args: [...(draft.config.args ?? []), ""] } })}>
+                    <Plus className="h-3.5 w-3.5" />
+                    {t("mcp.addArgument")}
+                  </Button>
+                </div>
                 <p className="text-[11px] text-muted-foreground">{t("mcp.fArgsHint")}</p>
               </div>
               <div className="space-y-1.5">
@@ -446,22 +470,23 @@ function McpEditDialog({
               })}
             </div>
           </div>
-        </div>
+        </fieldset>
 
         <div className="flex justify-end gap-2 mt-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
             <X className="w-4 h-4 mr-1" />
             {t("common.cancel")}
           </Button>
           <Button
             onClick={submit}
             disabled={
+              saving ||
               !draft.id.trim() ||
               (isRemote ? !draft.config.url?.trim() : !draft.config.command?.trim()) ||
               draft.apps.length === 0
             }
           >
-            {t("common.save")}
+            {saving ? t("dialog.saving") : t("common.save")}
           </Button>
         </div>
       </DialogContent>

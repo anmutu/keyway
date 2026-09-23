@@ -21,6 +21,52 @@ interface RouteRule {
   priority: number;
 }
 
+const IS_DEMO = new URLSearchParams(location.search).has("demo");
+
+const DEMO_PROVIDERS: Provider[] = [
+  {
+    id: "demo-route-main",
+    app_type: "codex",
+    name: "CoderPlan",
+    base_url: "https://api.coderplan.ai",
+    endpoints: { openai: "https://api.coderplan.ai/v1" },
+    keychain_id: "demo-route-main",
+    models: ["gpt-5", "o3"],
+    is_current: true,
+    is_healthy: true,
+    sort_index: 0,
+    created_at: 0,
+    has_key: true,
+  },
+  {
+    id: "demo-route-fallback",
+    app_type: "codex",
+    name: "OpenAI",
+    base_url: "https://api.openai.com",
+    endpoints: { openai: "https://api.openai.com/v1" },
+    keychain_id: "demo-route-fallback",
+    models: ["gpt-5", "gpt-4.1"],
+    is_current: false,
+    is_healthy: true,
+    sort_index: 1,
+    created_at: 0,
+    has_key: true,
+  },
+];
+
+const DEMO_RULES: RouteRule[] = [
+  {
+    id: 1,
+    app_type: "codex",
+    pattern: "o3",
+    provider_id: "demo-route-main",
+    enabled: true,
+    match_type: "contains",
+    fallback_provider_id: "demo-route-fallback",
+    priority: 0,
+  },
+];
+
 /**
  * 模型路由设置卡:请求体 model 匹配关键词 → 优先路由到指定供应商。
  * 自带 app 分组切换与供应商加载,可独立嵌在设置页。
@@ -43,6 +89,21 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
 
   const dryRun = () => {
     if (!dryModel.trim()) { setDryResult(null); return; }
+    if (IS_DEMO) {
+      const model = dryModel.trim().toLowerCase();
+      const hit = rules.find((r) => {
+        if (!r.enabled) return false;
+        const pattern = r.pattern.toLowerCase();
+        return r.match_type === "starts_with" ? model.startsWith(pattern) : model.includes(pattern);
+      });
+      setDryResult({
+        rule_hit: !!hit,
+        pattern: hit?.pattern ?? null,
+        provider: nameOf(hit?.provider_id ?? providers[0]?.id ?? ""),
+        fallback: hit?.fallback_provider_id ? nameOf(hit.fallback_provider_id) : null,
+      });
+      return;
+    }
     invoke<{ rule_hit: boolean; pattern: string | null; provider: string; fallback: string | null }>(
       "dry_run_route",
       { appType: app, model: dryModel.trim() },
@@ -57,6 +118,15 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
   const [thProvider, setThProvider] = useState("");
 
   const reload = (a: AppType) => {
+    if (IS_DEMO) {
+      setRules(DEMO_RULES.map((r) => ({ ...r, app_type: a })));
+      setProviders(DEMO_PROVIDERS.map((p) => ({ ...p, app_type: a, endpoints: { ...p.endpoints }, models: [...p.models] })));
+      setLcProvider("demo-route-fallback");
+      setLcThreshold("60000");
+      setBgProvider("demo-route-main");
+      setThProvider("demo-route-main");
+      return;
+    }
     invoke<RouteRule[]>("list_route_rules", { appType: a })
       .then(setRules)
       .catch(() => setRules([]));
@@ -95,6 +165,23 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
     if (!pattern.trim() || !providerId) return;
     setAdding(true);
     try {
+      if (IS_DEMO) {
+        setRules((current) => [
+          ...current,
+          {
+            id: Math.max(0, ...current.map((r) => r.id)) + 1,
+            app_type: app,
+            pattern: pattern.trim(),
+            provider_id: providerId,
+            enabled: true,
+            match_type: matchType,
+            fallback_provider_id: null,
+            priority: current.length,
+          },
+        ]);
+        setPattern("");
+        return;
+      }
       await invoke("add_route_rule", {
         appType: app,
         pattern: pattern.trim(),
@@ -113,6 +200,17 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
   /** 上移/下移(与相邻规则交换优先级,列表即匹配顺序) */
   const move = async (id: number, dir: number) => {
     try {
+      if (IS_DEMO) {
+        setRules((current) => {
+          const index = current.findIndex((r) => r.id === id);
+          const target = index + dir;
+          if (index < 0 || target < 0 || target >= current.length) return current;
+          const next = [...current];
+          [next[index], next[target]] = [next[target], next[index]];
+          return next;
+        });
+        return;
+      }
       await invoke("move_route_rule", { id, dir });
       setRules(await invoke<RouteRule[]>("list_route_rules", { appType: app }));
     } catch (e) {
@@ -122,6 +220,10 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
 
   const remove = async (id: number) => {
     try {
+      if (IS_DEMO) {
+        setRules((current) => current.filter((r) => r.id !== id));
+        return;
+      }
       await invoke("delete_route_rule", { id });
       setRules(await invoke<RouteRule[]>("list_route_rules", { appType: app }));
     } catch (e) {
@@ -132,6 +234,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
   const toggle = async (r: RouteRule, enabled: boolean) => {
     // 乐观更新,失败回滚并提示
     setRules((rs) => rs.map((x) => (x.id === r.id ? { ...x, enabled } : x)));
+    if (IS_DEMO) return;
     try {
       await invoke("set_route_rule_enabled", { id: r.id, enabled });
     } catch (e) {
@@ -144,6 +247,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
     setRules((rs) =>
       rs.map((x) => (x.id === r.id ? { ...x, fallback_provider_id: pid || null } : x)),
     );
+    if (IS_DEMO) return;
     try {
       await invoke("set_route_rule_fallback", { id: r.id, providerId: pid || null });
     } catch (e) {
@@ -153,6 +257,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
 
   const saveThink = async (pid: string) => {
     setThProvider(pid);
+    if (IS_DEMO) return;
     try {
       await invoke("set_think_preset", { appType: app, providerId: pid });
     } catch (e) {
@@ -162,6 +267,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
 
   const saveBackground = async (pid: string) => {
     setBgProvider(pid);
+    if (IS_DEMO) return;
     try {
       await invoke("set_background_preset", {
         appType: app,
@@ -174,6 +280,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
 
   const saveLongctx = async (pid: string) => {
     setLcProvider(pid);
+    if (IS_DEMO) return;
     try {
       await invoke("set_longctx_preset", {
         appType: app,
@@ -196,16 +303,18 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
           <div className="text-xs text-muted-foreground mb-3">
             {t("route.cardDesc")}
           </div>
+          {IS_DEMO && <p className="mb-3 text-xs text-muted-foreground">{t("route.demoNote")}</p>}
 
           {/* app 分组切换 */}
           {apps.length > 1 && (
-            <div className="flex items-center gap-1 p-1 bg-muted rounded-lg w-fit mb-3">
+            <div className="flex flex-wrap items-center gap-1 p-1 bg-muted rounded-lg w-fit max-w-full mb-3">
               {apps.map((a) => (
                 <button
                   key={a}
                   type="button"
                   onClick={() => {
                     setApp(a);
+                    setDryResult(null);
                     setProviderId("");
                     reload(a);
                   }}
@@ -320,6 +429,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
               </select>
               <Button
                 size="sm"
+                aria-label={t("common.add")}
                 className="h-8 px-2.5"
                 disabled={adding || !pattern.trim() || !providerId}
                 onClick={() => void add()}

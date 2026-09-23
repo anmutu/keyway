@@ -418,17 +418,32 @@ function App() {
       setProxyAddr("127.0.0.1:9527");
       return;
     }
-    invoke<ProxyStatus>("proxy_status")
-      .then((s) => {
-        setProxyOk(s.running);
-        setProxyAddr(s.addr);
+    let cancelled = false;
+    const load = () => invoke<ProxyStatus>("proxy_status")
+      .then((status) => {
+        if (cancelled) return;
+        setProxyOk(status.running);
+        setProxyAddr(status.addr);
       })
-      .catch(() => setProxyOk(false));
+      .catch(() => { if (!cancelled) setProxyOk(null); });
+    void load();
+    const timer = window.setInterval(load, 5_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, []);
 
   // 接管漂移检测:active 但配置文件被外部(其他工具/手动)改写 → 分组页横幅提示(批 54)
   const refreshTakeover = useCallback(() => {
-    if (IS_DEMO) return;
+    if (IS_DEMO) {
+      setTakeoverMap({
+        claude: { active: true, effective: true },
+        codex: { active: false, effective: false },
+        gemini: { active: true, effective: false },
+      });
+      return;
+    }
     invoke<
       { app: string; supported: boolean; active: boolean; effective: boolean }[]
     >("takeover_status")
@@ -437,7 +452,7 @@ function App() {
         for (const s of list) m[s.app] = { active: s.active, effective: s.effective };
         setTakeoverMap(m);
       })
-      .catch(() => {});
+      .catch(() => setTakeoverMap({}));
   }, []);
   useEffect(() => {
     refreshTakeover();
@@ -451,11 +466,18 @@ function App() {
   const retakeOver = async () => {
     setRetaking(true);
     try {
-      await invoke("apply_takeover", {
-        appType: activeApp as "claude" | "codex" | "gemini",
-      });
-      toast("success", t("takeover.applied", { name: activeApp }));
-      refreshTakeover();
+      if (IS_DEMO) {
+        setTakeoverMap((current) => ({
+          ...current,
+          [activeApp]: { active: true, effective: true },
+        }));
+      } else {
+        await invoke("apply_takeover", {
+          appType: activeApp as "claude" | "codex" | "gemini",
+        });
+      }
+      toast("success", t(activeApp === "codex" ? "takeover.appliedCodex" : "takeover.applied", { name: t(`app.${activeApp}`) }));
+      if (!IS_DEMO) refreshTakeover();
     } catch (e) {
       toast("error", humanizeError(String(e), t));
     } finally {
@@ -481,7 +503,7 @@ function App() {
           el.blur();
           return;
         }
-        setCurrentView("usage");
+        setCurrentView("providers");
         return;
       }
       const mod = e.metaKey || e.ctrlKey;
@@ -788,6 +810,7 @@ function App() {
         {currentView === "logs" && (
           <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[860px] w-full mx-auto animate-fade-in">
             <LogsPage
+              key={activeApp}
               app={activeApp}
               providers={providers}
               onError={(m) => toast("error", humanizeError(m, t))}
@@ -813,7 +836,15 @@ function App() {
                   <span className="hidden sm:inline">{t("common.add")}</span>
                 </Button>
               </div>
-              <GatewayStatusStrip apps={appsOrder} />
+              <GatewayStatusStrip
+                app={activeApp}
+                defaultProvider={providers.find((provider) => provider.is_current)?.name}
+                proxyRunning={proxyOk}
+                proxyAddr={proxyAddr}
+                takeover={takeoverMap[activeApp]}
+                onManage={() => setTakeoverOpen(true)}
+                onLogs={() => setCurrentView("logs")}
+              />
               {/* 接管漂移:配置被外部覆盖,流量绕过了 Keyway(批 54) */}
               {groupDrift && (
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5">
@@ -859,7 +890,7 @@ function App() {
                   <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center border border-border">
                     <Boxes className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <p className="text-base font-medium">{t("empty.title", { app: activeApp })}</p>
+                  <p className="text-base font-medium">{t("empty.title", { app: t(`app.${activeApp}`) })}</p>
                   <p className="text-sm text-muted-foreground -mt-2">
                     {t("empty.desc")}
                   </p>
@@ -1122,9 +1153,13 @@ function App() {
 
       <TakeoverDialog
         open={takeoverOpen}
+        initialApp={activeApp}
         onOpenChange={setTakeoverOpen}
         onError={(m) => toast("error", humanizeError(m, t))}
-        onSuccess={(m) => toast("success", m)}
+        onSuccess={(m) => {
+          toast("success", m);
+          refreshTakeover();
+        }}
       />
 
       <AddProviderDialog

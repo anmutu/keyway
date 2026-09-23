@@ -8,7 +8,7 @@
 //!    Gemini 用 URL `?key=`),并保留客户端原始 header
 //! 5. 流式转发响应(支持 SSE)
 //!
-//! M0 只做透传 + 凭证注入;计量/故障转移/熔断留给 M1/M2。
+//! 当前代理负责透传、协议转换、计量、路由和可重试的故障转移。
 
 use anyhow::Result;
 use axum::{
@@ -36,6 +36,7 @@ pub async fn run(state: AppState, addr: &str) -> Result<()> {
 
 /// 在既有 listener 上启动代理(测试用随机端口)。
 pub async fn run_listener(state: AppState, listener: tokio::net::TcpListener) -> Result<()> {
+    let _running = state.proxy.listening();
     let health_state = state.clone();
     let app = Router::new()
         .route(
@@ -45,8 +46,8 @@ pub async fn run_listener(state: AppState, listener: tokio::net::TcpListener) ->
                 async move {
                     // 各分组当前供应商名(无则 null),便于脚本一眼确认路由去向
                     let mut current = serde_json::Map::new();
-                    for app in [AppType::Claude, AppType::Codex, AppType::Gemini] {
-                        let name = crate::db::provider_dao::get_current(&state.db, app)
+                    for app in AppType::all() {
+                        let name = crate::db::provider_dao::get_current(&state.db, *app)
                             .ok()
                             .flatten()
                             .map(|p| serde_json::Value::String(p.name));
@@ -69,7 +70,17 @@ pub async fn run_listener(state: AppState, listener: tokio::net::TcpListener) ->
 }
 
 /// 从 URL 路径推断 AppType。
+fn infer_prefixed_app(path: &str) -> Option<AppType> {
+    AppType::all().iter().copied().find(|app| {
+        let prefix = app.proxy_prefix();
+        path == prefix || path.starts_with(&format!("{prefix}/"))
+    })
+}
+
 fn infer_app_type(path: &str) -> Option<AppType> {
+    if let Some(app) = infer_prefixed_app(path) {
+        return Some(app);
+    }
     for app in AppType::all() {
         for prefix in app.path_prefixes() {
             if path.starts_with(prefix) {
@@ -80,20 +91,38 @@ fn infer_app_type(path: &str) -> Option<AppType> {
     None
 }
 
+fn strip_app_prefix(path: &str, app: AppType) -> String {
+    let prefix = app.proxy_prefix();
+    match path.strip_prefix(prefix) {
+        Some("") => "/".to_string(),
+        Some(rest) if rest.starts_with('/') => rest.to_string(),
+        _ => path.to_string(),
+    }
+}
+
 /// 主转发处理器。
 pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) -> Response<Body> {
     // 拆分请求:method/uri/headers 与 body 分开处理,避免消费后丢失 header
     let (parts, body) = req.into_parts();
     let method = parts.method;
-    let path = parts.uri.path().to_string();
+    let raw_path = parts.uri.path().to_string();
     let query = parts.uri.query().map(str::to_string);
     let client_headers = parts.headers;
-    let app_type = infer_app_type(&path);
+    let app_type = infer_app_type(&raw_path);
+    let path = app_type
+        .map(|app| strip_app_prefix(&raw_path, app))
+        .unwrap_or_else(|| raw_path.clone());
 
-    debug!(%method, %path, ?app_type, "代理请求");
+    debug!(%method, raw_path = %raw_path, normalized_path = %path, ?app_type, "代理请求");
 
     let Some(app) = app_type else {
         return text_resp(StatusCode::NOT_FOUND, &format!("无法识别的路径: {path}"));
+    };
+    let Some(protocol) = infer_app_type(&path).map(|protocol_app| protocol_app.protocol()) else {
+        return text_resp(
+            StatusCode::NOT_FOUND,
+            &format!("无法识别的协议路径: {path}"),
+        );
     };
 
     // 1. 候选链:故障转移开启时 = 当前 + 备用(有 Key),否则仅当前
@@ -304,7 +333,6 @@ pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) ->
         }
         base_headers.append(k.clone(), v.clone());
     }
-    let protocol = app.protocol();
     if protocol == crate::types::Protocol::Anthropic {
         base_headers.insert(
             HeaderName::from_static("anthropic-version"),
@@ -709,19 +737,14 @@ pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) ->
             .bytes_stream()
             .map_err(|e| std::io::Error::other(e.to_string()));
         // 用量计量:归属实际服务的供应商
-        let meter = if matches!(app, AppType::Claude | AppType::Codex | AppType::Gemini) {
-            UsageMeter::new(UsageCtx {
-                pool: state.db.clone(),
-                app_type: app.as_str().to_string(),
-                provider_id: provider.id.clone(),
-                model: model.clone(),
-                status: status.as_u16(),
-                rule_pattern: rule_pattern.clone(),
-                app: state.app.clone(),
-            })
-        } else {
-            UsageMeter::disabled()
-        };
+        let meter = meter_for(
+            &state,
+            app,
+            provider,
+            &model,
+            status.as_u16(),
+            &rule_pattern,
+        );
         let mut out = Response::new(Body::from_stream(MeteredStream::new(stream, meter)));
         *out.status_mut() = status;
         *out.headers_mut() = out_headers;
@@ -741,19 +764,15 @@ fn meter_for(
     status: u16,
     rule_pattern: &Option<String>,
 ) -> UsageMeter {
-    if matches!(app, AppType::Claude | AppType::Codex | AppType::Gemini) {
-        UsageMeter::new(UsageCtx {
-            pool: state.db.clone(),
-            app_type: app.as_str().to_string(),
-            provider_id: provider.id.clone(),
-            model: model.clone(),
-            status,
-            rule_pattern: rule_pattern.clone(),
-            app: state.app.clone(),
-        })
-    } else {
-        UsageMeter::disabled()
-    }
+    UsageMeter::new(UsageCtx {
+        pool: state.db.clone(),
+        app_type: app.as_str().to_string(),
+        provider_id: provider.id.clone(),
+        model: model.clone(),
+        status,
+        rule_pattern: rule_pattern.clone(),
+        app: state.app.clone(),
+    })
 }
 
 /// 常见错误的 actionable 提示(附在响应头 x-keyway-hint)。
@@ -813,4 +832,46 @@ fn encode_query_component(s: &str) -> String {
 /// URL 路径段编码(模型名等)
 fn encode_path_segment(s: &str) -> String {
     encode_query_component(s)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn prefixed_routes_disambiguate_shared_protocol_paths() {
+        assert_eq!(
+            infer_app_type("/__keyway/claude/v1/messages"),
+            Some(AppType::Claude)
+        );
+        assert_eq!(
+            infer_app_type("/__keyway/opencode/v1/chat/completions"),
+            Some(AppType::OpenCode)
+        );
+        assert_eq!(
+            infer_app_type("/__keyway/openclaw/v1/chat/completions"),
+            Some(AppType::OpenClaw)
+        );
+        assert_eq!(
+            infer_app_type("/__keyway/qwen/v1/responses"),
+            Some(AppType::Qwen)
+        );
+    }
+
+    #[test]
+    fn prefixed_routes_are_normalized_before_upstream_conversion() {
+        let path = "/__keyway/gemini/v1beta/models/gemini-2.5:generateContent";
+        let app = infer_app_type(path).expect("prefixed route should be recognized");
+        assert_eq!(app, AppType::Gemini);
+        assert_eq!(
+            strip_app_prefix(path, app),
+            "/v1beta/models/gemini-2.5:generateContent"
+        );
+    }
+
+    #[test]
+    fn legacy_root_routes_keep_existing_fallback_behavior() {
+        assert_eq!(infer_app_type("/v1/messages"), Some(AppType::Claude));
+        assert_eq!(infer_app_type("/v1/responses"), Some(AppType::Codex));
+    }
 }

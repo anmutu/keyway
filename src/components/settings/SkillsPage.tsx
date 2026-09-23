@@ -48,6 +48,7 @@ export function SkillsPage({
   const [importOpen, setImportOpen] = useState(false);
   const [importSrc, setImportSrc] = useState<Record<string, string[]>>({});
   const [syncing, setSyncing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const reload = useCallback(() => {
     if (IS_DEMO) {
@@ -61,6 +62,7 @@ export function SkillsPage({
   useEffect(() => reload(), [reload]);
 
   const save = (s: { id: string; content: string; apps: string[] }) => {
+    if (saving) return;
     // SKILL.md 头部需含 frontmatter name(同步依赖它作为 skill 名)
     const m = s.content.match(/^---\n([\s\S]*?)\n---/);
     const hasName = m?.[1].split("\n").some((l) => /^name:\s*\S/.test(l));
@@ -76,14 +78,18 @@ export function SkillsPage({
         return [...next, { id: s.id, name, description, apps: s.apps, has_files: false }];
       });
       onSuccess(t("sk.saved"));
+      setEditing(null);
       return;
     }
+    setSaving(true);
     invoke("save_skill", s)
       .then(() => {
+        setEditing(null);
         reload();
         onSuccess(t("sk.saved"));
       })
-      .catch((e) => onError(String(e)));
+      .catch((e) => onError(String(e)))
+      .finally(() => setSaving(false));
   };
 
   const remove = (s: SkillEntry) => {
@@ -277,11 +283,9 @@ export function SkillsPage({
 
       <SkillEditDialog
         draft={editing}
-        onClose={() => setEditing(null)}
-        onSave={(s) => {
-          save(s);
-          setEditing(null);
-        }}
+        saving={saving}
+        onClose={() => { if (!saving) setEditing(null); }}
+        onSave={save}
       />
 
       <Dialog open={importOpen} onOpenChange={setImportOpen}>
@@ -338,10 +342,12 @@ function SkillEditDialog({
   draft,
   onClose,
   onSave,
+  saving,
 }: {
   draft: { id: string; content: string; apps: string[]; isNew: boolean } | null;
   onClose: () => void;
   onSave: (s: { id: string; content: string; apps: string[] }) => void;
+  saving: boolean;
 }) {
   const { t } = useI18n();
   const [d, setD] = useState(draft);
@@ -350,11 +356,11 @@ function SkillEditDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-xl max-h-[90dvh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{d.isNew ? t("sk.add") : t("sk.edit")}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+        <fieldset disabled={saving} className="min-w-0 space-y-3">
           <div className="space-y-1.5">
             <Label>{t("sk.fId")}</Label>
             <Input
@@ -377,7 +383,7 @@ function SkillEditDialog({
           </div>
           <div className="space-y-1.5">
             <Label>{t("sk.fApps")}</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {TARGET_APPS.map((a) => {
                 const on = d.apps.includes(a.key);
                 return (
@@ -401,16 +407,16 @@ function SkillEditDialog({
               })}
             </div>
           </div>
-        </div>
+        </fieldset>
         <div className="flex justify-end gap-2 mt-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
             {t("common.cancel")}
           </Button>
           <Button
             onClick={() => onSave(d)}
-            disabled={!d.id.trim() || !d.content.trim() || d.apps.length === 0}
+            disabled={saving || !d.id.trim() || !d.content.trim() || d.apps.length === 0}
           >
-            {t("common.save")}
+            {saving ? t("dialog.saving") : t("common.save")}
           </Button>
         </div>
       </DialogContent>

@@ -1,13 +1,13 @@
 //! 首启导入:扫描各 CLI 现有 live 配置,自动创建对应供应商。
 //!
 //! 规则:该 app 尚无任何 provider 且现有配置里有「非官方、非代理回环」的 base_url
-//! 才导入;API Key 一并写入 keychain。
+//! 才导入;API Key 一并写入 SQLCipher 加密库。
 
 use anyhow::Result;
 use serde::Serialize;
 
 use crate::db::{provider_dao, Pool};
-use crate::services::{keychain, takeover};
+use crate::services::keys;
 use crate::types::{AppType, Provider};
 
 #[derive(Debug, Serialize)]
@@ -21,6 +21,13 @@ fn home_join(rel: &[&str]) -> Option<std::path::PathBuf> {
     dirs::home_dir().map(|h| rel.iter().fold(h, |p, c| p.join(c)))
 }
 
+fn is_local_proxy(base: &str) -> bool {
+    reqwest::Url::parse(base).ok().is_some_and(|url| {
+        url.port_or_known_default() == Some(9527)
+            && matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "[::1]"))
+    })
+}
+
 /// 提取 claude 配置:(base_url, api_key)
 fn scan_claude() -> Option<(String, Option<String>)> {
     let path = home_join(&[".claude", "settings.json"])?;
@@ -28,7 +35,7 @@ fn scan_claude() -> Option<(String, Option<String>)> {
     let v: serde_json::Value = serde_json::from_str(&raw).ok()?;
     let env = v.get("env")?;
     let base = env.get("ANTHROPIC_BASE_URL")?.as_str()?.trim().to_string();
-    if base.is_empty() || base == takeover::PROXY_URL {
+    if base.is_empty() || is_local_proxy(&base) {
         return None;
     }
     let key = env
@@ -53,7 +60,7 @@ fn scan_codex() -> Option<(String, Option<String>)> {
         .as_str()?
         .trim()
         .to_string();
-    if base.is_empty() || base == takeover::PROXY_URL {
+    if base.is_empty() || is_local_proxy(&base) {
         return None;
     }
     let key = home_join(&[".codex", "auth.json"])
@@ -78,7 +85,7 @@ fn scan_gemini() -> Option<(String, Option<String>)> {
         let t = line.trim();
         if let Some(v) = t.strip_prefix("GOOGLE_GEMINI_BASE_URL=") {
             let v = v.trim();
-            if !v.is_empty() && v != takeover::PROXY_URL {
+            if !v.is_empty() && !is_local_proxy(v) {
                 base = Some(v.to_string());
             }
         } else if let Some(v) = t.strip_prefix("GEMINI_API_KEY=") {
@@ -99,7 +106,7 @@ fn scan_opencode_at(path: &std::path::Path) -> Option<(String, Option<String>)> 
     for (_, p) in providers {
         let opts = p.get("options")?;
         let base = opts.get("baseURL")?.as_str()?.trim().to_string();
-        if base.is_empty() || base.starts_with(takeover::PROXY_URL) {
+        if base.is_empty() || is_local_proxy(&base) {
             continue;
         }
         let key = opts
@@ -119,7 +126,7 @@ fn scan_openclaw_at(path: &std::path::Path) -> Option<(String, Option<String>)> 
     let providers = v.get("models")?.get("providers")?.as_object()?;
     for (id, p) in providers {
         let base = p.get("baseUrl")?.as_str()?.trim().to_string();
-        if base.is_empty() || base.starts_with(takeover::PROXY_URL) {
+        if base.is_empty() || is_local_proxy(&base) {
             continue;
         }
         // "${ENV_VAR}" 形式的占位 Key 无法导入,跳过
@@ -165,7 +172,7 @@ pub fn import_existing(pool: &Pool) -> Result<Vec<ImportedProvider>> {
         };
         let id = uuid::Uuid::new_v4().to_string();
         if let Some(k) = &key {
-            keychain::store_provider_key(&id, k)?;
+            keys::store(pool, &id, k)?;
         }
         let keychain_ref = Some(id.clone());
         let mut endpoints = std::collections::HashMap::new();
@@ -200,6 +207,24 @@ pub fn import_existing(pool: &Pool) -> Result<Vec<ImportedProvider>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::takeover;
+
+    #[test]
+    fn excludes_local_proxy_with_any_group_or_protocol_prefix() {
+        for suffix in [
+            "",
+            "/v1",
+            "/__keyway/claude",
+            "/__keyway/codex",
+            "/__keyway/gemini",
+            "/__keyway/opencode/v1",
+        ] {
+            assert!(is_local_proxy(&format!("{}{suffix}", takeover::PROXY_URL)));
+        }
+        assert!(is_local_proxy("http://localhost:9527/__keyway/qwen/v1"));
+        assert!(!is_local_proxy("http://127.0.0.1:9528/v1"));
+        assert!(!is_local_proxy("https://relay.example/v1"));
+    }
 
     fn tmpfile(tag: &str, content: &str) -> std::path::PathBuf {
         let d = std::env::temp_dir().join(format!(

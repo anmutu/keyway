@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
-import { Activity, RefreshCw, ScrollText, Search, Download, Trash2, X } from "lucide-react";
+import { Activity, RefreshCw, ScrollText, Search, Download, Trash2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { Provider } from "@/types";
 
 interface UsageEntry {
@@ -67,8 +68,16 @@ export function LogsPage({
   const [onlyErrors, setOnlyErrors] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const requestId = useRef(0);
+  const nameOf = (id: string) =>
+    providers.find((provider) => provider.id === id)?.name ?? id.slice(0, 8);
 
   const exportCsv = async () => {
+    if (IS_DEMO) {
+      onInfo(t("logs.demoExport"));
+      return;
+    }
     try {
       // 先弹系统保存对话框;取消则回落到应用数据目录默认路径
       const ts = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -89,8 +98,11 @@ export function LogsPage({
 
   const clearAll = async () => {
     try {
-      const n = await invoke<number>("clear_usage", { appType: app });
+      const n = IS_DEMO ? entries?.length ?? 0 : await invoke<number>("clear_usage", { appType: app });
+      requestId.current += 1;
+      setRefreshing(false);
       setEntries([]);
+      setDetail(null);
       onInfo(t("logs.cleared", { n }));
     } catch (e) {
       onError(String(e));
@@ -115,20 +127,25 @@ export function LogsPage({
 
   // 拉取条数:默认 100,「加载更多」每次 +200
   const [limit, setLimit] = useState(100);
-  useEffect(() => setLimit(100), [app]);
 
   const reload = async () => {
+    const currentRequest = ++requestId.current;
     setRefreshing(true);
+    setLoadFailed(false);
     try {
       if (IS_DEMO) {
         setEntries(demoEntries(providers));
       } else {
-        setEntries(await invoke<UsageEntry[]>("get_recent_usage", { appType: app, limit }));
+        const result = await invoke<UsageEntry[]>("get_recent_usage", { appType: app, limit });
+        if (requestId.current === currentRequest) setEntries(result);
       }
     } catch (e) {
-      onError(String(e));
+      if (requestId.current === currentRequest) {
+        setLoadFailed(true);
+        onError(String(e));
+      }
     } finally {
-      setRefreshing(false);
+      if (requestId.current === currentRequest) setRefreshing(false);
     }
   };
 
@@ -138,6 +155,7 @@ export function LogsPage({
 
   useEffect(() => {
     void reload();
+    return () => { requestId.current += 1; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app, limit]);
 
@@ -161,10 +179,7 @@ export function LogsPage({
       es,
     ]) as [string, typeof filtered][];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered]);
-
-  const nameOf = (id: string) =>
-    providers.find((p) => p.id === id)?.name ?? id.slice(0, 8);
+  }, [filtered, t]);
 
   const fmtTime = (ts: number) => {
     const d = new Date(ts * 1000);
@@ -174,6 +189,8 @@ export function LogsPage({
 
   return (
     <div className="space-y-4 w-full">
+      {IS_DEMO && <p className="text-xs text-muted-foreground">{t("logs.demoNote")}</p>}
+      {loadFailed && <p role="alert" className="text-sm text-destructive">{t("logs.loadFailed")}</p>}
       <div className="rounded-xl border border-border bg-card">
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
@@ -207,11 +224,13 @@ export function LogsPage({
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={t("logs.searchPh")}
+                aria-label={t("logs.searchPh")}
                 className="h-7 pl-7 text-xs"
               />
             </div>
             <select
               value={prov}
+              aria-label={t("logs.provider")}
               onChange={(e) => setProv(e.target.value)}
               className="h-7 rounded-md border border-border bg-background px-1.5 text-xs"
             >
@@ -255,16 +274,23 @@ export function LogsPage({
         )}
         {entries === null ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            {t("common.loading")}
+            {loadFailed ? t("logs.loadFailed") : t("common.loading")}
           </p>
         ) : (filtered?.length ?? 0) === 0 ? (
           <div className="flex flex-col items-center gap-2 py-10 text-center">
             <ScrollText className="w-8 h-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">{t("logs.empty")}</p>
+            <p className="text-sm text-muted-foreground">
+              {entries.length ? t("logs.noMatch") : t("logs.empty")}
+            </p>
+            {entries.length > 0 && (
+              <Button variant="outline" size="sm" onClick={() => { setQ(""); setProv(""); setOnlyErrors(false); }}>
+                {t("logs.resetFilters")}
+              </Button>
+            )}
           </div>
         ) : (
-          <div className="max-h-[60vh] overflow-y-auto">
-            <table className="w-full text-xs">
+          <div className="max-h-[60vh] overflow-auto">
+            <table className="w-full min-w-[640px] text-xs">
               <thead className="text-muted-foreground sticky top-0 bg-card">
                 <tr className="border-b border-border">
                   <th className="text-left font-medium px-4 py-2">{t("logs.time")}</th>
@@ -294,7 +320,9 @@ export function LogsPage({
                     className="border-b border-border/50 hover:bg-accent/50 cursor-pointer"
                   >
                     <td className="px-4 py-1.5 text-muted-foreground whitespace-nowrap">
-                      {fmtTime(e.created_at)}
+                      <button type="button" className="rounded text-left underline-offset-4 hover:underline" onClick={() => setDetail(e)} aria-label={`${t("logs.detail")} · ${fmtTime(e.created_at)}`}>
+                        {fmtTime(e.created_at)}
+                      </button>
                     </td>
                     <td className="px-2 py-1.5 max-w-[140px] truncate">
                       {nameOf(e.provider_id)}
@@ -342,7 +370,7 @@ export function LogsPage({
       </div>
       {entries && entries.length >= limit && limit < 2000 && (
         <div className="flex justify-center">
-          <Button variant="outline" size="sm" onClick={() => setLimit((n) => n + 200)}>
+          <Button variant="outline" size="sm" disabled={refreshing} onClick={() => setLimit((n) => Math.min(2000, n + 200))}>
             {t("logs.more")}
           </Button>
         </div>
@@ -364,21 +392,13 @@ export function LogsPage({
 
       {/* 详情抽屉:点行展开(Proxyman 式) */}
       {detail && (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setDetail(null)}>
-          <div className="absolute inset-0 bg-black/30" />
-          <div
-            className="relative w-[340px] h-full bg-card border-l border-border shadow-xl overflow-y-auto"
-            onClick={(ev) => ev.stopPropagation()}
+        <Dialog open onOpenChange={(open) => { if (!open) setDetail(null); }}>
+          <DialogContent
+            aria-describedby={undefined}
+            className="left-auto right-0 top-0 block h-dvh w-[340px] max-w-full translate-x-0 translate-y-0 overflow-y-auto rounded-none bg-card p-0 sm:rounded-none"
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-card">
-              <h4 className="text-sm font-semibold">{t("logs.detail")}</h4>
-              <button
-                type="button"
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => setDetail(null)}
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <div className="flex items-center justify-between px-4 py-4 border-b border-border sticky top-0 bg-card">
+              <DialogTitle className="text-sm font-semibold">{t("logs.detail")}</DialogTitle>
             </div>
             <div className="p-4 space-y-3 text-xs">
               {[
@@ -403,8 +423,8 @@ export function LogsPage({
                 </div>
               )}
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

@@ -166,7 +166,7 @@ export function ProviderCard({
         </div>
 
         {/* hover 显示操作组 */}
-        <div className="flex items-center ml-auto min-w-0 gap-3">
+        <div className="flex w-full min-w-0 items-center gap-3 sm:ml-auto sm:w-auto">
           {/* 累计用量(常显,有数据才出现) */}
           {usage && usage.requests > 0 && (
             <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground leading-tight">
@@ -176,7 +176,7 @@ export function ProviderCard({
               </span>
             </div>
           )}
-          <div className="ml-auto">
+          <div className="ml-auto min-w-0">
             <div className="flex items-center gap-1">
               {batchResult && (
                 <span
@@ -203,7 +203,7 @@ export function ProviderCard({
             </div>
           </div>
           <div
-            className="provider-action-group flex items-center gap-1.5 flex-shrink-0 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-200"
+            className="provider-action-group flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 opacity-100 pointer-events-auto sm:w-auto sm:flex-nowrap sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:group-hover:pointer-events-auto sm:group-focus-within:pointer-events-auto transition-opacity duration-200"
             onMouseUp={() => {
               // 鼠标点击会把焦点留在按钮上,操作组因 focus-within 常亮不再隐藏;
               // 点击后立即释放焦点恢复 hover 显隐(键盘 Tab 聚焦不受影响)

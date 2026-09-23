@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "@/i18n";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowRight, ScrollText, Settings2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AppType } from "@/types";
 
@@ -13,11 +14,14 @@ interface Degraded {
 }
 
 interface GatewayStatus {
-  proxy_addr: string;
-  version: string;
-  current: Record<string, string | null>;
   today_tokens: number;
   today_requests: number;
+  last?: Record<string, {
+    provider: string;
+    model: string | null;
+    status: number;
+    created_at: number;
+  }>;
 }
 
 const IS_DEMO = new URLSearchParams(location.search).has("demo");
@@ -28,8 +32,23 @@ function fmtTokens(n: number): string {
   return String(n);
 }
 
-/** 网关状态条(Docker Desktop 式状态感):绿点 + 地址 + 各分组当前出口 + 今日用量。 */
-export function GatewayStatusStrip({ apps }: { apps: AppType[] }) {
+export function GatewayStatusStrip({
+  app,
+  defaultProvider,
+  proxyRunning,
+  proxyAddr,
+  takeover,
+  onManage,
+  onLogs,
+}: {
+  app: AppType;
+  defaultProvider?: string;
+  proxyRunning: boolean | null;
+  proxyAddr: string;
+  takeover?: { active: boolean; effective: boolean };
+  onManage: () => void;
+  onLogs: () => void;
+}) {
   const { t } = useI18n();
   const [st, setSt] = useState<GatewayStatus | null>(null);
   const [degraded, setDegraded] = useState<Degraded[]>([]);
@@ -37,11 +56,16 @@ export function GatewayStatusStrip({ apps }: { apps: AppType[] }) {
   useEffect(() => {
     if (IS_DEMO) {
       setSt({
-        proxy_addr: "127.0.0.1:9527",
-        version: "0.2.12",
-        current: { claude: "Relay A", codex: "官方", gemini: null, opencode: "Relay A", openclaw: null },
         today_tokens: 123_400,
         today_requests: 18,
+        last: {
+          claude: {
+            provider: "CoderPlan",
+            model: "claude-sonnet-4.5",
+            status: 200,
+            created_at: Math.floor(Date.now() / 1000) - 180,
+          },
+        },
       });
       return;
     }
@@ -63,7 +87,17 @@ export function GatewayStatusStrip({ apps }: { apps: AppType[] }) {
     };
   }, []);
 
-  if (!st) return null;
+  const connected = takeover?.active && takeover.effective;
+  const last = st?.last?.[app];
+  const statusKey = proxyRunning === false
+    ? "gw.offlineHelp"
+    : !takeover || proxyRunning === null
+      ? "gw.unknownHelp"
+      : takeover.active && !takeover.effective
+        ? "takeover.driftBanner"
+        : connected
+          ? "gw.connectedHelp"
+          : "gw.notConnectedHelp";
 
   return (
     <div className="space-y-2">
@@ -79,39 +113,61 @@ export function GatewayStatusStrip({ apps }: { apps: AppType[] }) {
           </span>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-border bg-card px-4 py-3">
-      <span className="flex items-center gap-2 text-sm font-semibold">
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-        </span>
-        {t("gw.running")}
-      </span>
-      <span className="text-xs text-muted-foreground font-mono">
-        {st.proxy_addr} · v{st.version}
-      </span>
-      <span className="h-4 w-px bg-border" />
-      {apps.map((k) => (
-        <span key={k} className="flex items-center gap-1.5 text-xs">
-          <span className="text-muted-foreground">{t(`app.${k}`)}</span>
-          <span
-            className={cn(
-              "font-medium",
-              st.current[k] ? "text-foreground" : "text-muted-foreground/60",
-            )}
-          >
-            {st.current[k] ?? t("gw.none")}
+      <div className="space-y-3 rounded-xl border border-border bg-card px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="flex items-center gap-2 text-sm font-semibold" role="status">
+            <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", proxyRunning === true ? "bg-emerald-500" : proxyRunning === false ? "bg-red-500" : "bg-muted-foreground")} />
+            {t(proxyRunning === true ? "gw.running" : proxyRunning === false ? "takeover.proxyOff" : "gw.unknown")}
           </span>
-        </span>
-      ))}
-        {st.today_requests > 0 && (
-          <>
-            <span className="h-4 w-px bg-border" />
+          <span className="text-xs text-muted-foreground font-mono break-all">{proxyAddr}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-medium">{t(`app.${app}`)}</span>
+          <ArrowRight className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+          <span className="text-muted-foreground">{t("gw.defaultProvider")}</span>
+          <span className="min-w-0 break-all font-medium">{defaultProvider ?? t("gw.none")}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-muted-foreground">{t("gw.actualProvider")}</span>
+          {last ? (
+            <>
+              <span className="min-w-0 break-all font-medium">{last.provider}</span>
+              {last.model && <span className="min-w-0 truncate text-muted-foreground">· {last.model}</span>}
+              <span className={cn(
+                "rounded-md px-1.5 py-0.5 font-mono text-[10px]",
+                last.status >= 400
+                  ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+              )}>
+                {last.status}
+              </span>
+              <time className="text-muted-foreground" dateTime={new Date(last.created_at * 1000).toISOString()}>
+                {new Date(last.created_at * 1000).toLocaleString()}
+              </time>
+            </>
+          ) : (
+            <span className="text-muted-foreground">{t(st ? "gw.noRequests" : "gw.requestsUnconfirmed")}</span>
+          )}
+        </div>
+        <div className="space-y-1 text-xs leading-relaxed text-muted-foreground">
+          <p>{t(statusKey)}</p>
+          <p>{t("gw.defaultHelp")}</p>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={onManage}>
+              <Settings2 className="h-3.5 w-3.5" />{t("gw.manage")}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onLogs}>
+              <ScrollText className="h-3.5 w-3.5" />{t("gw.viewLogs")}
+            </Button>
+          </div>
+          {st && st.today_requests > 0 && (
             <span className="text-xs text-muted-foreground tabular-nums">
               {t("gw.today", { tok: fmtTokens(st.today_tokens), n: st.today_requests })}
             </span>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -56,13 +56,11 @@ export function QuickSwitchPanel({
     ? groups.flatMap((g) => g.providers.map((p) => ({ p, app: g.app })))
     : providers.map((p) => ({ p, app }));
   const query = q.trim().toLowerCase();
-  const searchable = (p: Provider) =>
-    [p.name, p.base_url, ...p.models].join(" ").toLowerCase();
   const filtered = query
-    ? flat
-        .map((e) => ({ e, hits: fuzzy(searchable(e.p), query) }))
-        .filter((x) => x.hits)
-        .map((x) => x.e)
+    ? flat.filter(({ p }) =>
+        fuzzy(p.name, query) !== null ||
+        [p.base_url, ...p.models].some((value) => value.toLowerCase().includes(query)),
+      )
     : flat;
   const hitOf = (p: Provider): Set<number> => {
     if (!query) return new Set();
@@ -72,16 +70,11 @@ export function QuickSwitchPanel({
   useEffect(() => {
     if (open) {
       setQ("");
-      setIdx(Math.max(0, filtered.findIndex((e) => e.p.is_current)));
-      setTimeout(() => inputRef.current?.focus(), 30);
+      setIdx(Math.max(0, flat.findIndex((entry) => entry.app === app && entry.p.is_current)));
+      const timer = setTimeout(() => inputRef.current?.focus(), 30);
+      return () => clearTimeout(timer);
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // 输入过滤后保持选中项有效
-  useEffect(() => {
-    setIdx((i) => Math.min(i, Math.max(0, filtered.length - 1)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
 
   useEffect(() => {
     if (!open) return;
@@ -91,11 +84,11 @@ export function QuickSwitchPanel({
       if (e.key === "Escape") {
         e.preventDefault();
         // 有关键词时先清词,再按一次才关闭
-        if (q.trim()) setQ("");
+        if (q.trim()) { setQ(""); setIdx(0); }
         else onClose();
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        setIdx((i) => Math.min(filtered.length - 1, i + 1));
+        setIdx((i) => Math.max(0, Math.min(filtered.length - 1, i + 1)));
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setIdx((i) => Math.max(0, i - 1));
@@ -106,7 +99,7 @@ export function QuickSwitchPanel({
       } else if (/^[1-9]$/.test(e.key) && !e.metaKey && !e.ctrlKey) {
         // 数字键 1-9 秒切(Raycast 式);正在过滤输入时不劫持
         // (否则输入 "gpt-4" 的 4 会直接切到第 4 个供应商)
-        if (document.activeElement === inputRef.current && q.trim()) return;
+        if (document.activeElement === inputRef.current) return;
         const e2 = filtered[Number(e.key) - 1];
         if (e2) {
           e.preventDefault();
@@ -148,7 +141,7 @@ export function QuickSwitchPanel({
               {t("qs.title", { app: t(`app.${app}`) })}
             </span>
             <span className="text-[11px] text-muted-foreground">
-              {filtered.length} · ↑↓ · ⏎ · 1-9
+              {filtered.length} · ↑↓ · ⏎ · Esc
             </span>
           </div>
           <button
@@ -165,8 +158,9 @@ export function QuickSwitchPanel({
           <input
             ref={inputRef}
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => { setQ(e.target.value); setIdx(0); }}
             placeholder={t("qs.filterPh")}
+            aria-label={t("qs.filterPh")}
             className="w-full h-8 rounded-md bg-muted pl-8 pr-2.5 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
           />
         </div>
@@ -198,7 +192,7 @@ export function QuickSwitchPanel({
               const showHeader = groups && e.app !== lastApp;
               lastApp = e.app;
               return (
-                <div key={e.p.id}>
+                <div key={`${e.app}:${e.p.id}`}>
                   {showHeader && (
                     <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                       {t(`app.${e.app}`)}

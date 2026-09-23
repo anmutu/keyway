@@ -88,7 +88,7 @@ export function ProviderActions({
   };
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex flex-wrap items-center justify-end gap-1.5">
       {/* 测试结果:延迟/状态 */}
       {result && (
         <span
@@ -128,6 +128,7 @@ export function ProviderActions({
         disabled={testing || !canSwitch}
         onClick={() => void runTest()}
         title={t("provider.test")}
+        aria-label={t("provider.test")}
       >
         <Activity className={cn("h-4 w-4", testing && "animate-pulse")} />
       </Button>
@@ -138,6 +139,7 @@ export function ProviderActions({
         disabled={!provider.has_key || balanceLoading}
         onClick={() => void runBalance()}
         title={t("provider.balance")}
+        aria-label={t("provider.balance")}
       >
         <Wallet className={cn("h-4 w-4", balanceLoading && "animate-pulse")} />
       </Button>
@@ -164,6 +166,7 @@ export function ProviderActions({
         className={iconButtonClass}
         onClick={() => onDuplicate(provider)}
         title={t("provider.duplicate")}
+        aria-label={t("provider.duplicate")}
       >
         <Copy className="h-4 w-4" />
       </Button>
@@ -173,6 +176,7 @@ export function ProviderActions({
         className={iconButtonClass}
         onClick={() => onEdit(provider)}
         title={t("provider.edit")}
+        aria-label={t("provider.edit")}
       >
         <Pencil className="h-4 w-4" />
       </Button>
@@ -182,6 +186,7 @@ export function ProviderActions({
         className={`${iconButtonClass} hover:bg-red-500/15 hover:text-red-500`}
         onClick={() => onDelete(provider)}
         title={t("provider.delete")}
+        aria-label={t("provider.delete")}
       >
         <Trash2 className="h-4 w-4" />
       </Button>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ArrowLeft, ExternalLink, Plus, Search } from "lucide-react";
 import { useI18n } from "@/i18n";
@@ -206,9 +206,8 @@ export function AddProviderDialog({
             <div className="grid gap-1.5">
               <div className="grid gap-1.5 max-h-[52vh] overflow-y-auto pr-1">
                 {presets.map((p) => (
-                  <button
+                  <div
                     key={p.name}
-                    type="button"
                     draggable={!search.trim()}
                     onDragStart={() => setDragPreset(p.name)}
                     onDragEnd={() => { setDragPreset(null); setDragOverPreset(null); }}
@@ -220,7 +219,6 @@ export function AddProviderDialog({
                       e.stopPropagation();
                       dropPreset(p.name);
                     }}
-                    onClick={() => pick(p)}
                     className={cn(
                       "flex items-center gap-2.5 rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
                       !search.trim() && "cursor-grab active:cursor-grabbing",
@@ -228,24 +226,30 @@ export function AddProviderDialog({
                         "border-blue-500/60 ring-1 ring-blue-500/40",
                     )}
                   >
-                    <ProviderIcon
-                      icon={p.icon ?? ""}
-                      name={p.name}
-                      size={18}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5">
-                        <span className="truncate font-medium">{p.name}</span>
-                        {p.partner && (
-                          <span className="shrink-0 rounded bg-amber-500/15 px-1 py-px text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                            {t("preset.badge.partner")}
-                          </span>
-                        )}
+                    <button
+                      type="button"
+                      onClick={() => pick(p)}
+                      className="flex min-w-0 flex-1 items-center gap-2.5 text-left text-sm"
+                    >
+                      <ProviderIcon
+                        icon={p.icon ?? ""}
+                        name={p.name}
+                        size={18}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="truncate font-medium">{p.name}</span>
+                          {p.partner && (
+                            <span className="shrink-0 rounded bg-amber-500/15 px-1 py-px text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                              {t("preset.badge.partner")}
+                            </span>
+                          )}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {p.baseUrl}
+                        </span>
                       </span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {p.baseUrl}
-                      </span>
-                    </span>
+                    </button>
                     {p.apiKeyUrl && (
                       <a
                         href={p.apiKeyUrl}
@@ -254,6 +258,7 @@ export function AddProviderDialog({
                         title={t("preset.getKey")}
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (!isTauri()) return;
                           // Tauri WebView 拦截新窗口,必须走 opener 插件才能真正打开
                           e.preventDefault();
                           void openUrl(p.apiKeyUrl!).catch(() => {});
@@ -263,7 +268,7 @@ export function AddProviderDialog({
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     )}
-                  </button>
+                  </div>
                 ))}
 
                 {presets.length === 0 && (
@@ -362,6 +367,7 @@ export function AddProviderDialog({
                     rel="noreferrer"
                     className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
                     onClick={(e) => {
+                      if (!isTauri()) return;
                       e.preventDefault();
                       void openUrl(preset.apiKeyUrl!).catch(() => {});
                     }}

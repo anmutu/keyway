@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Keyway 使用指南 — 5 分钟上手,管好你的每一个 AI CLI</title>
-    <meta name="description" content="Keyway 完整使用教程:下载安装、添加供应商、一键接管 CLI、免重启切换、模型路由、故障转移、请求日志与用量统计,5 分钟全部掌握。" />
+    <meta name="description" content="Keyway 使用教程:下载安装、添加供应商、接入本地代理、默认供应商与路由、故障转移、请求日志和恢复直连,5 分钟掌握。" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Keyway 使用指南" />
-    <meta property="og:description" content="从安装到进阶:接管、秒切、路由、故障转移、日志,5 分钟全部掌握。" />
+    <meta property="og:description" content="从安装到进阶:接入本地代理、管理供应商与路由、查看实际请求去向、排查失败并恢复直连。" />
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
     <link rel="canonical" href="https://anmutu.github.io/keyway/guide.html" />
     <meta property="og:image" content="https://anmutu.github.io/keyway/app-light.png" />
@@ -16,12 +16,12 @@
       "@context": "https://schema.org",
       "@type": "HowTo",
       "name": "Keyway 使用指南",
-      "description": "从安装到进阶:接管 AI CLI、免重启切换供应商、模型路由、故障转移与日志。",
+      "description": "从安装到进阶:接入 AI CLI 本地代理、管理默认供应商与路由、查看请求日志、排查失败并恢复直连。",
       "step": [
         { "@type": "HowToStep", "name": "下载与安装", "text": "从 GitHub Releases 下载对应平台的安装包。macOS 拖入应用程序,Windows 运行安装程序,Linux 使用 AppImage 或 deb/rpm 包。" },
         { "@type": "HowToStep", "name": "添加供应商", "text": "预设直选、从现有 CLI 配置导入或自定义 Base URL 与 API Key。" },
         { "@type": "HowToStep", "name": "一键接管 CLI", "text": "接管前自动备份原配置,代理 127.0.0.1:9527 开始转发。" },
-        { "@type": "HowToStep", "name": "切换秒生效", "text": "主界面或菜单栏切换供应商,下一个请求立即生效,会话无需重启。" },
+        { "@type": "HowToStep", "name": "切换并确认去向", "text": "切换默认供应商,发送新请求后在请求日志中确认实际供应商。已通过代理的会话通常无需重启;首次接管 Codex 需新开会话。" },
         { "@type": "HowToStep", "name": "进阶功能", "text": "模型路由规则、自动故障转移、请求日志与用量统计、配置档案与备份。" }
       ]
     }
@@ -146,7 +146,7 @@
           <li><a href="#install" data-i18n="gToc1">下载与安装</a></li>
           <li><a href="#add" data-i18n="gToc2">添加供应商</a></li>
           <li><a href="#takeover" data-i18n="gToc3">一键接管 CLI</a></li>
-          <li><a href="#switch" data-i18n="gToc4">切换:秒生效,不重启</a></li>
+          <li><a href="#switch" data-i18n="gToc4">切换并确认请求去向</a></li>
           <li><a href="#advanced" data-i18n="gToc5">进阶:路由 · 故障转移 · 日志 · 档案</a></li>
           <li><a href="#faq" data-i18n="gToc6">遇到问题?</a></li>
         </ol>
@@ -175,7 +175,7 @@
           <li data-i18n="gS1l2">启动后 Keyway 会常驻<b>菜单栏(托盘)</b>,关闭窗口不影响代理运行。</li>
           <li data-i18n="gS1l3">本地代理默认监听 <code>127.0.0.1:9527</code>,只接受本机请求。</li>
         </ul>
-        <div class="tip blue" data-i18n="gTip1"><b>它怎么工作?</b>Keyway 接管各 AI CLI 的 API 地址后,所有请求先到本地代理,再转发到你选定的供应商。切换只改本地状态、不重写 CLI 配置 —— 这就是"免重启"的原因。</div>
+        <div class="tip blue" data-i18n="gTip1"><b>它怎么工作?</b>接入代理的请求按默认供应商、路由规则和故障转移配置转发。默认选择不等于实际去向,请通过请求日志确认。已经通过代理的会话,切换默认供应商无需重启。</div>
       </section>
 
       <section class="step" id="add">
@@ -189,7 +189,7 @@
           <li data-i18n="gS2l3"><b>自定义</b>:填名称、Base URL、API Key,任意中转/自建网关都支持。</li>
           <li data-i18n="gS2l4"><b>以 CoderPlan 为例</b>:预设置顶、端点已预填;点 <b>「获取 API Key」</b>直达 <a href="https://coderplan.ai/dashboard/keys" target="_blank" rel="noreferrer">coderplan.ai/dashboard/keys</a>,创建并复制 Key,粘贴即可。</li>
         </ul>
-        <div class="tip" data-i18n="gTip2"><b>密钥安全</b>:API Key 存入系统钥匙串 + 整库加密的本地数据库,不会明文写进任何 CLI 配置文件,导出备份也不含密钥。</div>
+        <div class="tip" data-i18n="gTip2"><b>密钥存储</b>:API Key 存入本机 SQLCipher 加密数据库,数据库主密钥由系统钥匙串保管。导出的供应商配置不含 API Key;转发请求时仍需向所选上游发送认证信息。</div>
         <p style="margin-top:18px;" data-i18n="gS2p2">添加完成后,可点击供应商卡片上的 <b>测速按钮</b> 检查连通性与延迟,再决定用谁。</p>
       </section>
 
@@ -199,8 +199,8 @@
         <h2 data-i18n="gS3h2">一键接管 CLI</h2>
         <p data-i18n="gS3p">在分组页点击 <b>「接管」</b>,Keyway 会把该 CLI 的配置指向本地代理:</p>
         <ul>
-          <li data-i18n="gS3l1">接管前<b>自动备份原配置</b>,随时可一键还原,不留残留。</li>
-          <li data-i18n="gS3l2">接管后 CLI 照常使用 —— 你不需要改变任何使用习惯。</li>
+          <li data-i18n="gS3l1">接管前<b>自动备份原配置</b>,可在接管管理中还原。还原前请确认是否有需要保留的手动修改。</li>
+          <li data-i18n="gS3l2">首次接管 Codex 后请新开一次会话。接管期间保持 Keyway 运行;完全退出前如需直连,请先还原配置。</li>
           <li data-i18n="gS3l3">也可以不接管,手动给 CLI 设置环境变量指向 <code>127.0.0.1:9527</code>(应用内有可复制的变量)。</li>
         </ul>
         <div class="terminal">
@@ -219,12 +219,12 @@
       <section class="step" id="switch">
         <span class="stepnum">4</span>
         <div class="kicker" data-i18n="gS4k">日常</div>
-        <h2 data-i18n="gS4h2">切换:秒生效,不重启</h2>
-        <p data-i18n="gS4p">这是 Keyway 与"改配置文件"类工具最大的不同 —— <b>切换只改本地状态,下一个请求立即走新供应商</b>:</p>
+        <h2 data-i18n="gS4h2">切换并确认请求去向</h2>
+        <p data-i18n="gS4p">卡片上的默认供应商是选择,不是实际请求证明。切换后发送新请求,再从日志确认实际去向:</p>
         <ul>
           <li data-i18n="gS4l1">主界面点供应商卡片上的 <b>「切换」</b>,或直接在<b>菜单栏托盘</b>里选,两秒钟完成。</li>
           <li data-i18n="gS4l0">全局快捷键 <b>⌘⇧K</b>(Windows/Linux 为 Ctrl+Shift+K)随时唤起<b>快速切换面板</b>:↑↓ 选择、Enter 切换、Esc 关闭,手不离键盘。</li>
-          <li data-i18n="gS4l2"><b>正在运行的 claude / codex 会话无需重启</b>,发下一条消息就已切换。</li>
+          <li data-i18n="gS4l2"><b>已通过代理的会话无需重启</b>。切换影响后续请求,不会迁移已发出的请求;路由规则可能覆盖默认选择。</li>
           <li data-i18n="gS4l3">同一供应商可按协议复用到多个 CLI(如一个中转 Key 同时供 Claude Code 和 Codex)。</li>
           <li data-i18n="gS4l9"><b>Responses 桥接</b>:Codex 的 /v1/responses 请求可按供应商开启桥接,自动转成 /v1/chat/completions 发给只支持 chat 协议的中转站;编辑供应商时勾选即可,官方 OpenAI 等原生支持 Responses 的渠道无需开启。</li>
           <li data-i18n="gS4l4"><b>自动协议转换(全向)</b>:只配置了 OpenAI 兼容或 Gemini 端点的供应商,也能直接给 Claude Code 等 Anthropic 协议 CLI 使用;反过来,只有 Anthropic 或 OpenAI 端点的渠道也能供 Codex、Gemini CLI 使用 —— Keyway 在本地完成请求/响应/流式与工具调用的双向转换;深度思考参数也会自动折算(Claude 的 thinking 预算 ↔ Gemini thinkingConfig ↔ OpenAI reasoning_effort),对 CLI 完全透明。</li>
@@ -272,9 +272,9 @@
         <h2 data-i18n="gFaqH2">遇到问题?</h2>
         <ul>
           <li data-i18n="gFaqL1"><b>请求 401 / 403</b>:响应头带 <code>x-keyway-hint</code>,按提示检查 Key 是否有效、额度是否充足。</li>
-          <li data-i18n="gFaqL2"><b>切换没生效</b>:确认该 CLI 已被接管(分组页有接管状态),或环境变量指向 <code>127.0.0.1:9527</code>。</li>
+          <li data-i18n="gFaqL2"><b>切换没生效</b>:先确认代理运行与 CLI 接管状态,再发送新请求并查看日志。模型路由可能覆盖默认供应商;首次接管 Codex 需新开会话。</li>
           <li data-i18n="gFaqL3"><b>想恢复原样</b>:分组页「还原」即可,原配置在接管时已备份。</li>
-          <li data-i18n="gFaqL4"><b>数据在哪</b>:全部在本机加密数据库,不上传任何服务器;卸载即彻底清除。</li>
+          <li data-i18n="gFaqL4"><b>数据在哪</b>:配置与用量保存在本机加密数据库;请求内容和认证信息会发给所选上游。卸载不保证清除应用数据或钥匙串记录。</li>
         </ul>
       </section>
 
@@ -303,7 +303,7 @@
           gSub: "From install to advanced routing — everything about Keyway in 5 minutes.",
           gToc: "On this page",
           gToc1: "Download & install", gToc2: "Add providers", gToc3: "One-click takeover",
-          gToc4: "Switch instantly, no restarts", gToc5: "Advanced: routing · failover · logs · profiles", gToc6: "Troubleshooting",
+          gToc4: "Switch and verify requests", gToc5: "Advanced: routing · failover · logs · profiles", gToc6: "Troubleshooting",
           gS1k: "Get ready", gS1h2: "Download & install",
           gS1p: "Keyway is a free desktop app for macOS, Windows and Linux. Download the installer for your platform below — no other dependencies required.",
           gS1dl: "Download for Apple silicon (M1–M4)", gS1dlWin: "Windows", gS1dlLinux: "Linux AppImage", gS1dlDeb: "Linux .deb", gS1dlRpm: "Linux .rpm",
@@ -313,25 +313,25 @@
           gS1l1: "On macOS, if the developer cannot be verified, right-click Keyway in Applications and choose Open; on Windows, choose “More info” → “Run anyway” if SmartScreen appears.",
           gS1l2: "On Linux, make the AppImage executable before opening it (for example, chmod +x Keyway_0.2.12_amd64.AppImage).",
           gS1l3: "Keyway lives in the menu bar or system tray; closing the window keeps the local proxy running on 127.0.0.1:9527.",
-          gTip1: "How does it work? After taking over each CLI's API endpoint, every request hits the local proxy first, then forwards to your chosen provider. Switching only changes local state — no CLI config rewriting. That's why there are no restarts.",
+          gTip1: "How does it work? Connected requests follow default providers, routing rules and failover settings. The default is not proof of the actual destination: check request logs. Sessions already using the proxy need no restart when changing defaults.",
           gS2k: "Set up", gS2h2: "Add providers",
           gS2p: "Open the main window and add model providers per CLI group (Claude Code, Codex, Gemini CLI and more):",
           gS2l1: "Presets: common providers and relays built in — just paste an API key.",
           gS2l2: "Import from existing configs: already configured a CLI? Import in one click, no retyping.",
           gS2l3: "Custom: name, Base URL and API Key — any relay or self-hosted gateway works.",
-          gS2l4: "Example — CoderPlan: preset pinned at top with the endpoint prefilled; click “Get API Key” to open coderplan.ai/dashboard/keys, create and copy a key, then paste it back.",
-          gTip2: "Key safety: API keys live in the system keychain plus a fully encrypted local database. They are never written in plain text to CLI configs, and exports exclude them.",
+          gS2l4: 'Example — CoderPlan: preset pinned at top with the endpoint prefilled; click “Get API Key” to open <a href="https://coderplan.ai/dashboard/keys" target="_blank" rel="noreferrer">coderplan.ai/dashboard/keys</a>, create and copy a key, then paste it back.',
+          gTip2: "Key storage: API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys. Authentication is still sent to the selected upstream when forwarding requests.",
           gS2p2: "After adding, hit the test button on a provider card to check reachability and latency before committing.",
           gS3k: "Takeover", gS3h2: "One-click CLI takeover",
           gS3p: "Click “Take over” on a group page and Keyway points that CLI's config at the local proxy:",
-          gS3l1: "Original configs are backed up automatically before takeover — restore anytime, no leftovers.",
-          gS3l2: "Your CLIs keep working exactly as before — no habit change required.",
+          gS3l1: "Original configs are backed up before takeover and can be restored in takeover management. Review any manual changes you want to keep first.",
+          gS3l2: "Start a new Codex session after first-time takeover. Keep Keyway running while using the proxy; restore configs before fully quitting if you need direct connections.",
           gS3l3: "Prefer manual? Set the CLI's environment variables to 127.0.0.1:9527 instead (copyable from the app).",
-          gS4k: "Daily", gS4h2: "Switching: instant, no restarts",
-          gS4p: "This is the biggest difference from config-file tools — switching only changes local state; the very next request follows:",
+          gS4k: "Daily", gS4h2: "Switch and verify requests",
+          gS4p: "The default provider is a selection, not proof of the actual destination. After switching, send a new request and verify its provider in the logs:",
           gS4l0: "Global shortcut ⌘⇧K (Ctrl+Shift+K on Windows/Linux) opens the quick-switch panel anywhere: ↑↓ to select, Enter to switch, Esc to dismiss — hands stay on the keyboard.",
-          gS4l1: "Click “Switch” on a provider card, or pick from the menu-bar tray — two seconds, done.",
-          gS4l2: "Running claude / codex sessions need no restart; the next message already uses the new provider.",
+          gS4l1: "Click “Switch” on a provider card, or pick from the menu-bar tray. The selection applies to subsequent requests.",
+          gS4l2: "Sessions already using the proxy need no restart. Switching affects new requests, not in-flight ones; routing rules may override the default provider.",
           gS4l3: "One provider can serve multiple CLIs per protocol (e.g. one relay key for both Claude Code and Codex).",
           gS4l9: "Responses bridge: per-provider toggle converts Codex /v1/responses requests to /v1/chat/completions for chat-only relays; enable it when editing a provider. Native Responses providers like official OpenAI do not need it.",
           gS4l4: "Omnidirectional automatic protocol conversion: providers with only an OpenAI-compatible or Gemini endpoint work directly with Claude Code and other Anthropic-protocol CLIs, and Anthropic- or OpenAI-only channels serve Codex and Gemini CLI as well — Keyway converts requests, responses, streaming and tool calls locally; deep-thinking params are auto-mapped across formats (Claude thinking budget ↔ Gemini thinkingConfig ↔ OpenAI reasoning_effort), fully transparent to the CLI.",
@@ -339,6 +339,7 @@
         gS4l6: "Unified Skills management: maintain skills in a local vault and sync them to Claude Code and Codex in one click; built-in or manually added skills are untouched.",
           gS4l7: "More in-app shortcuts: ⌘N new provider, ⌘1..5 switch CLI group, ⌘⇧M / ⌘⇧S jump to MCP / Skills management (Ctrl combos on Windows/Linux).",
           gS4l8: "The local proxy exposes http://127.0.0.1:9527/healthz returning the version and each CLI group's current provider — handy for scripts and health checks.",
+          gS4l10: "Balance lookup: for OpenRouter-compatible relays, click the wallet icon on a provider card to view used and total quota before you need to top up.",
           gS5k: "Advanced", gS5h2: "Routing · failover · logs · profiles",
           gS5p: "Model routing rules — in Settings → Model routing, keep specific models on specific providers:",
           gS5l1: "E.g. rule claude → relay A; rule deepseek → official. Name the model in your CLI and Keyway dispatches it.",
@@ -352,9 +353,9 @@
           gS5p4: "Profiles & backup — save the current provider set as a profile (work / personal / testing, one-tap switching) and export a JSON backup via the system save dialog (keys excluded) for moving machines. Config export / import shares providers, route rules and presets as a portable JSON — imports merge by name, so teams can share setups in one step.",
           gFaqK: "Troubleshooting", gFaqH2: "Having trouble?",
           gFaqL1: "401 / 403 responses carry an x-keyway-hint header — follow it to check key validity and quota.",
-          gFaqL2: "Switch not taking effect: make sure the CLI is taken over (see the badge on its group page), or that env vars point to 127.0.0.1:9527.",
+          gFaqL2: "Switch not taking effect: check proxy and takeover status, send a new request, then inspect its log. Model routing can override the default provider; first-time Codex takeover needs a new session.",
           gFaqL3: "Want your original setup back? Click “Restore” on the group page — the original config was backed up at takeover.",
-          gFaqL4: "Where's my data? Everything stays in an encrypted local database, nothing is uploaded; uninstalling removes it entirely.",
+          gFaqL4: "Where's my data? Configuration and usage records are encrypted locally. Request content and authentication go to the selected upstream. Uninstalling does not guarantee removal of app data or keychain entries.",
           gCtaH2: "Ready when you are.",
           gCtaSub: "Free and open source — take over every AI CLI in five minutes.",
           gCtaDl: "Download free"

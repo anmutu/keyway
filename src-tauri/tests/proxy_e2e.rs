@@ -42,6 +42,109 @@ async fn spawn_mock_upstream(tag: &'static str) -> String {
 }
 
 #[tokio::test]
+async fn namespaced_requests_keep_group_protocol_and_usage_independent() {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let upstream_addr = listener.local_addr().unwrap();
+    let router = Router::new().route(
+        "/v1/chat/completions",
+        post(
+            |axum::Json(body): axum::Json<serde_json::Value>| async move {
+                assert_eq!(body["messages"][0]["content"], "group-check");
+                axum::Json(serde_json::json!({
+                    "choices": [{"message": {"role": "assistant", "content": "ok"}}],
+                    "usage": {"prompt_tokens": 7, "completion_tokens": 3}
+                }))
+            },
+        ),
+    );
+    let upstream = tokio::spawn(async move { axum::serve(listener, router).await });
+    let directory = std::env::temp_dir().join(format!("keyway_groups_{}", uuid::Uuid::new_v4()));
+    let pool = db::init_pool(directory.join("test.db"), &"ab".repeat(32)).unwrap();
+    let mut provider = test_provider(
+        "group-provider",
+        "Grouped",
+        format!("http://{upstream_addr}/v1"),
+    );
+    provider
+        .endpoints
+        .insert("openai".into(), provider.base_url.clone());
+    provider_dao::insert(&pool, &provider).unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let proxy_addr = listener.local_addr().unwrap();
+    let gateway = tokio::spawn(proxy::server::run_listener(
+        AppState::new(pool.clone()),
+        listener,
+    ));
+    let client = reqwest::Client::new();
+    for app in [
+        AppType::OpenCode,
+        AppType::OpenClaw,
+        AppType::Qwen,
+        AppType::Iflow,
+        AppType::Crush,
+        AppType::Droid,
+    ] {
+        provider_dao::set_current(&pool, &provider.id, app).unwrap();
+        let response = client.post(format!("http://{proxy_addr}/__keyway/{}/v1/chat/completions", app.as_str()))
+            .json(&serde_json::json!({"model":"test-model","messages":[{"role":"user","content":"group-check"}]}))
+            .send().await.unwrap();
+        assert!(
+            response.status().is_success(),
+            "{}: {}",
+            app.as_str(),
+            response.status()
+        );
+        let body: serde_json::Value = response.json().await.unwrap();
+        assert_eq!(
+            body["choices"][0]["message"]["content"],
+            "ok",
+            "{} must retain OpenAI format",
+            app.as_str()
+        );
+        let logs = db::usage_dao::recent(&pool, app.as_str(), 1).unwrap();
+        assert_eq!(
+            logs.len(),
+            1,
+            "{} must record its own request",
+            app.as_str()
+        );
+        assert_eq!(logs[0].provider_id, provider.id);
+        assert_eq!(logs[0].input_tokens, 7);
+    }
+    assert!(db::usage_dao::recent(&pool, "codex", 1).unwrap().is_empty());
+    gateway.abort();
+    upstream.abort();
+}
+
+#[tokio::test]
+async fn proxy_runtime_tracks_binding_and_task_cancellation() {
+    let db_dir = std::env::temp_dir().join(format!("keyway_status_{}", uuid::Uuid::new_v4()));
+    let pool = db::init_pool(db_dir.join("test.db"), &"ab".repeat(32)).unwrap();
+    let state = AppState::new(pool);
+    assert!(!state.proxy.is_running());
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    assert!(proxy::server::run(state.clone(), &address.to_string())
+        .await
+        .is_err());
+    assert!(!state.proxy.is_running());
+
+    let task = tokio::spawn(proxy::server::run_listener(state.clone(), listener));
+    let response = reqwest::get(format!("http://{address}/healthz"))
+        .await
+        .unwrap();
+    assert!(response.status().is_success());
+    assert!(state.proxy.is_running());
+    task.abort();
+    assert!(task.await.unwrap_err().is_cancelled());
+    assert!(!state.proxy.is_running());
+
+    drop(state);
+    std::fs::remove_dir_all(db_dir).unwrap();
+}
+
+#[tokio::test]
 async fn proxy_forwards_to_current_provider_and_switches_without_restart() {
     // 1. 两个 mock 上游(切换前后)
     let upstream_a = spawn_mock_upstream("mock-a").await;

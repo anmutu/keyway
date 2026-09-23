@@ -1,8 +1,8 @@
 //! 共享类型定义
 //!
 //! 贯穿前后端的领域类型。注意安全设计:`Provider` 结构**不包含 API Key 字段**,
-//! Key 只存放在系统 keychain,数据库里只保留 keychain 的引用标识(`keychain_id`)。
-//! 这是 Keyway 相对竞品的核心安全差异化:DB 泄露不会导致凭证泄露。
+//! API Key 存放在 SQLCipher 加密数据库;数据库主密钥由系统 keychain 保管。
+//! `keychain_id` 仅作为旧数据迁移和供应商关联标识,前端永远拿不到 Key。
 
 use serde::{Deserialize, Serialize};
 
@@ -84,7 +84,7 @@ impl AppType {
             ],
             // Google Gemini API
             AppType::Gemini => &["/v1beta/"],
-            // OpenCode / OpenClaw / 扩充分组复用既有端点(M1 先透传)
+            // OpenCode / OpenClaw / 扩充分组复用既有协议端点;自动接管用专属前缀区分分组
             AppType::OpenCode => &["/v1/messages"],
             AppType::OpenClaw => &["/v1/messages"],
             AppType::Qwen => &[
@@ -96,6 +96,25 @@ impl AppType {
             AppType::Iflow => &["/v1/messages"],
             AppType::Crush => &["/v1/messages"],
             AppType::Droid => &["/v1/messages"],
+        }
+    }
+
+    /// 自动接管使用的本地代理路径前缀。
+    ///
+    /// 不同 CLI 可能发出完全相同的 Anthropic/OpenAI 路径，仅靠请求路径
+    /// 无法判断它属于哪个分组。接管时把分组编码进本地 URL，代理再剥掉
+    /// 这一段后按原协议转发；不走自动接管的旧根路径仍保留兼容行为。
+    pub fn proxy_prefix(&self) -> &'static str {
+        match self {
+            AppType::Claude => "/__keyway/claude",
+            AppType::Codex => "/__keyway/codex",
+            AppType::Gemini => "/__keyway/gemini",
+            AppType::OpenCode => "/__keyway/opencode",
+            AppType::OpenClaw => "/__keyway/openclaw",
+            AppType::Qwen => "/__keyway/qwen",
+            AppType::Iflow => "/__keyway/iflow",
+            AppType::Crush => "/__keyway/crush",
+            AppType::Droid => "/__keyway/droid",
         }
     }
 
@@ -165,7 +184,7 @@ pub struct Provider {
     /// 迁移前旧数据只有 base_url 单值;v2 起以此为准,base_url 保留为展示兼容
     #[serde(default)]
     pub endpoints: std::collections::HashMap<String, String>,
-    /// keychain 引用标识,真实 Key 通过它从系统 keychain 取
+    /// 旧版 keychain / 当前加密库的供应商关联标识
     pub keychain_id: Option<String>,
     /// 可用模型列表
     pub models: Vec<String>,

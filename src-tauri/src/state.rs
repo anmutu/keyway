@@ -7,11 +7,38 @@
 //! 代理热路径不持有全局锁:`get_current` 直接走 DB 池,并发请求各取各的连接。
 
 use crate::db::Pool;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+
+#[derive(Clone, Default)]
+pub struct ProxyRuntime(Arc<AtomicBool>);
+
+impl ProxyRuntime {
+    pub fn is_running(&self) -> bool {
+        self.0.load(Ordering::Acquire)
+    }
+
+    pub(crate) fn listening(&self) -> ProxyRunningGuard {
+        self.0.store(true, Ordering::Release);
+        ProxyRunningGuard(self.0.clone())
+    }
+}
+
+pub(crate) struct ProxyRunningGuard(Arc<AtomicBool>);
+
+impl Drop for ProxyRunningGuard {
+    fn drop(&mut self) {
+        self.0.store(false, Ordering::Release);
+    }
+}
 
 #[derive(Clone)]
 pub struct AppState {
     pub db: Pool,
     pub http: reqwest::Client,
+    pub proxy: ProxyRuntime,
     /// Tauri 应用句柄(emit 事件用);测试环境为 None
     pub app: Option<tauri::AppHandle>,
 }
@@ -29,6 +56,11 @@ impl AppState {
             .read_timeout(std::time::Duration::from_secs(300))
             .build()
             .expect("reqwest client 构建失败");
-        Self { db, http, app }
+        Self {
+            db,
+            http,
+            proxy: ProxyRuntime::default(),
+            app,
+        }
     }
 }

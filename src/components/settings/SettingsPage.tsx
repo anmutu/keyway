@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { RouteRulesCard } from "@/components/settings/RouteRulesCard";
+import { SettingsNavigation, SettingsSection } from "@/components/settings/SettingsNavigation";
 import { useTheme, type Theme } from "@/components/theme-provider";
 import { useI18n, type LocaleSetting } from "@/i18n";
 import { FlagCN, FlagGB, GlobeAuto } from "@/components/LanguageBadges";
@@ -73,7 +74,7 @@ function Row({
           <div className="text-xs text-muted-foreground break-all">{desc}</div>
         </div>
       </div>
-      <div className="shrink-0 self-end sm:self-auto">{children}</div>
+      <div className="min-w-0 max-w-full self-end sm:shrink-0 sm:self-auto">{children}</div>
     </div>
   );
 }
@@ -215,6 +216,8 @@ export function SettingsPage({
           <p className="text-xs text-muted-foreground">{t("settings.pageDesc")}</p>
         </div>
       </div>
+      <SettingsNavigation />
+      <SettingsSection id="general">
       <Row
         icon={<Power className="w-4 h-4" />}
         title={t("settings.autostart")}
@@ -224,25 +227,6 @@ export function SettingsPage({
           checked={settings?.autostart ?? false}
           disabled={!settings}
           onCheckedChange={(v) => void toggleAutostart(v)}
-        />
-      </Row>
-
-      <Row
-        icon={<CalendarClock className="w-4 h-4" />}
-        title={t("settings.retention")}
-        desc={t("settings.retentionDesc")}
-      >
-        <Input
-          type="number"
-          min={1}
-          max={365}
-          defaultValue={settings?.retention_days ?? 30}
-          key={settings?.retention_days}
-          onBlur={(e) => void saveRetention(Number(e.target.value))}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") e.currentTarget.blur();
-          }}
-          className="w-20 h-8 text-xs tabular-nums text-right"
         />
       </Row>
 
@@ -327,6 +311,8 @@ export function SettingsPage({
       </Row>
 
       {/* 分组管理:显示/隐藏 + 排序 */}
+      </SettingsSection>
+      <SettingsSection id="cli">
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 text-muted-foreground">
@@ -412,6 +398,26 @@ export function SettingsPage({
 
       {/* 模型路由:按模型名自动分流到指定供应商 */}
       <RouteRulesCard onError={onError} />
+      </SettingsSection>
+
+      <SettingsSection id="data">
+      <Row
+        icon={<CalendarClock className="w-4 h-4" />}
+        title={t("settings.retention")}
+        desc={t("settings.retentionDesc")}
+      >
+        <Input
+          type="number"
+          min={1}
+          max={365}
+          aria-label={t("settings.retention")}
+          defaultValue={settings?.retention_days ?? 30}
+          key={settings?.retention_days}
+          onBlur={(event) => void saveRetention(Number(event.target.value))}
+          onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }}
+          className="w-20 h-8 text-xs tabular-nums text-right"
+        />
+      </Row>
 
       <Row
         icon={<Database className="w-4 h-4" />}
@@ -429,7 +435,7 @@ export function SettingsPage({
         title={t("profile.row")}
         desc={t("profile.rowDesc")}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <select
             value={activeProfile}
             onChange={(e) => setActiveProfile(e.target.value)}
@@ -637,6 +643,8 @@ export function SettingsPage({
         </div>
       </Row>
 
+      </SettingsSection>
+      <SettingsSection id="proxy">
       <Row
         icon={<Monitor className="w-4 h-4" />}
         title={t("settings.proxyRow")}
@@ -671,17 +679,21 @@ export function SettingsPage({
           onChange={(e) => {
             const v = Number(e.target.value);
             setHealthMin(v);
-            invoke("set_health_interval", { minutes: v }).catch((e) => onError(String(e)));
+            if (!IS_DEMO) {
+              invoke("set_health_interval", { minutes: v }).catch((e) => onError(String(e)));
+            }
           }}
+          aria-label={t("settings.healthRow")}
           className="h-8 rounded-md border border-border bg-background px-2 text-xs"
         >
           <option value={0}>{t("settings.healthOff")}</option>
-          <option value={15}>15 min</option>
-          <option value={30}>30 min</option>
-          <option value={60}>60 min</option>
+          <option value={15}>{t("settings.health15")}</option>
+          <option value={30}>{t("settings.health30")}</option>
+          <option value={60}>{t("settings.health60")}</option>
         </select>
       </Row>
 
+      </SettingsSection>
       <div className="flex justify-end pt-2">
         <Button
           variant="link"

@@ -2,14 +2,15 @@
 
 # Keyway
 
-### AI CLI 的本地供应中心
+### AI CLI 的本地网关
 
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](#)
 [![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-orange.svg)](https://tauri.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-一个应用管理 **Claude Code · Codex · Gemini CLI · OpenCode · OpenClaw** 的全部供应商。
-切换即生效、免重启;API Key 加密存储、永不落盘明文。
+**让 AI CLI 的每一次请求,都有清楚、可控的去向。**
+
+为 **Claude Code · Codex · Gemini CLI · OpenCode · OpenClaw** 管理供应商、路由与故障转移,从请求日志查看实际去向。API Key 存储于本机加密数据库。
 
 [特性](#-核心特性) · [快速开始](#-快速开始)
 
@@ -23,11 +24,14 @@
 
 ## ✨ 核心特性
 
-- **⚡ 切换即生效,零重启** — 本地代理(`127.0.0.1:9527`)接管全部 CLI 流量,切换供应商只改一个指针,Codex / Gemini 与 Claude 一致免重启
-- **🔐 Key 永不落盘明文** — API Key 存系统钥匙串(macOS Keychain / Windows DPAPI / Linux Secret Service),配置库整库 SQLCipher 加密
-- **🛰️ 代理优先架构** — 代理是默认体验而非高级选项;关闭窗口驻留托盘,CLI 永不断流
-- **📊 转发即计量** — 代理转发同时原生统计各供应商 token 用量,零额外请求
+- **🧭 看清请求去向** — 分开显示默认供应商与接管状态;通过日志核对实际供应商、模型、状态码及路由规则
+- **⚡ 通过代理切换** — 已接入本地代理(`127.0.0.1:9527`)的会话,切换默认供应商无需重启;路由规则可能覆盖默认选择
+- **🛟 故障转移与排查** — 可配置备用候选链,对可重试失败尝试备用供应商;日志提供错误信息,不承诺流式响应中途无缝恢复
+- **🔐 本机加密存储** — API Key 存 SQLCipher 加密数据库,数据库主密钥由系统钥匙串保管;导出的供应商配置不含 API Key
+- **📊 转发即计量** — 从上游响应提取 token 用量并记录请求,不为计量额外发起模型请求;统计完整性取决于上游返回的 usage
 - **🌗 浅色 / 深色 / 跟随系统** 三态主题,`⌘N` 新建、`⌘1..5` 快速切换应用
+
+> **使用边界:** 首次接管 Codex 后需新开一次会话。接管期间应保持 Keyway 运行;关闭窗口可驻留托盘,完全退出会停止代理。需要直连时请先还原 CLI 配置。切换影响后续请求,不会迁移已发出的请求。本地存储不代表离线推理:请求内容与认证信息仍会发送给所选上游。
 
 ## 📦 安装
 
@@ -58,9 +62,9 @@ pnpm tauri build   # 构建
 
 ## 🗺️ 路线图
 
-- **M1**:takeover 接管(自动改写各 CLI live 配置)+ 首启导入 + 故障转移/熔断
-- **M2**:成本归因(项目/会话/模型)+ MCP/Skills 管理 + 云同步
-- **M3**:团队配置共享
+- **现有实现**:接管与还原、配置导入、路由与故障转移、日志与用量、MCP/Skills 管理。
+- **待完善**:真实 CLI 与打包应用的兼容性回归、前端自动化测试覆盖。
+- **未来探索**:项目/会话成本归因、云同步、团队配置共享(不代表已实现或交付承诺)。
 
 详见 [docs/design.md](docs/design.md)。
 

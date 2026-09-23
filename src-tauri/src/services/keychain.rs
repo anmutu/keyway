@@ -1,8 +1,8 @@
 //! 系统凭证管理。
 //!
-//! 两类密钥都进 keychain,不落盘明文:
+//! 系统凭证层主要保存 SQLCipher 主密钥,不把它落盘:
 //! 1. **DB 主密钥**:`get_or_create_master_key` 生成一次,供 SQLCipher 使用。
-//! 2. **各供应商 API Key**:按 `keychain_id` 存取。
+//! 2. 旧版本供应商 API Key 仍可按 `keychain_id` 读取并迁移到加密库。
 //!
 //! keyring v4 在 macOS 用 Keychain、Windows 用 DPAPI、Linux 用 Secret Service。
 //! 注意:keyring v4 的 `Entry::new` 是 fallible(返回 `Result`),需用 `?` 解包。

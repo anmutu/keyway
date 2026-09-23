@@ -26,20 +26,12 @@ export function hasOnboarded(): boolean {
 }
 
 interface TakeoverStatus {
-  app: string;
+  app: AppType;
   supported: boolean;
   config_exists: boolean;
   active: boolean;
   effective: boolean;
 }
-
-const APP_LABEL: Record<string, string> = {
-  claude: "Claude Code",
-  codex: "Codex",
-  gemini: "Gemini CLI",
-  opencode: "OpenCode",
-  openclaw: "OpenClaw",
-};
 
 /**
  * 首启向导(3 步):选常用 CLI → 添加/迁移第一个供应商 → 一键接管。
@@ -221,7 +213,7 @@ export function OnboardingDialog({
                 <div className="flex items-center gap-2.5">
                   <ProviderIcon icon={s.app} size={18} />
                   <span className="text-sm font-medium">
-                    {APP_LABEL[s.app] ?? s.app}
+                    {t(`app.${s.app}`)}
                   </span>
                 </div>
                 {s.active ? (

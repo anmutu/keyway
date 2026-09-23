@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Keyway — AI CLI 的本地供应中心</title>
+    <title>Keyway — AI CLI 的本地网关</title>
     <meta
       name="description"
-      content="Keyway:一个应用,管好你的每一个 AI CLI。切换即生效、免重启,API Key 加密不落盘。"
+      content="Keyway:AI CLI 的本地网关。管理供应商、路由与故障转移,从请求日志看清去向,API Key 存储于本机加密数据库。"
     />
     <meta name="keywords" content="Claude Code 供应商切换, Codex 中转管理, AI CLI 代理, API Key 管理, claude code provider switch, 故障转移, 模型路由, AI CLI 网关" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Keyway — AI CLI 的本地供应中心" />
-    <meta property="og:description" content="一个应用管好你的每一个 AI CLI:切换即生效、免重启,API Key 加密不落盘,本地代理计量用量。" />
+    <meta property="og:title" content="Keyway — AI CLI 的本地网关" />
+    <meta property="og:description" content="让 AI CLI 的每一次请求,都有清楚、可控的去向。本地代理、供应商切换、故障转移与请求诊断,一个地方管理。" />
     <meta property="og:image" content="https://anmutu.github.io/keyway/app-light.png" />
-    <meta name="twitter:title" content="Keyway — AI CLI 的本地供应中心" />
-    <meta name="twitter:description" content="一个应用管好你的每一个 AI CLI:切换即生效、免重启,API Key 加密不落盘,本地代理计量用量。" />
+    <meta name="twitter:title" content="Keyway — AI CLI 的本地网关" />
+    <meta name="twitter:description" content="让 AI CLI 的每一次请求,都有清楚、可控的去向。本地代理、供应商切换、故障转移与请求诊断,一个地方管理。" />
     <meta name="twitter:image" content="https://anmutu.github.io/keyway/app-light.png" />
     <meta name="twitter:card" content="summary" />
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
@@ -24,10 +24,10 @@
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
-        { "@type": "Question", "name": "Keyway 是如何工作的?", "acceptedAnswer": { "@type": "Answer", "text": "Keyway 在本机运行轻量代理 127.0.0.1:9527,接管各 AI CLI 的 API 地址后转发到你选定的供应商。切换只改本地状态,不重写 CLI 配置,无需重启终端。" } },
-        { "@type": "Question", "name": "Keyway 的 API Key 安全吗?", "acceptedAnswer": { "@type": "Answer", "text": "安全。密钥存于 SQLCipher 整库加密的本地数据库与系统钥匙串,绝不明文落盘、绝不上传,导出备份也不含密钥。" } },
-        { "@type": "Question", "name": "Keyway 支持哪些 AI CLI?", "acceptedAnswer": { "@type": "Answer", "text": "Claude Code、Codex CLI、Gemini CLI、OpenCode、OpenClaw 等 9 大 CLI 工具,覆盖 Anthropic / OpenAI / Gemini 三种协议。" } },
-        { "@type": "Question", "name": "切换供应商后正在运行的会话要重启吗?", "acceptedAnswer": { "@type": "Answer", "text": "不需要。代理实时转发,下一个请求即生效,正在运行的 claude / codex 会话无感切换。" } },
+        { "@type": "Question", "name": "Keyway 是如何工作的?", "acceptedAnswer": { "@type": "Answer", "text": "Keyway 在本机运行代理 127.0.0.1:9527。接入代理的 CLI 请求按默认供应商、路由规则与故障转移配置转发;请求日志用于查看实际去向。" } },
+        { "@type": "Question", "name": "Keyway 的 API Key 如何存储?", "acceptedAnswer": { "@type": "Answer", "text": "API Key 存入 SQLCipher 加密的本地数据库,数据库主密钥由系统钥匙串保管。导出的供应商配置不含 API Key;转发请求时会向所选上游发送认证信息。" } },
+        { "@type": "Question", "name": "Keyway 支持哪些 AI CLI?", "acceptedAnswer": { "@type": "Answer", "text": "Keyway 提供 9 个 CLI 分组来管理供应商,覆盖 Anthropic / OpenAI / Gemini 三种协议;其中 Claude Code、Codex CLI、Gemini CLI、OpenCode、OpenClaw 支持自动接管,其他分组可按 CLI 支持的变量手动接入。" } },
+        { "@type": "Question", "name": "切换供应商后正在运行的会话要重启吗?", "acceptedAnswer": { "@type": "Answer", "text": "已通过代理的会话切换默认供应商无需重启,后续请求按新配置转发,已发出的请求不迁移。首次接管 Codex 需新开一次会话;路由规则仍优先生效。" } },
         { "@type": "Question", "name": "Keyway 收费吗?", "acceptedAnswer": { "@type": "Answer", "text": "完全免费且开源(MIT),只需为自己使用的模型供应商付费。" } }
       ]
     }
@@ -59,12 +59,14 @@
       @keyframes fadeUp { from { transform: translateY(26px); } to { transform: none; } }
       .hero h1, .hero .tagline { animation: fadeUp .9s cubic-bezier(.28,.11,.32,1) both; }
       .hero .tagline { animation-delay: .12s; }
-      .hero .sub, .hero .links { animation: fadeUp .9s cubic-bezier(.28,.11,.32,1) .22s both; }
+      .hero .sub, .hero .links, .hero .platform-links, .hero .download-note {
+        animation: fadeUp .9s cubic-bezier(.28,.11,.32,1) .22s both;
+      }
       .hero-shot { animation: fadeUp 1.1s cubic-bezier(.28,.11,.32,1) .34s both; }
       .reveal { opacity: 1; transform: none; }
       .reveal.in { opacity: 1; transform: none; }
       @media (prefers-reduced-motion: reduce) {
-        .hero h1, .hero .tagline, .hero .sub, .hero .links, .hero-shot { animation: none; }
+        .hero h1, .hero .tagline, .hero .sub, .hero .links, .hero .platform-links, .hero .download-note, .hero-shot { animation: none; }
         .reveal { opacity: 1; transform: none; }
         html { scroll-behavior: auto; }
       }
@@ -111,7 +113,7 @@
       .alink:hover::after { transform: translateX(3px); }
 
       /* Hero:居中大标题 + 大图 */
-      .hero { padding: 88px 0 64px; }
+      .hero { padding: 88px 22px 64px; }
       .hero h1 { font-size: 62px; font-weight: 600; letter-spacing: -.02em; line-height: 1.05; }
       .hero h1 .dot { color: var(--fg-3); }
       .hero .tagline { font-size: 29px; font-weight: 600; margin-top: 12px; letter-spacing: -.01em; }
@@ -282,19 +284,20 @@
     <!-- Hero -->
     <section class="hero container">
       <h1>Keyway<span class="dot">。</span></h1>
-      <div class="tagline" data-i18n="tagline">切换,从未如此轻盈。</div>
-      <p class="sub" data-i18n="heroSub">一个应用,管好你的每一个 AI CLI。供应商、密钥、用量,尽在掌握。</p>
+      <div class="tagline" data-i18n="tagline">每一次请求,去向清楚。</div>
+      <p class="sub" data-i18n="heroSub">AI CLI 的本地网关。供应商切换、路由与故障转移,一个地方管理;从请求日志看清实际去向。</p>
       <div class="hero-proof" aria-label="Keyway highlights">
         <span data-i18n="heroProof1">本地代理优先</span>
         <span data-i18n="heroProof2">9 个 AI CLI</span>
-        <span data-i18n="heroProof3">MIT 开源 · 不上传</span>
+        <span data-i18n="heroProof3">本机加密存储 · MIT 开源</span>
       </div>
       <div class="links">
-        <a id="primaryDownload" class="btn dl-direct" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_aarch64.dmg" data-i18n="freeDl">免费下载</a>
-        <a class="alink" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64.dmg" data-i18n="intelDl">Intel 芯片版</a>
+        <a id="primaryDownload" class="btn dl-direct" href="#platform-downloads" data-i18n="freeDl">免费下载</a>
         <a class="alink" href="#features" data-i18n="learnMore">进一步了解</a>
       </div>
-      <div class="platform-links">
+      <div class="platform-links" id="platform-downloads" style="scroll-margin-top: 72px;">
+        <a class="alink" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_aarch64.dmg" data-i18n="appleDl">macOS · Apple 芯片</a>
+        <a class="alink" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64.dmg" data-i18n="intelDl">macOS · Intel 芯片</a>
         <a class="alink" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64-setup.exe" data-i18n="windowsDl">Windows 版</a>
         <a class="alink" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_amd64.AppImage" data-i18n="linuxDl">Linux AppImage</a>
         <a class="alink" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="allDl">全部平台</a>
@@ -309,23 +312,23 @@
     <!-- 三特性 -->
     <section class="alt" id="features">
       <div class="container">
-        <h2 data-i18n="fTitle">轻,而且安全。</h2>
-        <p class="sub" data-i18n="fSub">每一项能力,都为你的日常而生。</p>
+        <h2 data-i18n="fTitle">不止切换,更要看清。</h2>
+        <p class="sub" data-i18n="fSub">默认供应商、连接状态、实际请求,各有依据。</p>
         <div class="trio">
           <div>
             <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-            <h3 data-i18n="f1t">零重启。</h3>
-            <p data-i18n="f1d">切换供应商,下一个请求立即生效。Codex、Gemini 与 Claude 一致体验,终端不必重开。</p>
+            <h3 data-i18n="f1t">切换更省心。</h3>
+            <p data-i18n="f1d">已经通过代理的会话,切换默认供应商无需重启。后续请求按新配置转发,已发出的请求不会迁移。</p>
           </div>
           <div>
             <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-            <h3 data-i18n="f2t">更私密。</h3>
-            <p data-i18n="f2d">API Key 存入系统钥匙串,配置整库加密。不落盘、不上传,数据只属于你。</p>
+            <h3 data-i18n="f2t">密钥加密存储。</h3>
+            <p data-i18n="f2d">API Key 存入本机 SQLCipher 加密数据库,主密钥由系统钥匙串保管。导出的供应商配置不含 API Key。</p>
           </div>
           <div>
             <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-            <h3 data-i18n="f3t">看得清。</h3>
-            <p data-i18n="f3d">每一次转发都在计量。每个供应商用了多少 token,一眼看清。</p>
+            <h3 data-i18n="f3t">出错有处可查。</h3>
+            <p data-i18n="f3d">从请求日志查看供应商、模型、状态码与错误信息。路由或故障转移改变了去向,也不只靠猜。</p>
           </div>
         </div>
       </div>
@@ -335,7 +338,7 @@
     <section>
       <div class="container">
         <h2 data-i18n="tTitle">切换,一秒的事。</h2>
-        <p class="sub" data-i18n="tSub">接管与切换都在 Keyway 里完成,正在运行的 claude / codex 会话不受影响。</p>
+        <p class="sub" data-i18n="tSub">先接入本地代理,再切换默认供应商。首次接管 Codex 后需新开一次会话;后续切换无需重开。</p>
         <div class="qs-demo">
           <div class="qs-panel">
             <div class="qs-search">
@@ -361,7 +364,7 @@
         <div class="cap-grid">
           <div class="cap">
             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg><span data-i18n="c1t">自动故障转移</span></h3>
-            <p data-i18n="c1d">上游 5xx 或超时自动切换到备用供应商,长任务不再因单点故障中断。可配置候选链。</p>
+            <p data-i18n="c1d">配置并启用备用供应商链,在可重试的上游失败时尝试下一候选。已开始的流式响应不保证无缝恢复。</p>
           </div>
           <div class="cap">
             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg><span data-i18n="c2t">模型路由规则</span></h3>
@@ -381,11 +384,11 @@
           </div>
           <div class="cap">
             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg><span data-i18n="c6t">备份与迁移</span></h3>
-            <p data-i18n="c6d">供应商配置一键导出 JSON(不含密钥),换机、分享预设不发愁。兼容 9 大 CLI 配置导入。</p>
+            <p data-i18n="c6d">供应商配置一键导出 JSON(不含密钥),换机、分享预设不发愁。可从 5 个支持自动接管的 CLI 配置导入。</p>
           </div>
           <div class="cap">
             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="c7t">密钥保险箱</span></h3>
-            <p data-i18n="c7d">SQLCipher 整库加密 + 系统钥匙串,密钥从不明文落盘;导出备份也不包含密钥。</p>
+            <p data-i18n="c7d">API Key 存储于本机 SQLCipher 加密数据库,主密钥由系统钥匙串保管。导出的供应商配置不包含 API Key。</p>
           </div>
           <div class="cap">
             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg><span data-i18n="c8t">连通性测速</span></h3>
@@ -417,7 +420,7 @@
           <div class="step">
             <div class="n">3</div>
             <h3 data-i18n="s3t">秒切。</h3>
-            <p data-i18n="s3d">正在运行的 claude / codex 会话,下一个请求即生效。</p>
+            <p data-i18n="s3d">发一条新请求,打开日志确认实际供应商与响应状态。</p>
           </div>
         </div>
         <div class="links" style="margin-top:36px;">
@@ -452,19 +455,19 @@
         <div class="faq">
           <details>
             <summary data-i18n="q1">Keyway 是如何工作的?</summary>
-            <p data-i18n="a1">Keyway 在本机运行一个轻量代理(127.0.0.1:9527),接管各 CLI 的 API 地址后,所有请求经它转发到你选定的供应商。切换供应商只改本地状态,不重写 CLI 配置,所以无需重启终端。</p>
+            <p data-i18n="a1">Keyway 在本机运行代理(127.0.0.1:9527)。接入代理的 CLI 请求按默认供应商、路由规则与故障转移配置转发;请求日志用于查看实际去向。</p>
           </details>
           <details>
-            <summary data-i18n="q2">我的 API Key 安全吗?</summary>
-            <p data-i18n="a2">安全。密钥存于 SQLCipher 整库加密的本地数据库与系统钥匙串,绝不明文落盘、绝不上传;导出的备份文件也不包含密钥。</p>
+            <summary data-i18n="q2">我的 API Key 如何存储?</summary>
+            <p data-i18n="a2">API Key 存入 SQLCipher 加密的本地数据库,数据库主密钥由系统钥匙串保管。导出的供应商配置不含 API Key;转发请求时会向所选上游发送认证信息。</p>
           </details>
           <details>
             <summary data-i18n="q3">支持哪些 AI CLI?</summary>
-            <p data-i18n="a3">Claude Code、Codex CLI、Gemini CLI、OpenCode、OpenClaw 等 9 大 CLI 工具,覆盖 Anthropic / OpenAI / Gemini 三种协议,供应商可按协议复用。</p>
+            <p data-i18n="a3">Keyway 提供 9 个 CLI 分组来管理供应商,覆盖 Anthropic / OpenAI / Gemini 三种协议。Claude Code、Codex CLI、Gemini CLI、OpenCode、OpenClaw 支持自动接管,其他分组可按 CLI 支持的变量手动接入,供应商可按协议复用。</p>
           </details>
           <details>
             <summary data-i18n="q4">切换供应商后,正在运行的会话要重启吗?</summary>
-            <p data-i18n="a4">不需要。代理按当前供应商实时转发,下一个请求即生效 —— 正在跑的 claude / codex 会话无感切换。</p>
+            <p data-i18n="a4">已通过代理的会话切换默认供应商无需重启,后续请求按新配置转发,已发出的请求不迁移。首次接管 Codex 需新开一次会话;路由规则仍优先生效。</p>
           </details>
           <details>
             <summary data-i18n="q5">可以同时用多个供应商吗?</summary>
@@ -472,11 +475,15 @@
           </details>
           <details>
             <summary data-i18n="q6">想换回原来的配置怎么办?</summary>
-            <p data-i18n="a6">一键还原。接管 CLI 时原配置已自动备份,Keyway 随时可以完整交还,不留任何残留。</p>
+            <p data-i18n="a6">在接管管理中点击「还原」,撤销 Keyway 改写的配置字段,保留无关改动。目标字段或自动创建的条目被外部修改时会中止,文件与备份保留;请先检查冲突。</p>
           </details>
           <details>
             <summary data-i18n="q7">收费吗?</summary>
             <p data-i18n="a7">Keyway 完全免费且开源(MIT)。你只需为自己使用的模型供应商付费。</p>
+          </details>
+          <details>
+            <summary data-i18n="q8">退出 Keyway 后,CLI 还能用吗?</summary>
+            <p data-i18n="a8">已接入本地代理的 CLI 依赖 Keyway 运行。关闭窗口可驻留托盘,完全退出会停止代理;需要恢复直连时,请先还原配置。代理离线与上游供应商故障是两种不同状态。</p>
           </details>
         </div>
         <div class="links" style="margin-top:40px;">
@@ -490,7 +497,7 @@
     <!-- Footnotes + Footer -->
     <div class="footnotes">
       <div class="container">
-        <p data-i18n="fn1">* 所有数据(供应商配置、密钥引用、用量记录)仅存储于本机加密数据库,不上传任何服务器。</p>
+        <p data-i18n="fn1">* 配置与用量记录保存在本机加密数据库。代理会向选定的模型供应商发送请求内容与认证信息;本地存储不代表离线推理。</p>
         <p data-i18n="fn2">** Claude Code、Codex、Gemini CLI、OpenCode、OpenClaw 分别为各自所有者的产品;Keyway 与 Anthropic、OpenAI、Google 无关联。</p>
         <div class="divider"></div>
       </div>
@@ -507,47 +514,49 @@
         en: {
           navF: "Features", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navQ: "Start", navD: "Download",
           readGuide: "Read the guide", navG2: "Guide",
-          tagline: "Switching, weightless.",
-          heroSub: "One app for every AI CLI you use. Providers, keys and usage — all in hand.",
-          heroProof1: "Local proxy first", heroProof2: "9 AI CLIs", heroProof3: "MIT open source · no upload",
+          tagline: "Know where your requests go.",
+          heroSub: "The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.",
+          heroProof1: "Local proxy first", heroProof2: "9 AI CLIs", heroProof3: "Encrypted local storage · MIT",
           learnMore: "Learn more", freeDl: "Download for Apple silicon", freeDl2: "Download free",
-          intelDl: "For Intel Macs",
+          intelDl: "macOS · Intel",
+          appleDl: "macOS · Apple silicon",
           windowsDl: "Windows", linuxDl: "Linux AppImage", allDl: "All platforms",
-          versionNote: "Latest release v0.2.12 · macOS / Windows / Linux",
-          fTitle: "Light. And secure.", fSub: "Every capability, made for your daily flow.",
-          f1t: "Zero restarts.", f1d: "Switch providers and the very next request follows. Codex and Gemini feel just like Claude.",
-          f2t: "More private.", f2d: "API keys live in the system keychain with a fully encrypted store. Never on disk, never uploaded.",
-          f3t: "Clearly visible.", f3d: "Every forward is metered. Each provider's token usage, at a glance.",
-          tTitle: "Switching, in a keystroke.", tSub: "Takeover and switching happen inside Keyway — running claude / codex sessions just keep going.",
+          versionNote: "Version v0.2.12 · macOS / Windows / Linux",
+          fTitle: "More clarity. Not just switching.", fSub: "Default providers, connection status and actual requests — clearly distinguished.",
+          f1t: "Switch with clarity.", f1d: "Sessions already using the proxy need no restart when changing the default provider. New requests follow the updated configuration; in-flight requests do not migrate.",
+          f2t: "Encrypted key storage.", f2d: "API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.",
+          f3t: "Errors you can inspect.", f3d: "Check providers, models, status codes and errors in request logs. When routing or failover changes the destination, you have more than a guess.",
+          tTitle: "Switching, in a keystroke.", tSub: "Connect to the proxy first, then switch your default provider. Start a new Codex session after first-time takeover; later switches need no restart.",
           qsCap: "The ⌘⇧K quick switch panel — no config to touch",
           qsFoot: "↑↓ navigate · Enter switch · 1-9 pick · Esc close",
           capTitle: "Far more than switching.",
           capSub: "From key safety to request observability, Keyway is the local gateway for your AI CLIs.",
-          c1t: "Automatic failover", c1d: "Upstream 5xx or timeouts automatically fail over to backup providers. Long tasks no longer break on a single point of failure. Configurable candidate chain.",
+          c1t: "Automatic failover", c1d: "Configure and enable a backup chain to try the next candidate after retryable upstream failures. Recovery is not guaranteed once a streaming response has begun.",
           c2t: "Model routing rules", c2d: "Route specific models to specific providers: e.g. claude-* to official, deepseek-* to a relay — dispatched automatically by model name.",
           c3t: "Request logs", c3d: "The last 100 requests, item by item: provider, model, tokens in/out, status code and latency. Debugging at a glance.",
           c4t: "Usage & success rate", c4d: "Token usage and request success rate aggregated by CLI and by provider. Who's stable, who's costly — let data decide.",
           c5t: "Multiple profiles", c5d: "Work / personal / testing — snapshot provider sets, save and switch anytime without interference.",
-          c6t: "Backup & migration", c6d: "Export provider configs to JSON with one click (keys excluded). Moving machines or sharing presets is easy. Imports from 9 major CLI configs.",
-          c7t: "Key vault", c7d: "Full-database SQLCipher encryption plus the system keychain. Keys are never written to disk in plain text — not even in backups.",
+          c6t: "Backup & migration", c6d: "Export provider configs to JSON with one click (keys excluded). Moving machines or sharing presets is easy. Imports from the 5 CLIs with automatic takeover.",
+          c7t: "Key vault", c7d: "API keys are stored in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.",
           c8t: "Connectivity test", c8d: "One-click latency and reachability test per provider, before you switch.",
           c9t: "Onboarding + tray", c9d: "A three-step wizard: pick CLIs, add providers, take over in one click. Lives in the menu bar for instant switching.",
           qsTitle: "Up and running in three steps.",
           qsGuide: "Step-by-step guide",
           s1t: "Add a provider.", s1d: "Or import from existing CLI configs. GLM, Kimi, official, any relay.",
           s2t: "One-click takeover.", s2d: "Originals backed up, restorable anytime.",
-          s3t: "Switch in a tap.", s3d: "Running claude / codex sessions pick up the next request instantly.",
+          s3t: "Switch in a tap.", s3d: "Send a new request, then check its actual provider and response status in the logs.",
           pvTitle: "Two looks. Same excellence.",
           lightMode: "Light", darkMode: "Dark",
           faqTitle: "Frequently asked questions.",
-          q1: "How does Keyway work?", a1: "Keyway runs a lightweight local proxy (127.0.0.1:9527). After taking over your CLI's API endpoint, every request is forwarded to your chosen provider. Switching only changes local state — no CLI config rewriting, no terminal restarts.",
-          q2: "Are my API keys safe?", a2: "Yes. Keys live in a fully SQLCipher-encrypted local database and the system keychain — never on disk in plain text, never uploaded, and excluded from exported backups.",
-          q3: "Which AI CLIs are supported?", a3: "Claude Code, Codex CLI, Gemini CLI, OpenCode, OpenClaw and more — 9 CLI tools across the Anthropic / OpenAI / Gemini protocols, with shareable providers per protocol.",
-          q4: "Do I need to restart running sessions after switching?", a4: "No. The proxy forwards by current provider in real time; the very next request follows — running claude / codex sessions switch seamlessly.",
+          q1: "How does Keyway work?", a1: "Keyway runs a local proxy (127.0.0.1:9527). Connected CLI requests follow your default provider, routing rules and failover settings. Request logs show actual destinations.",
+          q2: "How are my API keys stored?", a2: "API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys. Authentication is sent to the selected upstream when forwarding requests.",
+          q3: "Which AI CLIs are supported?", a3: "Keyway provides 9 CLI groups across the Anthropic / OpenAI / Gemini protocols. Claude Code, Codex CLI, Gemini CLI, OpenCode and OpenClaw support automatic takeover; other groups can be connected manually using the variables supported by each CLI.",
+          q4: "Do I need to restart running sessions after switching?", a4: "Sessions already using the proxy need no restart when changing the default provider. New requests follow the updated configuration; in-flight requests do not migrate. First-time Codex takeover needs a new session, and routing rules still take priority.",
           q5: "Can I use multiple providers at once?", a5: "Yes. Model routing rules send different models to different providers; failover switches to backups on upstream errors; profiles swap whole work / personal setups in one tap.",
-          q6: "How do I revert to my original setup?", a6: "One click. Original configs are automatically backed up at takeover, and Keyway hands everything back cleanly with no leftovers.",
+          q6: "How do I revert to my original setup?", a6: "Click Restore in takeover management to undo Keyway's configuration changes while keeping unrelated edits. Conflicts in managed fields or generated entries stop the restore; the file and backup are retained for inspection.",
           q7: "Is it free?", a7: "Keyway is completely free and open source (MIT). You only pay the model providers you use.",
-          fn1: "* All data (provider configs, key references, usage records) is stored only in an encrypted local database. Nothing is uploaded.",
+          q8: "Will my CLI work after quitting Keyway?", a8: "CLIs connected to the local proxy depend on Keyway running. Closing the window keeps it in the tray; fully quitting stops the proxy. Restore configs first if you need direct connections. An offline proxy and an upstream provider failure are different states.",
+          fn1: "* Configuration and usage records are stored in an encrypted local database. The proxy sends request content and authentication to the selected model provider; local storage does not mean offline inference.",
           fn2: "** Claude Code, Codex, Gemini CLI, OpenCode and OpenClaw are products of their respective owners; Keyway is not affiliated with Anthropic, OpenAI or Google.",
           darkVer: "Dark version"
         },
@@ -592,23 +601,23 @@
           var ua = navigator.userAgent || "";
           var isWindows = /Windows/i.test(ua);
           var isLinux = /Linux/i.test(ua) && !/Android/i.test(ua);
-          var isIntelMac = /Macintosh/i.test(ua) && /Intel/i.test(ua);
-          var isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+          var isMac = /Macintosh|Mac OS X/i.test(ua);
+          var isMobile = /Android|iPhone|iPad|iPod/i.test(ua) || (isMac && navigator.maxTouchPoints > 1);
           if (isMobile) {
             primaryDownload.href = downloadTargets.all;
             primaryDownload.textContent = root.getAttribute("lang") === "en" ? "View all downloads" : "查看全部下载";
           } else if (isWindows) {
             primaryDownload.href = downloadTargets.windows;
             primaryDownload.textContent = root.getAttribute("lang") === "en" ? "Download for Windows" : "下载 Windows 版";
-          } else if (isLinux) {
+          } else if (isLinux && /x86_64|amd64/i.test(ua)) {
             primaryDownload.href = downloadTargets.linux;
             primaryDownload.textContent = root.getAttribute("lang") === "en" ? "Download for Linux" : "下载 Linux 版";
-          } else if (isIntelMac) {
-            primaryDownload.href = downloadTargets.macIntel;
-            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "Download for Intel Mac" : "下载 Intel 版";
+          } else if (isMac) {
+            primaryDownload.href = "#platform-downloads";
+            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "Choose your Mac download" : "选择 macOS 安装包";
           } else {
-            primaryDownload.href = downloadTargets.macArm;
-            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "Download for Apple silicon" : "下载 Apple 芯片版";
+            primaryDownload.href = downloadTargets.all;
+            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "View all downloads" : "查看全部下载";
           }
           if (navDownload) navDownload.href = primaryDownload.href;
         }
@@ -625,7 +634,7 @@
             if (v !== undefined) el.textContent = v;
           });
           root.setAttribute("lang", lang === "en" ? "en" : "zh-CN");
-          document.title = lang === "en" ? "Keyway — The local supply hub for AI CLIs" : zhTitle;
+          document.title = lang === "en" ? "Keyway — The local gateway for AI CLIs" : zhTitle;
           toggle.textContent = lang === "en" ? "中文" : "EN";
           syncPrimaryDownload();
           try { localStorage.setItem("site-lang", lang); } catch (e) {}

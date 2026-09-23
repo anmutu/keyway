@@ -120,15 +120,31 @@ pub fn get_health_interval(state: State<'_, AppState>) -> Result<Option<i64>, St
 #[tauri::command]
 pub fn gateway_status(state: State<'_, AppState>) -> Result<serde_json::Value, String> {
     let mut current = serde_json::Map::new();
-    for app in [
-        crate::types::AppType::Claude,
-        crate::types::AppType::Codex,
-        crate::types::AppType::Gemini,
-    ] {
-        let name = crate::db::provider_dao::get_current(&state.db, app)
+    let mut last = serde_json::Map::new();
+    for app in crate::types::AppType::all() {
+        let name = crate::db::provider_dao::get_current(&state.db, *app)
             .map_err(|e| e.to_string())?
             .map(|p| serde_json::Value::String(p.name));
         current.insert(app.as_str().into(), name.unwrap_or(serde_json::Value::Null));
+        if let Some(entry) = crate::db::usage_dao::recent(&state.db, app.as_str(), 1)
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .next()
+        {
+            let provider = crate::db::provider_dao::get_by_id(&state.db, &entry.provider_id)
+                .map_err(|e| e.to_string())?
+                .map(|p| p.name)
+                .unwrap_or(entry.provider_id);
+            last.insert(
+                app.as_str().into(),
+                serde_json::json!({
+                    "provider": provider,
+                    "model": entry.model,
+                    "status": entry.status,
+                    "created_at": entry.created_at,
+                }),
+            );
+        }
     }
     let (tin, tout, reqs) =
         crate::db::usage_dao::today_total(&state.db).map_err(|e| e.to_string())?;
@@ -136,6 +152,7 @@ pub fn gateway_status(state: State<'_, AppState>) -> Result<serde_json::Value, S
         "proxy_addr": crate::core::proxy::PROXY_ADDR,
         "version": env!("CARGO_PKG_VERSION"),
         "current": current,
+        "last": last,
         "today_tokens": tin + tout,
         "today_requests": reqs,
     }))

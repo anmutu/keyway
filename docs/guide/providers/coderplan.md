@@ -32,7 +32,7 @@
 ## 为什么要通过 Keyway 用 CoderPlan
 
 - **多供应商并存的切换键**:CoderPlan、GLM、Kimi、官方同时配好,卡片/托盘一键互切,`claude` 不用重启
-- **Key 进钥匙串**:不再以明文环境变量(`ANTHROPIC_AUTH_TOKEN`)形式留在 shell 配置里
+- **Key 进本机加密数据库**:数据库主密钥由系统钥匙串保管;已有 shell 配置中的旧凭证不会被自动清除
 - **用量统计**:CoderPlan 与其他供应商的消耗分开累计,一眼看清
 
 ## 常见问题

@@ -19,10 +19,18 @@ use crate::types::AppType;
 /// 本地代理地址(与 core::proxy::PROXY_ADDR 保持一致)
 pub const PROXY_URL: &str = "http://127.0.0.1:9527";
 
+fn proxy_url_for(app: AppType) -> String {
+    format!("{PROXY_URL}{}", app.proxy_prefix())
+}
+
+fn is_restore_proxy_url(value: &str, app: AppType) -> bool {
+    value == PROXY_URL || value == proxy_url_for(app)
+}
+
 #[derive(Debug, Serialize)]
 pub struct TakeoverStatus {
     pub app: String,
-    /// 是否支持接管(M1 仅 claude/codex/gemini)
+    /// 是否支持自动接管(当前覆盖 Claude/Codex/Gemini/OpenCode/OpenClaw)
     pub supported: bool,
     /// live 配置文件是否存在
     pub config_exists: bool,
@@ -111,6 +119,7 @@ pub fn apply_claude_at(path: &Path) -> Result<String> {
         .map(|s| s.to_string());
     let backup = serde_json::json!({ "base_url": old }).to_string();
 
+    let target_url = proxy_url_for(AppType::Claude);
     root.as_object_mut()
         .ok_or_else(|| anyhow!("settings.json 顶层必须是对象"))?
         .entry("env")
@@ -119,7 +128,7 @@ pub fn apply_claude_at(path: &Path) -> Result<String> {
         .ok_or_else(|| anyhow!("env 必须是对象"))?
         .insert(
             "ANTHROPIC_BASE_URL".into(),
-            serde_json::Value::String(PROXY_URL.into()),
+            serde_json::Value::String(target_url),
         );
     write_atomic(path, &serde_json::to_string_pretty(&root)?)?;
     Ok(backup)
@@ -128,12 +137,19 @@ pub fn apply_claude_at(path: &Path) -> Result<String> {
 pub fn restore_claude_at(path: &Path, backup: &str) -> Result<()> {
     let b: serde_json::Value = serde_json::from_str(backup)?;
     let old = b.get("base_url").and_then(|v| v.as_str());
-    let mut root: serde_json::Value = if path.exists() {
-        serde_json::from_str(&std::fs::read_to_string(path)?)
-            .unwrap_or_else(|_| serde_json::json!({}))
-    } else {
-        serde_json::json!({})
-    };
+    let raw = std::fs::read_to_string(path)
+        .map_err(|e| anyhow!("读取 Claude 配置失败,未执行还原: {e}"))?;
+    let mut root: serde_json::Value = serde_json::from_str(&raw)
+        .map_err(|e| anyhow!("Claude 配置已被外部改写且无法解析,未执行还原: {e}"))?;
+    let current = root
+        .get("env")
+        .and_then(|e| e.get("ANTHROPIC_BASE_URL"))
+        .and_then(|v| v.as_str());
+    if !current.is_some_and(|value| is_restore_proxy_url(value, AppType::Claude)) {
+        return Err(anyhow!(
+            "Claude 配置已被外部修改,为避免覆盖请先检查后再还原"
+        ));
+    }
     let env = root
         .as_object_mut()
         .ok_or_else(|| anyhow!("settings.json 顶层必须是对象"))?
@@ -163,7 +179,7 @@ fn claude_effective(path: &Path) -> bool {
         .and_then(|v| {
             v.get("env")
                 .and_then(|e| e.get("ANTHROPIC_BASE_URL"))
-                .and_then(|u| u.as_str().map(|s| s == PROXY_URL))
+                .and_then(|u| u.as_str().map(|s| s == proxy_url_for(AppType::Claude)))
         })
         .unwrap_or(false)
 }
@@ -195,15 +211,15 @@ pub fn apply_codex_at(path: &Path) -> Result<String> {
         // 无任何 provider:创建指向代理的最小条目并设为默认
         let mut t = toml_edit::Table::new();
         t["name"] = toml_edit::value("Keyway");
-        t["base_url"] = toml_edit::value(PROXY_URL);
-        t["wire_api"] = toml_edit::value("chat");
+        t["base_url"] = toml_edit::value(proxy_url_for(AppType::Codex));
+        t["wire_api"] = toml_edit::value("responses");
         providers["keyway"] = toml_edit::Item::Table(t);
         doc["model_provider"] = toml_edit::value("keyway");
     } else {
         for (_, item) in providers.iter_mut() {
             if let Some(t) = item.as_table_mut() {
                 if t.contains_key("base_url") {
-                    t["base_url"] = toml_edit::value(PROXY_URL);
+                    t["base_url"] = toml_edit::value(proxy_url_for(AppType::Codex));
                 }
             }
         }
@@ -213,10 +229,95 @@ pub fn apply_codex_at(path: &Path) -> Result<String> {
 }
 
 pub fn restore_codex_at(path: &Path, backup: &str) -> Result<()> {
-    if backup.is_empty() && !path.exists() {
-        return Ok(());
+    let raw = std::fs::read_to_string(path)
+        .map_err(|e| anyhow!("读取 Codex 配置失败,未执行还原: {e}"))?;
+    let original: toml_edit::DocumentMut = backup
+        .parse()
+        .map_err(|e| anyhow!("Codex 备份解析失败: {e}"))?;
+    let mut current: toml_edit::DocumentMut = raw
+        .parse()
+        .map_err(|e| anyhow!("Codex 配置已被外部改写且无法解析,未执行还原: {e}"))?;
+    let proxy = proxy_url_for(AppType::Codex);
+    let original_providers = original
+        .get("model_providers")
+        .and_then(|item| item.as_table());
+    for (name, original_item) in original_providers
+        .into_iter()
+        .flat_map(|table| table.iter())
+    {
+        let Some(original_url) = original_item
+            .as_table()
+            .and_then(|table| table.get("base_url"))
+            .and_then(|value| value.as_str())
+        else {
+            continue;
+        };
+        let current_url = current
+            .get("model_providers")
+            .and_then(|item| item.as_table())
+            .and_then(|table| table.get(name))
+            .and_then(|item| item.as_table())
+            .and_then(|table| table.get("base_url"))
+            .and_then(|value| value.as_str());
+        match current_url {
+            Some(value) if is_restore_proxy_url(value, AppType::Codex) => {
+                current["model_providers"][name]["base_url"] = toml_edit::value(original_url);
+            }
+            Some(value) if value == original_url => {}
+            Some(_) | None => {
+                return Err(anyhow!(
+                    "Codex 供应商 {name} 的接口地址已被外部修改,为避免覆盖请先检查后再还原"
+                ));
+            }
+        }
     }
-    write_atomic(path, backup)?;
+    let original_has_provider = original_providers.is_some_and(|table| !table.is_empty());
+    if !original_has_provider {
+        let generated = current
+            .get("model_providers")
+            .and_then(|item| item.as_table())
+            .and_then(|table| table.get("keyway"))
+            .and_then(|item| item.as_table())
+            .is_some_and(|table| {
+                table.len() == 3
+                    && matches!(
+                        table.get("wire_api").and_then(|value| value.as_str()),
+                        Some("chat" | "responses")
+                    )
+                    && table.get("name").and_then(|value| value.as_str()) == Some("Keyway")
+                    && table
+                        .get("base_url")
+                        .and_then(|value| value.as_str())
+                        .is_some_and(|value| value == proxy || value == PROXY_URL)
+            });
+        if !generated {
+            return Err(anyhow!("Codex 自动创建的供应商已被外部修改,未执行还原"));
+        }
+        if generated {
+            if let Some(table) = current["model_providers"].as_table_mut() {
+                table.remove("keyway");
+            }
+            if current
+                .get("model_provider")
+                .and_then(|value| value.as_str())
+                == Some("keyway")
+            {
+                if let Some(selection) = original.get("model_provider") {
+                    current["model_provider"] = selection.clone();
+                } else {
+                    current.as_table_mut().remove("model_provider");
+                }
+            }
+            if original.get("model_providers").is_none()
+                && current["model_providers"]
+                    .as_table()
+                    .is_some_and(|table| table.is_empty())
+            {
+                current.as_table_mut().remove("model_providers");
+            }
+        }
+    }
+    write_atomic(path, &current.to_string())?;
     Ok(())
 }
 
@@ -227,18 +328,21 @@ fn codex_effective(path: &Path) -> bool {
     let Ok(doc) = raw.parse::<toml_edit::DocumentMut>() else {
         return false;
     };
-    doc.get("model_providers")
-        .and_then(|p| p.as_table())
-        .map(|t| {
-            t.iter().any(|(_, item)| {
-                item.as_table()
-                    .and_then(|tt| tt.get("base_url"))
-                    .and_then(|v| v.as_str())
-                    .map(|s| s == PROXY_URL)
-                    .unwrap_or(false)
-            })
+    let profile = doc.get("profile").and_then(|value| value.as_str());
+    let selected = profile
+        .and_then(|name| {
+            doc.get("profiles")?
+                .get(name)?
+                .get("model_provider")?
+                .as_str()
         })
-        .unwrap_or(false)
+        .or_else(|| doc.get("model_provider").and_then(|value| value.as_str()))
+        .unwrap_or("openai");
+    doc.get("model_providers")
+        .and_then(|providers| providers.get(selected))
+        .and_then(|provider| provider.get("base_url"))
+        .and_then(|value| value.as_str())
+        .is_some_and(|url| url == proxy_url_for(AppType::Codex))
 }
 
 // ---------- Gemini: ~/.gemini/.env ----------
@@ -255,47 +359,93 @@ pub fn apply_gemini_at(path: &Path) -> Result<String> {
     } else {
         String::new()
     };
-    let target_line = format!("{GEMINI_VAR}={PROXY_URL}");
-    let mut found = false;
-    let mut lines: Vec<String> = original
-        .lines()
-        .map(|l| {
-            if l.trim_start().starts_with(&format!("{GEMINI_VAR}="))
-                || l.trim_start().starts_with(&format!("{GEMINI_VAR} ="))
-            {
-                found = true;
-                target_line.clone()
-            } else {
-                l.to_string()
-            }
-        })
-        .collect();
-    if !found {
-        if !lines.is_empty() && !original.ends_with('\n') {
-            lines.push(String::new());
-        }
-        lines.push(target_line);
-    }
-    let mut out = lines.join("\n");
-    if out.ends_with('\n') {
-        out.pop();
-    }
-    write_atomic(path, &out)?;
+    write_atomic(path, &gemini_content(&original))?;
     Ok(original)
 }
 
+fn gemini_assignment(line: &str) -> Option<&str> {
+    let trimmed = line.trim();
+    let assignment = trimmed.strip_prefix("export ").unwrap_or(trimmed);
+    let (name, value) = assignment.split_once('=')?;
+    (name.trim() == GEMINI_VAR).then(|| value.trim().trim_matches(['\'', '"']))
+}
+
+fn gemini_content(original: &str) -> String {
+    let target = format!("{GEMINI_VAR}={}", proxy_url_for(AppType::Gemini));
+    let newline = if original.contains("\r\n") {
+        "\r\n"
+    } else {
+        "\n"
+    };
+    let mut found = false;
+    let mut output = String::new();
+    for line in original.split_inclusive('\n') {
+        if gemini_assignment(line).is_some() {
+            found = true;
+            output.push_str(&target);
+            if line.ends_with('\n') {
+                output.push_str(newline);
+            }
+        } else {
+            output.push_str(line);
+        }
+    }
+    if !found {
+        if !output.is_empty() && !output.ends_with('\n') {
+            output.push_str(newline);
+        }
+        output.push_str(&target);
+        output.push_str(newline);
+    }
+    output
+}
+
 pub fn restore_gemini_at(path: &Path, backup: &str) -> Result<()> {
-    write_atomic(path, backup)?;
+    let raw = std::fs::read_to_string(path)
+        .map_err(|e| anyhow!("读取 Gemini 配置失败,未执行还原: {e}"))?;
+    let assignments: Vec<_> = raw.lines().filter_map(gemini_assignment).collect();
+    let originals: Vec<_> = backup
+        .split_inclusive('\n')
+        .filter(|line| gemini_assignment(line).is_some())
+        .collect();
+    if assignments.len() != originals.len().max(1)
+        || assignments
+            .iter()
+            .any(|value| !is_restore_proxy_url(value, AppType::Gemini))
+    {
+        return Err(anyhow!(
+            "Gemini 配置已被外部修改,为避免覆盖请先检查后再还原"
+        ));
+    }
+    if raw == gemini_content(backup) {
+        return write_atomic(path, backup);
+    }
+    let mut original_lines = originals.into_iter();
+    let mut output = String::new();
+    for line in raw.split_inclusive('\n') {
+        if gemini_assignment(line).is_some() {
+            if let Some(original) = original_lines.next() {
+                output.push_str(original);
+                if !original.ends_with('\n') && line.ends_with('\n') {
+                    output.push('\n');
+                }
+            }
+        } else {
+            output.push_str(line);
+        }
+    }
+    write_atomic(path, &output)?;
     Ok(())
 }
 
 fn gemini_effective(path: &Path) -> bool {
     std::fs::read_to_string(path)
         .map(|raw| {
-            raw.lines().any(|l| {
-                let t = l.trim_start();
-                t.starts_with(&format!("{GEMINI_VAR}=")) && t == format!("{GEMINI_VAR}={PROXY_URL}")
-            })
+            let values: Vec<_> = raw.lines().filter_map(gemini_assignment).collect();
+            !values.is_empty()
+                && values
+                    .iter()
+                    .all(|value| *value == proxy_url_for(AppType::Gemini))
         })
         .unwrap_or(false)
 }
@@ -304,6 +454,10 @@ fn gemini_effective(path: &Path) -> bool {
 
 /// OpenAI 兼容端点路径(@ai-sdk/openai-compatible 会在 baseURL 后拼 /chat/completions)
 const PROXY_V1: &str = "http://127.0.0.1:9527/v1";
+
+fn proxy_v1_for(app: AppType) -> String {
+    format!("{}{}/v1", PROXY_URL, app.proxy_prefix())
+}
 
 fn opencode_config_path() -> Result<PathBuf> {
     home_path(&[".config", "opencode", "opencode.json"])
@@ -322,6 +476,7 @@ pub fn apply_opencode_at(path: &Path) -> Result<String> {
     } else {
         serde_json::from_str(&original).context("opencode.json 不是合法 JSON")?
     };
+    let proxy_v1 = proxy_v1_for(AppType::OpenCode);
     let providers = root
         .as_object_mut()
         .ok_or_else(|| anyhow!("opencode.json 顶层必须是对象"))?
@@ -336,7 +491,10 @@ pub fn apply_opencode_at(path: &Path) -> Result<String> {
             continue;
         };
         if opts.contains_key("baseURL") {
-            opts.insert("baseURL".into(), serde_json::Value::String(PROXY_V1.into()));
+            opts.insert(
+                "baseURL".into(),
+                serde_json::Value::String(proxy_v1.clone()),
+            );
             opts.insert("apiKey".into(), serde_json::Value::String("keyway".into()));
             patched += 1;
         }
@@ -347,7 +505,7 @@ pub fn apply_opencode_at(path: &Path) -> Result<String> {
             serde_json::json!({
                 "npm": "@ai-sdk/openai-compatible",
                 "name": "Keyway",
-                "options": { "baseURL": PROXY_V1, "apiKey": "keyway" },
+                "options": { "baseURL": proxy_v1, "apiKey": "keyway" },
                 "models": {}
             }),
         );
@@ -357,10 +515,104 @@ pub fn apply_opencode_at(path: &Path) -> Result<String> {
 }
 
 pub fn restore_opencode_at(path: &Path, backup: &str) -> Result<()> {
-    if backup.is_empty() && !path.exists() {
-        return Ok(());
+    let raw = std::fs::read_to_string(path)
+        .map_err(|e| anyhow!("读取 OpenCode 配置失败,未执行还原: {e}"))?;
+    let original: serde_json::Value = if backup.trim().is_empty() {
+        serde_json::json!({})
+    } else {
+        serde_json::from_str(backup).map_err(|e| anyhow!("OpenCode 备份解析失败: {e}"))?
+    };
+    let mut current: serde_json::Value = serde_json::from_str(&raw)
+        .map_err(|e| anyhow!("OpenCode 配置已被外部改写且无法解析,未执行还原: {e}"))?;
+    let proxy = proxy_v1_for(AppType::OpenCode);
+    let original_providers = original.get("provider").and_then(|value| value.as_object());
+    for (name, original_item) in original_providers
+        .into_iter()
+        .flat_map(|object| object.iter())
+    {
+        let Some(original_options) = original_item
+            .get("options")
+            .and_then(|value| value.as_object())
+        else {
+            continue;
+        };
+        let Some(original_url) = original_options
+            .get("baseURL")
+            .and_then(|value| value.as_str())
+        else {
+            continue;
+        };
+        let current_options = current
+            .get("provider")
+            .and_then(|value| value.get(name))
+            .and_then(|value| value.get("options"))
+            .and_then(|value| value.as_object());
+        let current_url = current_options
+            .and_then(|options| options.get("baseURL"))
+            .and_then(|value| value.as_str());
+        let current_uses_keyway = current_options
+            .and_then(|options| options.get("apiKey"))
+            .and_then(|value| value.as_str())
+            == Some("keyway");
+        match current_url {
+            Some(value) if value == proxy || value == PROXY_V1 => {
+                let options = current["provider"][name]["options"]
+                    .as_object_mut()
+                    .unwrap();
+                options.insert(
+                    "baseURL".into(),
+                    serde_json::Value::String(original_url.into()),
+                );
+                if current_uses_keyway {
+                    if let Some(original_key) = original_options.get("apiKey") {
+                        options.insert("apiKey".into(), original_key.clone());
+                    } else {
+                        options.remove("apiKey");
+                    }
+                }
+            }
+            Some(value) if value == original_url => {}
+            Some(_) | None => {
+                return Err(anyhow!(
+                    "OpenCode 供应商 {name} 的接口地址已被外部修改,为避免覆盖请先检查后再还原"
+                ));
+            }
+        }
     }
-    write_atomic(path, backup)?;
+    if original_providers.is_none_or(|object| {
+        object.values().all(|item| {
+            item.get("options")
+                .and_then(|options| options.get("baseURL"))
+                .is_none()
+        })
+    }) {
+        let generated = current
+            .get("provider")
+            .and_then(|value| value.get("keyway"));
+        let expected = |url: &str| {
+            serde_json::json!({
+                "npm": "@ai-sdk/openai-compatible", "name": "Keyway",
+                "options": {"baseURL": url, "apiKey": "keyway"}, "models": {}
+            })
+        };
+        if generated != Some(&expected(&proxy)) && generated != Some(&expected(PROXY_V1)) {
+            return Err(anyhow!("OpenCode 自动创建的供应商已被外部修改,未执行还原"));
+        }
+        let providers = current["provider"].as_object_mut().unwrap();
+        if let Some(previous) = original_providers.and_then(|providers| providers.get("keyway")) {
+            providers.insert("keyway".into(), previous.clone());
+        } else {
+            providers.remove("keyway");
+        }
+        if providers.is_empty() && original.get("provider").is_none() {
+            current.as_object_mut().unwrap().remove("provider");
+        }
+    }
+    if current == original {
+        write_atomic(path, backup)?;
+    } else {
+        write_atomic(path, &serde_json::to_string_pretty(&current)?)?;
+    }
     Ok(())
 }
 
@@ -385,7 +637,8 @@ fn opencode_effective(path: &Path) -> bool {
                 .collect()
         })
         .unwrap_or_default();
-    !urls.is_empty() && urls.iter().all(|u| u.starts_with(PROXY_URL))
+    let proxy_v1 = proxy_v1_for(AppType::OpenCode);
+    !urls.is_empty() && urls.iter().all(|u| u == &proxy_v1)
 }
 
 // ---------- OpenClaw: ~/.openclaw/openclaw.json(JSON5) ----------
@@ -408,6 +661,7 @@ pub fn apply_openclaw_at(path: &Path) -> Result<String> {
     } else {
         json5::from_str(&original).context("openclaw.json 不是合法 JSON5/JSON")?
     };
+    let proxy_v1 = proxy_v1_for(AppType::OpenClaw);
     let providers = root
         .as_object_mut()
         .ok_or_else(|| anyhow!("openclaw.json 顶层必须是对象"))?
@@ -424,7 +678,10 @@ pub fn apply_openclaw_at(path: &Path) -> Result<String> {
     for (_, item) in providers.iter_mut() {
         if let Some(t) = item.as_object_mut() {
             if t.contains_key("baseUrl") {
-                t.insert("baseUrl".into(), serde_json::Value::String(PROXY_V1.into()));
+                t.insert(
+                    "baseUrl".into(),
+                    serde_json::Value::String(proxy_v1.clone()),
+                );
                 t.insert("apiKey".into(), serde_json::Value::String("keyway".into()));
                 patched += 1;
             }
@@ -434,7 +691,7 @@ pub fn apply_openclaw_at(path: &Path) -> Result<String> {
         providers.insert(
             "keyway".into(),
             serde_json::json!({
-                "baseUrl": PROXY_V1,
+                "baseUrl": proxy_v1,
                 "apiKey": "keyway",
                 "api": "openai-completions",
                 "models": []
@@ -446,10 +703,111 @@ pub fn apply_openclaw_at(path: &Path) -> Result<String> {
 }
 
 pub fn restore_openclaw_at(path: &Path, backup: &str) -> Result<()> {
-    if backup.is_empty() && !path.exists() {
-        return Ok(());
+    let raw = std::fs::read_to_string(path)
+        .map_err(|e| anyhow!("读取 OpenClaw 配置失败,未执行还原: {e}"))?;
+    let original: serde_json::Value = if backup.trim().is_empty() {
+        serde_json::json!({})
+    } else {
+        json5::from_str(backup).map_err(|e| anyhow!("OpenClaw 备份解析失败: {e}"))?
+    };
+    let mut current: serde_json::Value = json5::from_str(&raw)
+        .map_err(|e| anyhow!("OpenClaw 配置已被外部改写且无法解析,未执行还原: {e}"))?;
+    let proxy = proxy_v1_for(AppType::OpenClaw);
+    let original_providers = original
+        .get("models")
+        .and_then(|value| value.get("providers"))
+        .and_then(|value| value.as_object());
+    for (name, original_item) in original_providers
+        .into_iter()
+        .flat_map(|object| object.iter())
+    {
+        let Some(original_url) = original_item
+            .get("baseUrl")
+            .and_then(|value| value.as_str())
+        else {
+            continue;
+        };
+        let current_item = current
+            .get("models")
+            .and_then(|value| value.get("providers"))
+            .and_then(|value| value.get(name));
+        let current_url = current_item
+            .and_then(|value| value.get("baseUrl"))
+            .and_then(|value| value.as_str());
+        let current_uses_keyway = current_item
+            .and_then(|item| item.get("apiKey"))
+            .and_then(|value| value.as_str())
+            == Some("keyway");
+        match current_url {
+            Some(value) if value == proxy || value == PROXY_V1 => {
+                let provider = current["models"]["providers"][name]
+                    .as_object_mut()
+                    .unwrap();
+                provider.insert(
+                    "baseUrl".into(),
+                    serde_json::Value::String(original_url.into()),
+                );
+                if current_uses_keyway {
+                    if let Some(original_key) = original_item.get("apiKey") {
+                        provider.insert("apiKey".into(), original_key.clone());
+                    } else {
+                        provider.remove("apiKey");
+                    }
+                }
+            }
+            Some(value) if value == original_url => {}
+            Some(_) | None => {
+                return Err(anyhow!(
+                    "OpenClaw 供应商 {name} 的接口地址已被外部修改,为避免覆盖请先检查后再还原"
+                ));
+            }
+        }
     }
-    write_atomic(path, backup)?;
+    if original_providers
+        .is_none_or(|object| object.values().all(|item| item.get("baseUrl").is_none()))
+    {
+        let generated = current
+            .get("models")
+            .and_then(|value| value.get("providers"))
+            .and_then(|value| value.get("keyway"));
+        let expected = |url: &str| {
+            serde_json::json!({
+                "baseUrl": url, "apiKey": "keyway", "api": "openai-completions", "models": []
+            })
+        };
+        if generated != Some(&expected(&proxy)) && generated != Some(&expected(PROXY_V1)) {
+            return Err(anyhow!("OpenClaw 自动创建的供应商已被外部修改,未执行还原"));
+        }
+        let providers = current["models"]["providers"].as_object_mut().unwrap();
+        if let Some(previous) = original_providers.and_then(|providers| providers.get("keyway")) {
+            providers.insert("keyway".into(), previous.clone());
+        } else {
+            providers.remove("keyway");
+        }
+        if providers.is_empty()
+            && original
+                .get("models")
+                .and_then(|value| value.get("providers"))
+                .is_none()
+        {
+            current["models"]
+                .as_object_mut()
+                .unwrap()
+                .remove("providers");
+        }
+        if current["models"]
+            .as_object()
+            .is_some_and(|models| models.is_empty())
+            && original.get("models").is_none()
+        {
+            current.as_object_mut().unwrap().remove("models");
+        }
+    }
+    if current == original {
+        write_atomic(path, backup)?;
+    } else {
+        write_atomic(path, &serde_json::to_string_pretty(&current)?)?;
+    }
     Ok(())
 }
 
@@ -470,7 +828,8 @@ fn openclaw_effective(path: &Path) -> bool {
                 .collect()
         })
         .unwrap_or_default();
-    !urls.is_empty() && urls.iter().all(|u| u.starts_with(PROXY_URL))
+    let proxy_v1 = proxy_v1_for(AppType::OpenClaw);
+    !urls.is_empty() && urls.iter().all(|u| u == &proxy_v1)
 }
 
 // ---------- 对外接口 ----------
@@ -546,24 +905,42 @@ pub fn apply(pool: &Pool, app: AppType) -> Result<()> {
         return Err(anyhow!("{} 暂不支持接管,下个版本支持", app.as_str()));
     }
     let path = live_path(app)?;
-    let backup = match app {
-        AppType::Claude => apply_claude_at(&path)?,
-        AppType::Codex => apply_codex_at(&path)?,
-        AppType::Gemini => apply_gemini_at(&path)?,
-        AppType::OpenCode => apply_opencode_at(&path)?,
-        AppType::OpenClaw => apply_openclaw_at(&path)?,
+    apply_at(pool, app, &path)
+}
+
+fn apply_at(pool: &Pool, app: AppType, path: &Path) -> Result<()> {
+    let existing_backup = settings_get(pool, &backup_key(app))?;
+    if existing_backup.is_none() {
+        let original = if path.exists() {
+            std::fs::read_to_string(path)?
+        } else {
+            String::new()
+        };
+        let backup = if app == AppType::Claude {
+            let root: serde_json::Value = if original.trim().is_empty() {
+                serde_json::json!({})
+            } else {
+                serde_json::from_str(&original)?
+            };
+            serde_json::json!({"base_url": root.get("env").and_then(|env| env.get("ANTHROPIC_BASE_URL")).and_then(|value| value.as_str())}).to_string()
+        } else {
+            original
+        };
+        settings_set(pool, &backup_key(app), &backup)?;
+    }
+    let result = match app {
+        AppType::Claude => apply_claude_at(path),
+        AppType::Codex => apply_codex_at(path),
+        AppType::Gemini => apply_gemini_at(path),
+        AppType::OpenCode => apply_opencode_at(path),
+        AppType::OpenClaw => apply_openclaw_at(path),
         _ => unreachable!(),
     };
-    // 重新夺回(已接管状态下再次 apply)时保留最初的原始备份:
-    // 此刻 live 文件已指向代理,拿它覆盖备份会让"还原"写回一个死代理地址。
-    let already_active = settings_get(pool, &active_key(app))?
-        .map(|v| v == "1")
-        .unwrap_or(false);
-    let has_backup = settings_get(pool, &backup_key(app))?
-        .map(|s| !s.is_empty())
-        .unwrap_or(false);
-    if !(already_active && has_backup) {
-        settings_set(pool, &backup_key(app), &backup)?;
+    if let Err(error) = result {
+        if existing_backup.is_none() {
+            settings_del(pool, &backup_key(app))?;
+        }
+        return Err(error);
     }
     settings_set(pool, &active_key(app), "1")?;
     tracing::info!("已接管 {} → {PROXY_URL}({})", app.as_str(), path.display());
@@ -634,6 +1011,27 @@ mod tests {
     }
 
     #[test]
+    fn claude_restore_refuses_to_overwrite_external_base_url_change() {
+        let p = tmp("claude_external").join("settings.json");
+        std::fs::write(
+            &p,
+            r#"{"env":{"ANTHROPIC_BASE_URL":"https://origin.example"},"theme":"dark"}"#,
+        )
+        .unwrap();
+        let backup = apply_claude_at(&p).unwrap();
+        std::fs::write(
+            &p,
+            r#"{"env":{"ANTHROPIC_BASE_URL":"https://manual.example"},"theme":"light"}"#,
+        )
+        .unwrap();
+
+        assert!(restore_claude_at(&p, &backup).is_err());
+        let current = std::fs::read_to_string(&p).unwrap();
+        assert!(current.contains("https://manual.example"));
+        assert!(current.contains("light"));
+    }
+
+    #[test]
     fn codex_apply_keeps_comments_and_restores() {
         let p = tmp("codex").join("config.toml");
         let original = "# my comment\nmodel_provider = \"acme\"\n\n[model_providers.acme]\nname = \"Acme\"\nbase_url = \"https://acme.example\"\n";
@@ -657,6 +1055,58 @@ mod tests {
         let raw = std::fs::read_to_string(&p).unwrap();
         assert!(raw.contains("model_provider = \"keyway\""));
         assert!(raw.contains(PROXY_URL));
+        assert!(raw.contains("wire_api = \"responses\""));
+    }
+
+    #[test]
+    fn codex_status_only_checks_the_selected_provider() {
+        let path = tmp("codex_selected").join("config.toml");
+        let raw = format!("model_provider = \"direct\"\n[model_providers.direct]\nbase_url = \"https://direct.example\"\n[model_providers.keyway]\nbase_url = \"{}\"\n", proxy_url_for(AppType::Codex));
+        std::fs::write(&path, &raw).unwrap();
+        assert!(!codex_effective(&path));
+        std::fs::write(
+            &path,
+            raw.replace("model_provider = \"direct\"", "model_provider = \"keyway\""),
+        )
+        .unwrap();
+        assert!(codex_effective(&path));
+    }
+
+    #[test]
+    fn codex_restore_preserves_unrelated_changes_while_proxy_is_intact() {
+        let p = tmp("codex_unrelated").join("config.toml");
+        std::fs::write(
+            &p,
+            "[model_providers.relay]\nname = \"Relay\"\nbase_url = \"https://origin.example\"\n",
+        )
+        .unwrap();
+        let backup = apply_codex_at(&p).unwrap();
+        let mut doc: toml_edit::DocumentMut = std::fs::read_to_string(&p).unwrap().parse().unwrap();
+        doc["model"] = toml_edit::value("gpt-5");
+        std::fs::write(&p, doc.to_string()).unwrap();
+
+        restore_codex_at(&p, &backup).unwrap();
+        let restored = std::fs::read_to_string(&p).unwrap();
+        assert!(restored.contains("https://origin.example"));
+        assert!(restored.contains("model = \"gpt-5\""));
+    }
+
+    #[test]
+    fn codex_restore_refuses_to_overwrite_external_provider_change() {
+        let p = tmp("codex_external").join("config.toml");
+        std::fs::write(
+            &p,
+            "[model_providers.relay]\nname = \"Relay\"\nbase_url = \"https://origin.example\"\n",
+        )
+        .unwrap();
+        let backup = apply_codex_at(&p).unwrap();
+        let mut doc: toml_edit::DocumentMut = std::fs::read_to_string(&p).unwrap().parse().unwrap();
+        doc["model_providers"]["relay"]["base_url"] = toml_edit::value("https://manual.example");
+        std::fs::write(&p, doc.to_string()).unwrap();
+
+        assert!(restore_codex_at(&p, &backup).is_err());
+        let current = std::fs::read_to_string(&p).unwrap();
+        assert!(current.contains("https://manual.example"));
     }
 
     #[test]
@@ -686,6 +1136,107 @@ mod tests {
         let backup = apply_gemini_at(&p).unwrap();
         assert_eq!(backup, "");
         assert!(gemini_effective(&p));
+    }
+
+    #[test]
+    fn gemini_restore_refuses_to_overwrite_external_base_url_change() {
+        let p = tmp("gemini_external").join(".env");
+        std::fs::write(
+            &p,
+            "GEMINI_API_KEY=keep\nGOOGLE_GEMINI_BASE_URL=https://origin.example\n",
+        )
+        .unwrap();
+        let backup = apply_gemini_at(&p).unwrap();
+        std::fs::write(
+            &p,
+            "GEMINI_API_KEY=keep\nGOOGLE_GEMINI_BASE_URL=https://manual.example\n",
+        )
+        .unwrap();
+
+        assert!(restore_gemini_at(&p, &backup).is_err());
+        let current = std::fs::read_to_string(&p).unwrap();
+        assert!(current.contains("https://manual.example"));
+    }
+
+    #[test]
+    fn gemini_restore_preserves_unrelated_edits() {
+        let path = tmp("gemini_merge").join(".env");
+        std::fs::write(&path, "# original\r\nGEMINI_API_KEY=old\r\n").unwrap();
+        let backup = apply_gemini_at(&path).unwrap();
+        let current = std::fs::read_to_string(&path)
+            .unwrap()
+            .replace("GEMINI_API_KEY=old", "GEMINI_API_KEY=new");
+        std::fs::write(&path, format!("{current}\nNEW_SETTING=keep\n")).unwrap();
+        restore_gemini_at(&path, &backup).unwrap();
+        let restored = std::fs::read_to_string(&path).unwrap();
+        assert!(restored.contains("GEMINI_API_KEY=new"));
+        assert!(restored.contains("NEW_SETTING=keep"));
+        assert!(!restored.contains(GEMINI_VAR));
+    }
+
+    #[test]
+    fn empty_json_backups_do_not_erase_external_edits() {
+        for (name, apply, restore) in [
+            (
+                "opencode",
+                apply_opencode_at as fn(&Path) -> Result<String>,
+                restore_opencode_at as fn(&Path, &str) -> Result<()>,
+            ),
+            ("openclaw", apply_openclaw_at, restore_openclaw_at),
+        ] {
+            let path = tmp(name).join("config.json");
+            let backup = apply(&path).unwrap();
+            assert!(backup.is_empty());
+            let changed = "{\"user_added\":true}";
+            std::fs::write(&path, changed).unwrap();
+            assert!(restore(&path, &backup).is_err(), "{name}");
+            assert_eq!(std::fs::read_to_string(&path).unwrap(), changed);
+        }
+    }
+
+    #[test]
+    fn generated_codex_provider_is_not_silently_deleted_after_edit() {
+        let path = tmp("codex_generated").join("config.toml");
+        let backup = apply_codex_at(&path).unwrap();
+        let mut current: toml_edit::DocumentMut =
+            std::fs::read_to_string(&path).unwrap().parse().unwrap();
+        current["model_providers"]["keyway"]["custom_setting"] = toml_edit::value("keep");
+        let changed = current.to_string();
+        std::fs::write(&path, &changed).unwrap();
+        assert!(restore_codex_at(&path, &backup).is_err());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), changed);
+    }
+
+    #[test]
+    fn repeated_takeover_preserves_empty_original_backup() {
+        let directory = tmp("empty_backup");
+        let pool = crate::db::init_pool(directory.join("test.db"), &"ab".repeat(32)).unwrap();
+        for app in [
+            AppType::Codex,
+            AppType::Gemini,
+            AppType::OpenCode,
+            AppType::OpenClaw,
+        ] {
+            let path = directory.join(app.as_str());
+            apply_at(&pool, app, &path).unwrap();
+            apply_at(&pool, app, &path).unwrap();
+            assert_eq!(
+                settings_get(&pool, &backup_key(app)).unwrap(),
+                Some(String::new())
+            );
+        }
+    }
+
+    #[test]
+    fn takeover_does_not_touch_config_when_backup_storage_fails() {
+        let directory = tmp("backup_failure");
+        let pool = crate::db::init_pool(directory.join("test.db"), &"ab".repeat(32)).unwrap();
+        pool.get().unwrap().execute_batch("CREATE TRIGGER reject_backup BEFORE INSERT ON settings BEGIN SELECT RAISE(FAIL, 'test write failure'); END;").unwrap();
+        let path = directory.join("config.toml");
+        let original = "model = \"my-model\"\n";
+        std::fs::write(&path, original).unwrap();
+        assert!(apply_at(&pool, AppType::Codex, &path).is_err());
+        assert_eq!(std::fs::read_to_string(path).unwrap(), original);
     }
 }
 
@@ -724,7 +1275,7 @@ mod opencode_openclaw_tests {
 
         let backup = apply_opencode_at(&p).unwrap();
         let raw = std::fs::read_to_string(&p).unwrap();
-        assert!(raw.contains(PROXY_V1));
+        assert!(raw.contains(&proxy_v1_for(AppType::OpenCode)));
         assert!(raw.contains("kimi-k2")); // models 不动
         assert!(opencode_effective(&p));
 
@@ -772,7 +1323,7 @@ mod opencode_openclaw_tests {
 
         let backup = apply_openclaw_at(&p).unwrap();
         let raw = std::fs::read_to_string(&p).unwrap();
-        assert!(raw.contains(PROXY_V1));
+        assert!(raw.contains(&proxy_v1_for(AppType::OpenClaw)));
         assert!(raw.contains("kimi-k2.6")); // models 数组不动
         assert!(openclaw_effective(&p));
         // 仍是合法 JSON5(重写后为标准 JSON)
