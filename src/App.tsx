@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { Activity, Boxes, CopyPlus, Download, Gauge, Plus, Search, TriangleAlert, X } from "lucide-react";
@@ -9,6 +9,7 @@ import { AppHeaderBar } from "@/components/AppHeaderBar";
 import { ProviderCard } from "@/components/providers/ProviderCard";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
 import { GatewayStatusStrip } from "@/components/providers/GatewayStatusStrip";
+import { RoutePreviewCard } from "@/components/providers/RoutePreviewCard";
 import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ToastStack, type ToastItem, type ToastType } from "@/components/Toast";
@@ -16,11 +17,6 @@ import { AboutDialog } from "@/components/AboutDialog";
 import { QuickSwitchPanel } from "@/components/QuickSwitchPanel";
 import { OnboardingDialog, hasOnboarded } from "@/components/OnboardingDialog";
 import { TakeoverDialog } from "@/components/TakeoverDialog";
-import { SettingsPage } from "@/components/settings/SettingsPage";
-import { UsagePage } from "@/components/usage/UsagePage";
-import { LogsPage } from "@/components/usage/LogsPage";
-import { McpPage } from "@/components/settings/McpPage";
-import { SkillsPage } from "@/components/settings/SkillsPage";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
@@ -33,6 +29,36 @@ import {
   saveLastApp,
   type LayoutMode,
 } from "@/lib/appPrefs";
+
+const GettingStartedDialog = lazy(async () => {
+  const module = await import("@/components/GettingStartedDialog");
+  return { default: module.GettingStartedDialog };
+});
+
+const SettingsPage = lazy(async () => {
+  const module = await import("@/components/settings/SettingsPage");
+  return { default: module.SettingsPage };
+});
+
+const UsagePage = lazy(async () => {
+  const module = await import("@/components/usage/UsagePage");
+  return { default: module.UsagePage };
+});
+
+const LogsPage = lazy(async () => {
+  const module = await import("@/components/usage/LogsPage");
+  return { default: module.LogsPage };
+});
+
+const McpPage = lazy(async () => {
+  const module = await import("@/components/settings/McpPage");
+  return { default: module.McpPage };
+});
+
+const SkillsPage = lazy(async () => {
+  const module = await import("@/components/settings/SkillsPage");
+  return { default: module.SkillsPage };
+});
 
 function getInitialApp(): AppType {
   return loadLastApp() ?? "claude";
@@ -68,6 +94,16 @@ function SkeletonCard() {
           <div className="h-3 w-56 rounded bg-muted animate-pulse" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function PageFallback() {
+  return (
+    <div className="mx-auto w-full max-w-[1040px] space-y-3 px-3 py-4 sm:px-6 sm:py-6">
+      <div className="h-7 w-40 animate-pulse rounded bg-muted" />
+      <div className="h-28 animate-pulse rounded-xl border border-border bg-card" />
+      <div className="h-48 animate-pulse rounded-xl border border-border bg-card" />
     </div>
   );
 }
@@ -182,6 +218,7 @@ function App() {
     }
   };
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   // 拖拽排序:被拖卡片 id 与悬停目标 id
   const [dragId, setDragId] = useState<string | null>(null);
@@ -191,6 +228,7 @@ function App() {
   const [testingAll, setTestingAll] = useState(false);
   // 候选链展示(Clash 式)+ 按延迟排序开关
   const [chain, setChain] = useState<string[]>([]);
+  const [gatewayRevision, setGatewayRevision] = useState(0);
   const [latencySort, setLatencySort] = useState(false);
   // 接管状态:app → { active: 内部已接管, effective: 配置确实指向代理 }(批 54 漂移检测)
   const [takeoverMap, setTakeoverMap] = useState<
@@ -303,6 +341,8 @@ function App() {
   const [proxyOk, setProxyOk] = useState<boolean | null>(null);
   const [proxyAddr, setProxyAddr] = useState("");
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const mainScrollRef = useRef<HTMLElement | null>(null);
+  const providerScrollRef = useRef<HTMLDivElement | null>(null);
   // macOS 融合标题栏(Overlay):红绿灯占据左上角,侧栏顶部需向下避让
   const [isMac, setIsMac] = useState(false);
   useEffect(() => {
@@ -317,6 +357,11 @@ function App() {
   useEffect(() => {
     activeAppRef.current = activeApp;
   }, [activeApp]);
+
+  useEffect(() => {
+    if (mainScrollRef.current) mainScrollRef.current.scrollTop = 0;
+    if (providerScrollRef.current) providerScrollRef.current.scrollTop = 0;
+  }, [currentView, activeApp]);
   useEffect(() => {
     if (IS_DEMO) return;
     const app = activeApp;
@@ -327,7 +372,7 @@ function App() {
       .catch(() => {
         if (activeAppRef.current === app) setChain([]);
       });
-  }, [activeApp, providers]);
+  }, [activeApp, providers, gatewayRevision]);
 
   const toast = useCallback(
     (type: ToastType, msg: string, action?: ToastItem["action"]) => {
@@ -344,10 +389,23 @@ function App() {
     setToasts((ts) => ts.filter((t) => t.id !== id));
   }, []);
 
+  const handleError = useCallback((message: string) => {
+    toast("error", humanizeError(message, t));
+  }, [t, toast]);
+
+  const handleSuccess = useCallback((message: string) => {
+    toast("success", message);
+  }, [toast]);
+
+  const handleQuickSwitch = useCallback(() => {
+    setQuickOpen(true);
+  }, []);
+
   const refresh = useCallback(async (app: AppType) => {
     // 演示模式:不走 IPC,直接展示 mock 数据
     if (IS_DEMO) {
       setProviders(demoProvidersFor(app));
+      setChain(["CoderPlan", "OpenAI"]);
       setHasCache(true);
       setUsageMap({
         "demo-1": { requests: 128, input_tokens: 412_000, output_tokens: 1_260_000 },
@@ -513,9 +571,14 @@ function App() {
         setIsAddOpen(true);
         return;
       }
-      // Cmd/Ctrl+Shift+M → MCP;Cmd/Ctrl+Shift+S → Skills
+      // Cmd/Ctrl+Shift+K → 快速切换;M → MCP;S → Skills
       if (e.shiftKey) {
         const k = e.key.toLowerCase();
+        if (k === "k") {
+          e.preventDefault();
+          setQuickOpen(true);
+          return;
+        }
         if (k === "m") {
           e.preventDefault();
           setCurrentView("mcp");
@@ -565,6 +628,7 @@ function App() {
 
   // 全局快捷键 ⌘⇧K:唤起快速切换面板(演示模式同样可用,纯前端交互)
   useEffect(() => {
+    if (IS_DEMO) return;
     let un: (() => void) | undefined;
     void listen("quick-switch", () => setQuickOpen(true)).then(
       (fn) => (un = fn),
@@ -734,6 +798,7 @@ function App() {
           proxyAddr={proxyAddr}
           onTakeover={() => setTakeoverOpen(true)}
           onAbout={() => setAboutOpen(true)}
+          onGuide={() => setGuideOpen(true)}
           onAdd={() => setIsAddOpen(true)}
           onQuickSwitch={() => setQuickOpen(true)}
           isMac={isMac}
@@ -754,6 +819,7 @@ function App() {
           proxyOk={proxyOk}
           proxyAddr={proxyAddr}
           onTakeover={() => setTakeoverOpen(true)}
+          onGuide={() => setGuideOpen(true)}
           isMac={isMac}
         />
       )}
@@ -762,6 +828,7 @@ function App() {
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
       {/* 主内容区:供应商卡片列表 */}
       <main
+        ref={mainScrollRef}
         className={cn(
           "flex-1 min-h-0 flex flex-col overflow-y-auto",
           // 右侧/底部布局:macOS 红绿灯悬于主区左上,顶部避让
@@ -769,27 +836,28 @@ function App() {
         )}
         data-tauri-drag-region
       >
+        <Suspense fallback={<PageFallback />}>
         {currentView === "skills" && (
-          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[760px] w-full mx-auto animate-fade-in">
+          <div className="mx-auto w-full max-w-[920px] px-3 py-4 sm:px-6 sm:py-6 animate-fade-in">
             <SkillsPage
-              onError={(m) => toast("error", humanizeError(m, t))}
-              onSuccess={(m) => toast("success", m)}
+              onError={handleError}
+              onSuccess={handleSuccess}
             />
           </div>
         )}
         {currentView === "mcp" && (
-          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[760px] w-full mx-auto animate-fade-in">
+          <div className="mx-auto w-full max-w-[920px] px-3 py-4 sm:px-6 sm:py-6 animate-fade-in">
             <McpPage
-              onError={(m) => toast("error", humanizeError(m, t))}
-              onSuccess={(m) => toast("success", m)}
+              onError={handleError}
+              onSuccess={handleSuccess}
             />
           </div>
         )}
         {currentView === "settings" && (
           <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[760px] w-full mx-auto animate-fade-in">
             <SettingsPage
-              onError={(m) => toast("error", humanizeError(m, t))}
-              onSuccess={(m) => toast("success", m)}
+              onError={handleError}
+              onSuccess={handleSuccess}
               layout={layout}
               onLayoutChange={setLayout}
               apps={appsOrder}
@@ -798,34 +866,40 @@ function App() {
           </div>
         )}
         {currentView === "usage" && (
-          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[860px] w-full mx-auto animate-fade-in">
+          <div className="mx-auto w-full max-w-[1040px] px-3 py-4 sm:px-6 sm:py-6 animate-fade-in">
             <UsagePage
               app={activeApp}
+              appName={t(`app.${activeApp}`)}
               providers={providers}
-              onError={(m) => toast("error", humanizeError(m, t))}
-              onInfo={(m) => toast("success", m)}
+              onError={handleError}
+              onInfo={handleSuccess}
             />
           </div>
         )}
         {currentView === "logs" && (
-          <div className="px-3 py-4 sm:px-6 sm:py-6 max-w-[860px] w-full mx-auto animate-fade-in">
+          <div className="mx-auto w-full max-w-[1040px] px-3 py-4 sm:px-6 sm:py-6 animate-fade-in">
             <LogsPage
               key={activeApp}
               app={activeApp}
+              appName={t(`app.${activeApp}`)}
               providers={providers}
-              onError={(m) => toast("error", humanizeError(m, t))}
-              onInfo={(m) => toast("success", m)}
+              onError={handleError}
+              onInfo={handleSuccess}
+              onQuickSwitch={handleQuickSwitch}
             />
           </div>
         )}
         {currentView === "providers" && (
-        <div className="px-6 pt-6 flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
-            <div className="max-w-[760px] mx-auto w-full h-full flex flex-col space-y-4 animate-fade-in" key={activeApp}>
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden px-4 pt-4 sm:px-8 sm:pt-6">
+          <div ref={providerScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
+            <div className="mx-auto flex min-h-full w-full max-w-[1040px] flex-col space-y-4 animate-fade-in" key={activeApp}>
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
-                    {t("sidebar.providerList", { app: t(`app.${activeApp}`) })}
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    {t("provider.workspace")}
+                  </p>
+                  <h1 className="mt-1 truncate text-xl font-semibold tracking-tight sm:text-2xl">
+                    {t(`app.${activeApp}`)}
                   </h1>
                   <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                     {t("provider.pageDesc")}
@@ -842,12 +916,16 @@ function App() {
                 proxyRunning={proxyOk}
                 proxyAddr={proxyAddr}
                 takeover={takeoverMap[activeApp]}
+                chain={chain}
                 onManage={() => setTakeoverOpen(true)}
                 onLogs={() => setCurrentView("logs")}
+                onQuickSwitch={() => setQuickOpen(true)}
+                onTestAll={() => void runTestAll()}
+                testingAll={testingAll}
               />
               {/* 接管漂移:配置被外部覆盖,流量绕过了 Keyway(批 54) */}
               {groupDrift && (
-                <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5">
+                <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5">
                   <span className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
                     <TriangleAlert className="w-4 h-4 shrink-0" />
                     {t("takeover.driftBanner")}
@@ -863,17 +941,20 @@ function App() {
                   </Button>
                 </div>
               )}
-              {/* 候选链(Clash 式):开启故障转移时展示 A → B → C */}
-              {chain.length > 0 && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground rounded-xl border border-dashed border-border px-4 py-2">
-                  <span>{t("gw.chain")}</span>
-                  {chain.map((n, i) => (
-                    <span key={i} className="flex items-center gap-1.5">
-                      {i > 0 && <span className="text-border">→</span>}
-                      <span className={i === 0 ? "font-medium text-foreground" : ""}>{n}</span>
-                    </span>
-                  ))}
-                </div>
+              {providers.length > 0 && (
+                <RoutePreviewCard
+                  app={activeApp}
+                  providers={providers}
+                  onManage={() => {
+                    setCurrentView("settings");
+                    window.setTimeout(() => {
+                      document.getElementById("route-rules")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }, 80);
+                  }}
+                />
               )}
               {/* 首次加载:骨架屏占位 */}
               {!hasCache && providers.length === 0 && (
@@ -950,52 +1031,60 @@ function App() {
               )}
 
               {providers.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 -mb-2">
-                  <div className="relative min-w-[180px] flex-1">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="search"
-                      value={providerQuery}
-                      onChange={(event) => setProviderQuery(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Escape" && providerQuery) {
-                          event.stopPropagation();
-                          setProviderQuery("");
-                        }
-                      }}
-                      placeholder={t("provider.searchPh")}
-                      aria-label={t("provider.searchPh")}
-                      className="h-8 w-full appearance-none rounded-md border border-border bg-background pl-8 pr-8 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
-                    />
-                    {providerQuery && (
-                      <button
-                        type="button"
-                        aria-label={t("common.clear")}
-                        onClick={() => setProviderQuery("")}
-                        className="absolute right-1 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    )}
+                <div className="flex flex-col gap-3 border-b border-border/70 pb-3 pt-1 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">{t("provider.poolTitle")}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {t("provider.poolDesc", { n: providers.length })}
+                        {providerQuery && (
+                          <span className="ml-1 tabular-nums" aria-live="polite">
+                            · {t("provider.searchCount", { shown: visibleProviders.length, total: providers.length })}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 lg:flex-1 lg:justify-end">
+                    <div className="relative min-w-[180px] flex-1 lg:max-w-[340px]">
+                      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        type="search"
+                        value={providerQuery}
+                        onChange={(event) => setProviderQuery(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape" && providerQuery) {
+                            event.stopPropagation();
+                            setProviderQuery("");
+                          }
+                        }}
+                        placeholder={t("provider.searchPh")}
+                        aria-label={t("provider.searchPh")}
+                        className="h-9 w-full appearance-none rounded-lg border border-border bg-background pl-8 pr-8 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                      />
+                      {providerQuery && (
+                        <button
+                          type="button"
+                          aria-label={t("common.clear")}
+                          onClick={() => setProviderQuery("")}
+                          className="absolute right-1 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    <Button
+                      variant={latencySort ? "secondary" : "ghost"}
+                      size="sm"
+                      title={t("gw.latencySort")}
+                      onClick={() => setLatencySort((v) => !v)}
+                    >
+                      <Gauge className="w-4 h-4 mr-1" />
+                      {t("gw.latencySort")}
+                    </Button>
+                    <Button variant="ghost" size="sm" disabled={testingAll} onClick={() => void runTestAll()}>
+                      <Activity className={cn("w-4 h-4 mr-1", testingAll && "animate-pulse")} />
+                      {testingAll ? t("provider.testingAll") : t("provider.testAll")}
+                    </Button>
                   </div>
-                  {providerQuery && (
-                    <span className="text-[11px] tabular-nums text-muted-foreground" aria-live="polite">
-                      {t("provider.searchCount", { shown: visibleProviders.length, total: providers.length })}
-                    </span>
-                  )}
-                  <Button
-                    variant={latencySort ? "secondary" : "ghost"}
-                    size="sm"
-                    title={t("gw.latencySort")}
-                    onClick={() => setLatencySort((v) => !v)}
-                  >
-                    <Gauge className="w-4 h-4 mr-1" />
-                    {t("gw.latencySort")}
-                  </Button>
-                  <Button variant="ghost" size="sm" disabled={testingAll} onClick={() => void runTestAll()}>
-                    <Activity className={cn("w-4 h-4 mr-1", testingAll && "animate-pulse")} />
-                    {testingAll ? t("provider.testingAll") : t("provider.testAll")}
-                  </Button>
                 </div>
               )}
 
@@ -1043,6 +1132,7 @@ function App() {
                     isCurrent={p.is_current}
                     app={activeApp}
                     takeoverEffective={takeoverMap[activeApp]?.effective}
+                    takeoverActive={takeoverMap[activeApp]?.active}
                     highlight={p.id === highlightId}
                     onMoveUp={
                       !latencySort && providers.findIndex((x) => x.id === p.id) > 0
@@ -1086,6 +1176,7 @@ function App() {
           </div>
         </div>
         )}
+        </Suspense>
       </main>
       </div>
 
@@ -1102,6 +1193,7 @@ function App() {
           proxyAddr={proxyAddr}
           onTakeover={() => setTakeoverOpen(true)}
           onAbout={() => setAboutOpen(true)}
+          onGuide={() => setGuideOpen(true)}
           onAdd={() => setIsAddOpen(true)}
           onQuickSwitch={() => setQuickOpen(true)}
           isMac={isMac}
@@ -1122,6 +1214,7 @@ function App() {
           proxyOk={proxyOk}
           proxyAddr={proxyAddr}
           onTakeover={() => setTakeoverOpen(true)}
+          onGuide={() => setGuideOpen(true)}
           isMac={isMac}
         />
       )}
@@ -1129,6 +1222,31 @@ function App() {
       <ToastStack items={toasts} onDismiss={dismissToast} />
 
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+
+      {guideOpen && (
+        <Suspense fallback={null}>
+          <GettingStartedDialog
+            open={guideOpen}
+            onOpenChange={setGuideOpen}
+            app={activeApp}
+            providersCount={providers.length}
+            takeoverEffective={Boolean(takeoverMap[activeApp]?.effective)}
+            onAdd={() => setIsAddOpen(true)}
+            onTakeover={() => setTakeoverOpen(true)}
+            onQuickSwitch={() => setQuickOpen(true)}
+            onLogs={() => setCurrentView("logs")}
+            onRouting={() => {
+              setCurrentView("providers");
+              window.setTimeout(() => {
+                document.getElementById("route-preview")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+              }, 80);
+            }}
+          />
+        </Suspense>
+      )}
 
       <QuickSwitchPanel
         open={quickOpen}
@@ -1148,17 +1266,46 @@ function App() {
         onAdd={() => setIsAddOpen(true)}
         onImport={() => void runImport()}
         providersCount={providers.length}
-        onDone={() => void refresh(activeApp)}
+        onDone={() => {
+          void refresh(activeApp);
+          setGuideOpen(true);
+        }}
       />
 
       <TakeoverDialog
         open={takeoverOpen}
         initialApp={activeApp}
-        onOpenChange={setTakeoverOpen}
+        gatewayDetails={
+          <GatewayStatusStrip
+            variant="details"
+            app={activeApp}
+            defaultProvider={providers.find((provider) => provider.is_current)?.name}
+            proxyRunning={proxyOk}
+            proxyAddr={proxyAddr}
+            takeover={takeoverMap[activeApp]}
+            chain={chain}
+            onManage={() => setTakeoverOpen(true)}
+            onLogs={() => {
+              setTakeoverOpen(false);
+              setCurrentView("logs");
+            }}
+            onQuickSwitch={() => setQuickOpen(true)}
+            onTestAll={() => void runTestAll()}
+            testingAll={testingAll}
+          />
+        }
+        onOpenChange={(open) => {
+          setTakeoverOpen(open);
+          if (!open) {
+            setGatewayRevision((revision) => revision + 1);
+            refreshTakeover();
+          }
+        }}
         onError={(m) => toast("error", humanizeError(m, t))}
         onSuccess={(m) => {
           toast("success", m);
           refreshTakeover();
+          setGatewayRevision((revision) => revision + 1);
         }}
       />
 

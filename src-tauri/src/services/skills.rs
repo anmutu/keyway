@@ -5,7 +5,7 @@
 //! vault 内额外放 .keyway.json 记录同步目标 {apps:[...]}。
 //! 同步只增删 vault 中存在的 id(按目录名精确匹配),CLI 自带/用户手工的 skill 不动。
 
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -39,6 +39,38 @@ pub fn cli_skills_dir(app: &str) -> Result<PathBuf> {
 }
 
 pub const TARGET_APPS: &[&str] = &["claude", "codex", "opencode"];
+
+fn validate_skill_id(id: &str) -> Result<()> {
+    if id.is_empty()
+        || !id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err(anyhow!("ID 仅支持字母、数字、-、_"));
+    }
+    Ok(())
+}
+
+fn backup_target(root: &Path, relative: &str) -> Result<PathBuf> {
+    let path = Path::new(relative);
+    if relative.is_empty() || path.is_absolute() {
+        return Err(anyhow!("备份文件路径必须是非空相对路径: {relative}"));
+    }
+    let mut target = root.to_path_buf();
+    for component in path.components() {
+        match component {
+            Component::Normal(segment) => target.push(segment),
+            Component::CurDir => {}
+            Component::Prefix(_) | Component::RootDir | Component::ParentDir => {
+                return Err(anyhow!("备份文件路径越界: {relative}"));
+            }
+        }
+    }
+    if target == root {
+        return Err(anyhow!("备份文件路径不能指向目录: {relative}"));
+    }
+    Ok(target)
+}
 
 // ---------- frontmatter 解析(轻量:只取 name/description 首个字段) ----------
 
@@ -148,13 +180,7 @@ fn list_at(vault: &Path) -> Result<Vec<SkillEntry>> {
 
 /// 新建/更新 vault 内 skill(content 为 SKILL.md 全文)
 pub fn save(id: &str, content: &str, apps: &[String]) -> Result<()> {
-    if id.is_empty()
-        || !id
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-    {
-        return Err(anyhow!("ID 仅支持字母、数字、-、_"));
-    }
+    validate_skill_id(id)?;
     let dir = vault_dir()?.join(id);
     std::fs::create_dir_all(&dir)?;
     std::fs::write(dir.join("SKILL.md"), content)?;
@@ -164,6 +190,7 @@ pub fn save(id: &str, content: &str, apps: &[String]) -> Result<()> {
 
 /// 从某 CLI 的 skills 目录导入一个 skill 到 vault(含附属文件)
 pub fn import_from(app: &str, id: &str) -> Result<()> {
+    validate_skill_id(id)?;
     let src = cli_skills_dir(app)?.join(id);
     if !src.is_dir() {
         return Err(anyhow!("源 skill 不存在: {app}/{id}"));
@@ -203,6 +230,7 @@ pub fn scan_cli(app: &str) -> Result<Vec<String>> {
 
 /// 删除:vault + 所有目标目录中的副本
 pub fn delete(id: &str) -> Result<()> {
+    validate_skill_id(id)?;
     let dir = vault_dir()?.join(id);
     if dir.exists() {
         std::fs::remove_dir_all(&dir)?;
@@ -322,16 +350,36 @@ mod tests {
         assert_eq!(frontmatter_field(c, "description").unwrap(), "a skill");
         assert!(frontmatter_field("no fm", "name").is_none());
     }
+
+    #[test]
+    fn backup_paths_cannot_escape_skill_directory() {
+        let root = Path::new("/tmp/keyway-skill");
+        assert!(backup_target(root, "../outside").is_err());
+        assert!(backup_target(root, "/tmp/outside").is_err());
+        assert_eq!(
+            backup_target(root, "nested/file.txt").unwrap(),
+            root.join("nested/file.txt")
+        );
+    }
+
+    #[test]
+    fn backup_ids_use_the_same_safe_format_as_saved_skills() {
+        assert!(validate_skill_id("../escape").is_err());
+        assert!(validate_skill_id("nested/skill").is_err());
+        assert!(validate_skill_id("safe_skill-01").is_ok());
+    }
 }
 
 /// 读取 vault 内 skill 的 SKILL.md 全文(编辑用)
 pub fn read_content(id: &str) -> Result<String> {
+    validate_skill_id(id)?;
     std::fs::read_to_string(vault_dir()?.join(id).join("SKILL.md"))
         .context("skill 不存在或无 SKILL.md")
 }
 
 /// 仅改同步目标(不动内容)
 pub fn set_apps(id: &str, apps: &[String]) -> Result<()> {
+    validate_skill_id(id)?;
     write_meta(&vault_dir()?.join(id), apps)
 }
 
@@ -389,21 +437,33 @@ pub fn import_backup_skill(
     id: &str,
     files: &[crate::services::backup::BackupSkillFile],
 ) -> Result<bool> {
-    let dir = vault_dir()?.join(id);
-    if dir.exists() {
+    validate_skill_id(id)?;
+    let vault = vault_dir()?;
+    let dir = vault.join(id);
+    if std::fs::symlink_metadata(&dir).is_ok() {
         return Ok(false);
     }
-    std::fs::create_dir_all(&dir)?;
-    for f in files {
-        use base64::Engine;
-        let content = base64::engine::general_purpose::STANDARD
-            .decode(&f.content)
-            .with_context(|| format!("备份文件损坏: {}", f.path))?;
-        let target = dir.join(&f.path);
-        if let Some(parent) = target.parent() {
-            std::fs::create_dir_all(parent)?;
+    std::fs::create_dir_all(&vault)?;
+    let staging = vault.join(format!(".{id}.restore-{}", uuid::Uuid::new_v4()));
+    std::fs::create_dir(&staging)?;
+    let result = (|| -> Result<()> {
+        for f in files {
+            use base64::Engine;
+            let content = base64::engine::general_purpose::STANDARD
+                .decode(&f.content)
+                .with_context(|| format!("备份文件损坏: {}", f.path))?;
+            let target = backup_target(&staging, &f.path)?;
+            if let Some(parent) = target.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::write(target, content)?;
         }
-        std::fs::write(target, content)?;
+        Ok(())
+    })();
+    if let Err(error) = result {
+        let _ = std::fs::remove_dir_all(&staging);
+        return Err(error);
     }
+    std::fs::rename(staging, dir).context("恢复 skill 失败")?;
     Ok(true)
 }

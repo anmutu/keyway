@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, CornerDownLeft, Plus, Search, X } from "lucide-react";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { useI18n } from "@/i18n";
@@ -52,9 +52,12 @@ export function QuickSwitchPanel({
     return j === query.length ? hit : null;
   };
   // 跨分组时扁平化(编号/键盘导航按全局顺序),渲染时再按分组分组
-  const flat: FlatEntry[] = groups
-    ? groups.flatMap((g) => g.providers.map((p) => ({ p, app: g.app })))
-    : providers.map((p) => ({ p, app }));
+  const flat: FlatEntry[] = useMemo(
+    () => groups
+      ? groups.flatMap((g) => g.providers.map((p) => ({ p, app: g.app })))
+      : providers.map((p) => ({ p, app })),
+    [app, groups, providers],
+  );
   const query = q.trim().toLowerCase();
   const filtered = query
     ? flat.filter(({ p }) =>
@@ -70,11 +73,15 @@ export function QuickSwitchPanel({
   useEffect(() => {
     if (open) {
       setQ("");
-      setIdx(Math.max(0, flat.findIndex((entry) => entry.app === app && entry.p.is_current)));
       const timer = setTimeout(() => inputRef.current?.focus(), 30);
       return () => clearTimeout(timer);
     }
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || q.trim()) return;
+    setIdx(Math.max(0, flat.findIndex((entry) => entry.app === app && entry.p.is_current)));
+  }, [app, flat, open, q]);
 
   useEffect(() => {
     if (!open) return;

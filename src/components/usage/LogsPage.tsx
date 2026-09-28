@@ -2,7 +2,20 @@ import { Button } from "@/components/ui/button";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
-import { Activity, RefreshCw, ScrollText, Search, Download, Trash2 } from "lucide-react";
+import {
+  Activity,
+  CheckCircle2,
+  ChevronRight,
+  CircleAlert,
+  Copy,
+  Download,
+  RefreshCw,
+  ScrollText,
+  Search,
+  Trash2,
+  X,
+  Zap,
+} from "lucide-react";
 import { useI18n } from "@/i18n";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -20,6 +33,13 @@ interface UsageEntry {
   duration_ms: number;
   error_note: string | null;
   created_at: number;
+}
+
+interface TestResult {
+  ok: boolean;
+  status: number | null;
+  latency_ms: number;
+  message: string;
 }
 
 const IS_DEMO = new URLSearchParams(location.search).has("demo");
@@ -48,17 +68,44 @@ function demoEntries(providers: Provider[]): UsageEntry[] {
   }));
 }
 
+function fmtTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return String(n);
+}
+
+function StatusBadge({ status }: { status: number }) {
+  const ok = status < 400;
+  return (
+    <span
+      className={
+        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums " +
+        (ok
+          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+          : "bg-red-500/10 text-red-600 dark:text-red-400")
+      }
+    >
+      {ok ? <CheckCircle2 className="h-3 w-3" /> : <CircleAlert className="h-3 w-3" />}
+      {status}
+    </span>
+  );
+}
+
 /** 请求日志浏览器:最近 100 条请求(时间/供应商/模型/tokens/状态) */
 export function LogsPage({
   app,
+  appName,
   providers,
   onError,
   onInfo,
+  onQuickSwitch,
 }: {
   app: string;
+  appName: string;
   providers: Provider[];
   onError: (msg: string) => void;
   onInfo: (msg: string) => void;
+  onQuickSwitch: () => void;
 }) {
   const { t } = useI18n();
   const [entries, setEntries] = useState<UsageEntry[] | null>(null);
@@ -69,6 +116,8 @@ export function LogsPage({
   const [confirmClear, setConfirmClear] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [detailTesting, setDetailTesting] = useState(false);
+  const [detailTest, setDetailTest] = useState<TestResult | null>(null);
   const requestId = useRef(0);
   const nameOf = (id: string) =>
     providers.find((provider) => provider.id === id)?.name ?? id.slice(0, 8);
@@ -93,6 +142,43 @@ export function LogsPage({
       onInfo(t("logs.exportedTo", { path: r.path, n: r.count }));
     } catch (e) {
       onError(String(e));
+    }
+  };
+
+  const copyErrorSummary = async (entry: UsageEntry) => {
+    const summary = [
+      `${appName} · ${t("logs.detail")}`,
+      `HTTP ${entry.status}`,
+      `${t("logs.provider")}: ${nameOf(entry.provider_id)}`,
+      `${t("logs.model")}: ${entry.model ?? "—"}`,
+      `${t("logs.time")}: ${fmtTime(entry.created_at)}`,
+      entry.error_note ?? "",
+    ].filter(Boolean).join("\n");
+    try {
+      await navigator.clipboard.writeText(summary);
+      onInfo(t("logs.errCopied"));
+    } catch (error) {
+      onError(String(error));
+    }
+  };
+
+  const retestDetailProvider = async (entry: UsageEntry) => {
+    const provider = providers.find((item) => item.id === entry.provider_id);
+    if (!provider) return;
+    setDetailTesting(true);
+    setDetailTest(null);
+    try {
+      const result = IS_DEMO
+        ? { ok: true, status: 200, latency_ms: 186, message: "" }
+        : await invoke<TestResult>("test_provider", {
+            id: provider.id,
+            appType: app,
+          });
+      setDetailTest(result);
+    } catch (error) {
+      onError(String(error));
+    } finally {
+      setDetailTesting(false);
     }
   };
 
@@ -154,6 +240,11 @@ export function LogsPage({
   }, [app]);
 
   useEffect(() => {
+    setDetailTest(null);
+    setDetailTesting(false);
+  }, [detail?.id]);
+
+  useEffect(() => {
     void reload();
     return () => { requestId.current += 1; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -187,37 +278,91 @@ export function LogsPage({
     return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   };
 
+  const loadedFailureCount = entries?.filter((entry) => entry.status >= 400).length ?? 0;
+  const loadedTokens =
+    entries?.reduce((sum, entry) => sum + entry.input_tokens + entry.output_tokens, 0) ?? 0;
+  const latestProvider = entries?.[0] ? nameOf(entries[0].provider_id) : "—";
+  const hasFilters = Boolean(q.trim() || prov || onlyErrors);
+
   return (
-    <div className="space-y-4 w-full">
-      {IS_DEMO && <p className="text-xs text-muted-foreground">{t("logs.demoNote")}</p>}
-      {loadFailed && <p role="alert" className="text-sm text-destructive">{t("logs.loadFailed")}</p>}
+    <div className="w-full space-y-5">
+      {IS_DEMO && (
+        <p className="rounded-lg border border-blue-500/20 bg-blue-500/[0.06] px-3 py-2 text-xs text-muted-foreground">
+          {t("logs.demoNote")}
+        </p>
+      )}
+      {loadFailed && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-500/25 bg-red-500/[0.06] px-3 py-2 text-xs text-red-600 dark:text-red-400"
+        >
+          <span>{t("logs.loadFailed")}</span>
+          <Button variant="outline" size="sm" className="h-7 border-red-500/30 text-xs" onClick={() => void reload()}>
+            {t("logs.refresh")}
+          </Button>
+        </div>
+      )}
       <div className="rounded-xl border border-border bg-card">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-border">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-4">
+          <div className="flex items-start gap-2.5">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
+              <Activity className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                {appName}
+              </p>
+              <h2 className="text-base font-semibold">{t("logs.title")}</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t("logs.pageDesc")}</p>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-blue-500" />
-            <h3 className="text-sm font-semibold">{t("logs.title")}</h3>
-            <span className="text-xs text-muted-foreground">
+            <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground tabular-nums">
               {t("logs.count", {
                 n: filtered?.length ?? 0,
                 total: entries?.length ?? 0,
               })}
             </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => void reload()}
+              disabled={refreshing}
+              title={t("logs.refresh")}
+            >
+              <RefreshCw className={`mr-1 h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              {t("logs.refresh")}
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs"
-            onClick={() => void reload()}
-            disabled={refreshing}
-            title={t("logs.refresh")}
-          >
-            <RefreshCw className={`mr-1 h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
-            {t("logs.refresh")}
-          </Button>
         </div>
-        {/* 筛选行:关键词 / 供应商 / 仅看失败 */}
-        {entries !== null && entries.length > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-wrap">
+        {entries !== null && (
+          <>
+            <div className="grid grid-cols-2 gap-2 border-b border-border bg-muted/[0.18] px-4 py-3 sm:grid-cols-4">
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t("logs.loaded")}</div>
+                <div className="mt-0.5 text-sm font-semibold tabular-nums">{entries.length}</div>
+              </div>
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t("logs.failures")}</div>
+                <div className={`mt-0.5 text-sm font-semibold tabular-nums ${loadedFailureCount ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                  {loadedFailureCount}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t("logs.tokens")}</div>
+                <div className="mt-0.5 text-sm font-semibold tabular-nums">{fmtTokens(loadedTokens)}</div>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t("logs.latest")}</div>
+                <div className="mt-0.5 truncate text-sm font-semibold" title={latestProvider}>{latestProvider}</div>
+              </div>
+            </div>
+              {/* 筛选行:关键词 / 供应商 / 仅看失败 */}
+            <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2.5">
+              <span className="mr-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {t("logs.filterLabel")}
+              </span>
             <div className="relative flex-1 min-w-[140px] max-w-[220px]">
               <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -241,7 +386,7 @@ export function LogsPage({
                 </option>
               ))}
             </select>
-            <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer select-none">
+            <label className="flex h-7 cursor-pointer select-none items-center gap-1.5 rounded-md border border-border bg-background px-2 text-xs text-muted-foreground">
               <input
                 type="checkbox"
                 checked={onlyErrors}
@@ -250,16 +395,27 @@ export function LogsPage({
               />
               {t("logs.onlyErrors")}
             </label>
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={() => { setQ(""); setProv(""); setOnlyErrors(false); }}
+                className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+                {t("logs.clearFilters")}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => void exportCsv()}
-              className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              disabled={entries.length === 0}
+              className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               title={t("logs.exportTitle")}
             >
               <Download className="w-3.5 h-3.5" />
               CSV
             </button>
-            {entries !== null && entries.length > 0 && (
+            {entries.length > 0 && (
               <button
                 type="button"
                 onClick={() => setConfirmClear(true)}
@@ -270,27 +426,38 @@ export function LogsPage({
                 {t("logs.clear")}
               </button>
             )}
-          </div>
+            </div>
+          </>
         )}
         {entries === null ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            {loadFailed ? t("logs.loadFailed") : t("common.loading")}
-          </p>
+          <div className="flex flex-col items-center gap-2 px-4 py-12 text-center">
+            <ScrollText className="h-8 w-8 animate-pulse text-muted-foreground/60" />
+            <p className="text-sm font-medium">{t("common.loading")}</p>
+          </div>
         ) : (filtered?.length ?? 0) === 0 ? (
           <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <ScrollText className="w-8 h-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              {entries.length ? t("logs.noMatch") : t("logs.empty")}
+            <ScrollText className="h-8 w-8 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              {entries.length ? t("logs.noMatch") : t("logs.emptyTitle")}
+            </p>
+            <p className="max-w-md px-4 text-xs leading-relaxed text-muted-foreground">
+              {entries.length ? t("logs.noMatchHint") : t("logs.emptyHint")}
             </p>
             {entries.length > 0 && (
               <Button variant="outline" size="sm" onClick={() => { setQ(""); setProv(""); setOnlyErrors(false); }}>
-                {t("logs.resetFilters")}
+                {t("logs.clearFilters")}
+              </Button>
+            )}
+            {entries.length === 0 && (
+              <Button variant="outline" size="sm" onClick={() => void reload()} disabled={refreshing}>
+                <RefreshCw className={`mr-1 h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                {t("logs.refresh")}
               </Button>
             )}
           </div>
         ) : (
           <div className="max-h-[60vh] overflow-auto">
-            <table className="w-full min-w-[640px] text-xs">
+            <table className="w-full min-w-[700px] text-xs">
               <thead className="text-muted-foreground sticky top-0 bg-card">
                 <tr className="border-b border-border">
                   <th className="text-left font-medium px-4 py-2">{t("logs.time")}</th>
@@ -299,7 +466,8 @@ export function LogsPage({
                   <th className="text-right font-medium px-2 py-2">↓</th>
                   <th className="text-right font-medium px-2 py-2">↑</th>
                   <th className="text-right font-medium px-2 py-2">{t("logs.duration")}</th>
-                  <th className="text-right font-medium px-4 py-2">{t("logs.status")}</th>
+                  <th className="text-right font-medium px-3 py-2">{t("logs.status")}</th>
+                  <th className="w-8 px-2 py-2" aria-label={t("logs.detailHint")} />
                 </tr>
               </thead>
               <tbody className="tabular-nums">
@@ -307,7 +475,7 @@ export function LogsPage({
                   <Fragment key={day}>
                     <tr className="bg-muted/40">
                       <td
-                        colSpan={7}
+                        colSpan={8}
                         className="px-4 py-1 text-[11px] font-semibold text-muted-foreground"
                       >
                         {day} · {dayEntries.length}
@@ -317,7 +485,14 @@ export function LogsPage({
                   <tr
                     key={e.id}
                     onClick={() => setDetail(e)}
-                    className="border-b border-border/50 hover:bg-accent/50 cursor-pointer"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setDetail(e);
+                      }
+                    }}
+                    className={`cursor-pointer border-b border-border/50 hover:bg-accent/50 focus-within:bg-accent/50 focus-visible:outline-none focus-visible:bg-accent/50 ${e.status >= 400 ? "bg-red-500/[0.025]" : ""}`}
                   >
                     <td className="px-4 py-1.5 text-muted-foreground whitespace-nowrap">
                       <button type="button" className="rounded text-left underline-offset-4 hover:underline" onClick={() => setDetail(e)} aria-label={`${t("logs.detail")} · ${fmtTime(e.created_at)}`}>
@@ -347,17 +522,13 @@ export function LogsPage({
                     <td className="px-2 py-1.5 text-right text-muted-foreground">
                       {e.duration_ms > 0 ? `${(e.duration_ms / 1000).toFixed(1)}s` : "—"}
                     </td>
-                    <td className="px-4 py-1.5 text-right">
-                      <span
-                        className={
-                          e.status < 400
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-500"
-                        }
-                        title={e.error_note ?? undefined}
-                      >
-                        {e.status}
+                    <td className="px-3 py-1.5 text-right">
+                      <span title={e.error_note ?? undefined}>
+                        <StatusBadge status={e.status} />
                       </span>
+                    </td>
+                    <td className="px-2 py-1.5 text-right text-muted-foreground">
+                      <ChevronRight className="ml-auto h-3.5 w-3.5" aria-hidden="true" />
                     </td>
                   </tr>
                     ))}
@@ -401,14 +572,18 @@ export function LogsPage({
               <DialogTitle className="text-sm font-semibold">{t("logs.detail")}</DialogTitle>
             </div>
             <div className="p-4 space-y-3 text-xs">
+              <div className="rounded-lg border border-border bg-muted/20 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <StatusBadge status={detail.status} />
+                  <span className="truncate text-right font-medium">{detail.model ?? "—"}</span>
+                </div>
+                <p className="mt-2 truncate text-muted-foreground">{nameOf(detail.provider_id)}</p>
+              </div>
               {[
                 [t("logs.time"), fmtTime(detail.created_at)],
-                [t("logs.provider"), nameOf(detail.provider_id)],
-                [t("logs.model"), detail.model ?? "—"],
                 ["↓", String(detail.input_tokens)],
                 ["↑", String(detail.output_tokens)],
                 [t("logs.duration"), detail.duration_ms > 0 ? `${(detail.duration_ms / 1000).toFixed(1)}s` : "—"],
-                [t("logs.status"), String(detail.status)],
                 [t("logs.ruleHitShort"), detail.rule_pattern ?? "—"],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4">
@@ -420,6 +595,55 @@ export function LogsPage({
                 <div className="rounded-md bg-red-500/10 border border-red-500/30 p-2.5">
                   <p className="font-semibold text-red-600 dark:text-red-400 mb-1">{t("logs.errNote")}</p>
                   <p className="text-red-700 dark:text-red-300 break-all whitespace-pre-wrap">{detail.error_note}</p>
+                </div>
+              )}
+              {detail.status >= 400 && (
+                <div className="space-y-2.5 border-t border-border pt-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    {t("logs.recoveryTitle")}
+                  </p>
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    onClick={() => {
+                      setDetail(null);
+                      onQuickSwitch();
+                    }}
+                  >
+                    <Zap className="h-3.5 w-3.5" />
+                    {t("logs.quickSwitch")}
+                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={detailTesting || !providers.some((provider) => provider.id === detail.provider_id)}
+                      onClick={() => void retestDetailProvider(detail)}
+                    >
+                      <Activity className={detailTesting ? "h-3.5 w-3.5 animate-pulse" : "h-3.5 w-3.5"} />
+                      {t(detailTesting ? "logs.retesting" : "logs.retest")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void copyErrorSummary(detail)}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      {t("logs.copyError")}
+                    </Button>
+                  </div>
+                  {detailTest && (
+                    <p
+                      role="status"
+                      className={detailTest.ok
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-red-600 dark:text-red-400"}
+                    >
+                      {detailTest.ok
+                        ? t("logs.retestOk", { ms: detailTest.latency_ms })
+                        : t("logs.retestFail", { message: detailTest.message || t("provider.testFail") })}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

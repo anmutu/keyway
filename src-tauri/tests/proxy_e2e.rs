@@ -267,6 +267,7 @@ async fn failover_switches_to_backup_on_5xx() {
 
     let resp = reqwest::Client::new()
         .post(format!("http://{proxy_addr}/v1/messages"))
+        .header("idempotency-key", "failover-test-1")
         .json(&serde_json::json!({"x":1}))
         .send()
         .await
@@ -1047,6 +1048,7 @@ async fn cooldown_demotes_failed_provider_within_window() {
     // 第一次:A 500 → 回退 B,同时 A 进入冷却
     let r: serde_json::Value = client
         .post(&url)
+        .header("idempotency-key", "cooldown-test-1")
         .json(&serde_json::json!({"x":1}))
         .send()
         .await
@@ -1060,6 +1062,7 @@ async fn cooldown_demotes_failed_provider_within_window() {
     // 第二次:A 在冷却窗口内被降级到链尾,B 直接成功 → A 不再被打
     let r: serde_json::Value = client
         .post(&url)
+        .header("idempotency-key", "cooldown-test-2")
         .json(&serde_json::json!({"x":2}))
         .send()
         .await
@@ -1075,6 +1078,7 @@ async fn cooldown_demotes_failed_provider_within_window() {
     db::kv::set(&pool, "cooldown.ca", &past).unwrap();
     let r: serde_json::Value = client
         .post(&url)
+        .header("idempotency-key", "cooldown-test-3")
         .json(&serde_json::json!({"x":3}))
         .send()
         .await

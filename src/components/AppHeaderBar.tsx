@@ -1,12 +1,9 @@
 import {
-  BarChart3,
   Plus,
   ScrollText,
-  Settings as SettingsIcon,
   Search,
-  Sparkles,
-  Plug,
 } from "lucide-react";
+import { AdvancedNavMenu } from "@/components/AdvancedNavMenu";
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
@@ -32,6 +29,7 @@ export function AppHeaderBar({
   proxyOk,
   proxyAddr,
   onTakeover,
+  onGuide,
   isMac,
 }: {
   position: "top" | "bottom";
@@ -45,6 +43,7 @@ export function AppHeaderBar({
   proxyOk: boolean | null;
   proxyAddr: string;
   onTakeover: () => void;
+  onGuide: () => void;
   isMac: boolean;
 }) {
   const { t } = useI18n();
@@ -78,6 +77,7 @@ export function AppHeaderBar({
           size="icon"
           className="h-8 w-8 shrink-0"
           title={t("common.add")}
+          aria-label={t("common.add")}
           onClick={onAdd}
         >
           <Plus className="w-4 h-4" />
@@ -97,73 +97,42 @@ export function AppHeaderBar({
         <Button
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8", currentView === "usage" && "bg-accent")}
-          title={t("dash.title")}
-          onClick={() => onViewChange("usage")}
-        >
-          <BarChart3 className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
           className={cn("h-8 w-8", currentView === "logs" && "bg-accent")}
           title={t("logs.title")}
+          aria-label={t("logs.title")}
           onClick={() => onViewChange("logs")}
         >
           <ScrollText className="w-4 h-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn("h-8 w-8", currentView === "skills" && "bg-accent")}
-          title={`${t("sk.title")} (⌘⇧S)`}
-          onClick={() => onViewChange("skills")}
+        <AdvancedNavMenu
+          currentView={currentView}
+          onViewChange={onViewChange}
+          onGuide={onGuide}
+          mode="toolbar"
+        />
+        <button
+          type="button"
+          onClick={onTakeover}
+          className={cn(
+            "inline-flex h-8 shrink-0 items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            proxyOk === true
+              ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+              : proxyOk === false
+                ? "text-red-600 dark:text-red-400 bg-red-500/10"
+                : "text-muted-foreground bg-muted/60",
+          )}
+          aria-label={`${t(proxyOk === true ? "gw.running" : proxyOk === false ? "takeover.proxyOff" : "gw.unknown")} · ${t("gw.details")}`}
+          aria-haspopup="dialog"
+          title={`${t("gw.details")}${proxyAddr ? ` · ${proxyAddr}` : ""}`}
         >
-          <Sparkles className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn("h-8 w-8", currentView === "mcp" && "bg-accent")}
-          title={`${t("mcp.title")} (⌘⇧M)`}
-          onClick={() => onViewChange("mcp")}
-        >
-          <Plug className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn("h-8 w-8", currentView === "settings" && "bg-accent")}
-          title={t("common.settings")}
-          onClick={() => onViewChange("settings")}
-        >
-          <SettingsIcon className="w-4 h-4" />
-        </Button>
-        {proxyOk !== null && (
-          <button
-            type="button"
-            onClick={onTakeover}
+          <span
             className={cn(
-              "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-opacity hover:opacity-80",
-              proxyOk
-                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
-                : "text-red-600 dark:text-red-400 bg-red-500/10",
+              "h-1.5 w-1.5 rounded-full",
+              proxyOk === true ? "bg-emerald-500" : proxyOk === false ? "bg-red-500" : "bg-muted-foreground",
             )}
-            title={
-              proxyOk
-                ? t("takeover.proxyTipOn", { addr: proxyAddr })
-                : t("takeover.proxyTipOff")
-            }
-          >
-            <span
-              className={cn(
-                "h-1.5 w-1.5 rounded-full",
-                proxyOk ? "bg-emerald-500" : "bg-red-500",
-              )}
-            />
-            {proxyOk ? t("takeover.proxyOn") : t("takeover.proxyOff")}
-          </button>
-        )}
+          />
+          <span className="hidden lg:inline">{t(proxyOk === true ? "takeover.proxyOn" : proxyOk === false ? "takeover.proxyOff" : "gw.details")}</span>
+        </button>
         <ModeToggle />
       </div>
     </header>

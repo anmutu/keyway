@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Keyway 使用指南 — 5 分钟上手,管好你的每一个 AI CLI</title>
-    <meta name="description" content="Keyway 使用教程:下载安装、添加供应商、接入本地代理、默认供应商与路由、故障转移、请求日志和恢复直连,5 分钟掌握。" />
+    <title>Keyway 详细使用指南 — 安装、接管、验证请求与故障排查</title>
+    <meta name="description" content="Keyway 详细使用教程:准备 CLI 与 API Key、填写供应商端点、接管配置、验证第一条请求、配置路由与故障转移、备份迁移和恢复直连。" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Keyway 使用指南" />
     <meta property="og:description" content="从安装到进阶:接入本地代理、管理供应商与路由、查看实际请求去向、排查失败并恢复直连。" />
@@ -139,7 +139,7 @@
 
     <header class="hero container">
       <h1 data-i18n="gH1">使用指南。</h1>
-      <p class="sub" data-i18n="gSub">从安装到进阶,5 分钟掌握 Keyway 的全部。</p>
+      <p class="sub" data-i18n="gSub">按步骤完成第一条请求,再学习日常切换、路由、备份和故障排查。</p>
       <div class="toc">
         <b data-i18n="gToc">本页内容</b>
         <ol>
@@ -147,7 +147,9 @@
           <li><a href="#add" data-i18n="gToc2">添加供应商</a></li>
           <li><a href="#takeover" data-i18n="gToc3">一键接管 CLI</a></li>
           <li><a href="#switch" data-i18n="gToc4">切换并确认请求去向</a></li>
+          <li><a href="#first-request" data-i18n="gTocVerify">实操:验证第一条请求</a></li>
           <li><a href="#advanced" data-i18n="gToc5">进阶:路由 · 故障转移 · 日志 · 档案</a></li>
+          <li><a href="#restore" data-i18n="gTocRestore">还原、退出与换机</a></li>
           <li><a href="#faq" data-i18n="gToc6">遇到问题?</a></li>
         </ol>
       </div>
@@ -155,11 +157,18 @@
 
     <main class="container">
 
+      <div class="tip" data-i18n="gVersionNote"><b>先核对版本:</b>本页下载按钮目前指向 v0.2.12。官网内容可能先于安装包更新;新版网关状态卡、按 CLI 分组的专属代理路径和还原冲突保护属于后续改动,请以安装包对应的 <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">发布说明</a> 为准。浏览官网不会安装或接管本机 CLI,示意画面也不代表真实请求。</div>
+
       <section class="step" id="install">
         <span class="stepnum">1</span>
         <div class="kicker" data-i18n="gS1k">准备</div>
         <h2 data-i18n="gS1h2">下载与安装</h2>
-        <p data-i18n="gS1p">Keyway 是一个免费的跨平台桌面应用。macOS 用户下载对应芯片的 <code>.dmg</code>,Windows 用户下载安装程序,Linux 用户可使用 AppImage;无需其他依赖。</p>
+        <p data-i18n="gS1p">Keyway 是桌面端本地网关,不是在线聊天工具,也不会替你安装 AI CLI。macOS 用户按芯片选择 <code>.dmg</code>,Windows 选择安装程序,Linux 选择对应架构的 AppImage、deb 或 rpm 包。</p>
+        <ul>
+          <li data-i18n="gPrereqCli"><b>准备 CLI:</b>先安装你要使用的 Claude Code、Codex 或 Gemini CLI 等工具,确认它能在终端中启动。Keyway 管理的是这些工具的请求去向。</li>
+          <li data-i18n="gPrereqKey"><b>准备供应商:</b>从供应商控制台取得 API Key、API 接口地址和可用模型名。不要假设网页聊天订阅同时包含 API 额度;以供应商账户权限为准。</li>
+          <li data-i18n="gPrereqSafe"><b>保护已有配置:</b>首次接管前另存一份 CLI 配置。不要同时让多个切换工具改写同一份配置;不确定时先只接入一个 CLI。</li>
+        </ul>
         <p style="margin-top:14px;">
           <a class="dl-btn dl-direct" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_aarch64.dmg" data-i18n="gS1dl">下载 for Apple 芯片(M1/M2/M3/M4)</a>
           <a class="dl-alt dl-direct-x64" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64.dmg" data-i18n="gS1dlAlt">Intel 芯片版</a>
@@ -191,6 +200,14 @@
         </ul>
         <div class="tip" data-i18n="gTip2"><b>密钥存储</b>:API Key 存入本机 SQLCipher 加密数据库,数据库主密钥由系统钥匙串保管。导出的供应商配置不含 API Key;转发请求时仍需向所选上游发送认证信息。</div>
         <p style="margin-top:18px;" data-i18n="gS2p2">添加完成后,可点击供应商卡片上的 <b>测速按钮</b> 检查连通性与延迟,再决定用谁。</p>
+        <h3 data-i18n="gFieldsTitle">这些字段怎么填?</h3>
+        <ul>
+          <li data-i18n="gFieldName"><b>名称:</b>使用易辨认的名称,如「主力渠道」或「备用渠道」。编辑已有供应商前确认它是否也被其他 CLI 分组复用。</li>
+          <li data-i18n="gFieldUrl"><b>接口地址:</b>填供应商文档中的 API Base URL,不是官网或控制台网址,也不是完整的 <code>/chat/completions</code> 请求地址。按实际协议选择端点;示例 <code>https://api.example.com/v1</code> 仅用于说明,不能直接请求。</li>
+          <li data-i18n="gFieldKey"><b>API Key:</b>粘贴该供应商的密钥,不要上传到工单或截图中。编辑时留空表示保留原密钥;换机导入配置后需要重新填写。</li>
+          <li data-i18n="gFieldModel"><b>模型:</b>使用上游支持的准确模型名。卡片中的模型列表用于展示,不会自动为 CLI 改名或开通模型权限;实际请求模型仍需在 CLI 中配置。</li>
+        </ul>
+        <div class="tip blue" data-i18n="gTestLimit"><b>测速通过不等于完整可用。</b>还需把供应商设为当前/默认,接管 CLI,再实际发送一条请求。首次验证先不用复杂路由和故障转移,便于判断问题出在哪一层。</div>
       </section>
 
       <section class="step" id="takeover">
@@ -206,12 +223,12 @@
         <div class="terminal">
           <div class="term-bar">
             <i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
-            <span>Keyway · 接管 Claude Code</span>
+            <span data-i18n="gTakeoverExampleTitle">接管流程示意 · 非实际执行结果</span>
           </div>
           <div class="term-body">
-            <div><span class="dim">»</span> 点击 <span class="blue">接管 Claude Code</span></div>
-            <div><span class="green">✓</span> 已备份 <span class="yellow">~/.claude/settings.json</span> → keyway.bak</div>
-            <div><span class="green">✓</span> 已接管,代理 127.0.0.1:9527 运行中</div>
+            <div data-i18n="gTakeoverExample1">1. 打开接管管理 → 找到 Claude Code → 接管</div>
+            <div data-i18n="gTakeoverExample2">2. Keyway 将接管所需的原配置信息备份到本机加密数据库</div>
+            <div data-i18n="gTakeoverExample3">3. 配置指向代理后,发送新请求并检查日志</div>
           </div>
         </div>
       </section>
@@ -227,7 +244,7 @@
           <li data-i18n="gS4l2"><b>已通过代理的会话无需重启</b>。切换影响后续请求,不会迁移已发出的请求;路由规则可能覆盖默认选择。</li>
           <li data-i18n="gS4l3">同一供应商可按协议复用到多个 CLI(如一个中转 Key 同时供 Claude Code 和 Codex)。</li>
           <li data-i18n="gS4l9"><b>Responses 桥接</b>:Codex 的 /v1/responses 请求可按供应商开启桥接,自动转成 /v1/chat/completions 发给只支持 chat 协议的中转站;编辑供应商时勾选即可,官方 OpenAI 等原生支持 Responses 的渠道无需开启。</li>
-          <li data-i18n="gS4l4"><b>自动协议转换(全向)</b>:只配置了 OpenAI 兼容或 Gemini 端点的供应商,也能直接给 Claude Code 等 Anthropic 协议 CLI 使用;反过来,只有 Anthropic 或 OpenAI 端点的渠道也能供 Codex、Gemini CLI 使用 —— Keyway 在本地完成请求/响应/流式与工具调用的双向转换;深度思考参数也会自动折算(Claude 的 thinking 预算 ↔ Gemini thinkingConfig ↔ OpenAI reasoning_effort),对 CLI 完全透明。</li>
+          <li data-i18n="gS4l4"><b>协议转换有边界:</b>Keyway 实现了部分 Anthropic、OpenAI Chat 和 Gemini 请求/响应转换,不代表所有模型、工具、多模态或深度思考参数都能无损兼容。优先使用 CLI 原生协议端点;Codex 的 Responses 桥接需单独开启并用实际任务验证。</li>
           <li data-i18n="gS4l10"><b>余额查询</b>:OpenRouter 兼容的中转站,在供应商卡片点钱包图标即可查看已用额度 / 总额度,方便及时充值。</li>
           <li data-i18n="gS4l5"><b>MCP 服务器统一管理</b>:在 Keyway 里定义一次 MCP 服务器,自动写入 Claude Code 与 Codex 的配置(stdio 支持环境变量);手工配置的条目不受影响,还可逐个测试连接。</li>
           <li data-i18n="gS4l8">本地代理提供 <b>http://127.0.0.1:9527/healthz</b> 探活端点,返回版本号与各 CLI 分组当前使用的供应商,方便脚本与健康检查集成。</li>
@@ -237,15 +254,30 @@
         <div class="terminal">
           <div class="term-bar">
             <i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
-            <span>claude — running session</span>
+            <span data-i18n="gSwitchExampleTitle">切换与验收示意 · 非真实日志</span>
           </div>
           <div class="term-body">
-            <div><span class="dim">»</span> 托盘切换: GLM Coding Plan <span class="dim">→</span> Kimi</div>
-            <div><span class="green">✓</span> 已切换 → Kimi</div>
-            <div><span class="dim">»</span> codex "continue"</div>
-            <div><span class="dim">POST</span> /v1/chat/completions <span class="dim">→</span> <span class="violet">Kimi</span> <span class="green">200 · 1.2s</span> <span class="dim">(会话未重启)</span></div>
+            <div data-i18n="gSwitchExample1">1. 在 Claude Code 分组把默认供应商从 A 切到 B</div>
+            <div data-i18n="gSwitchExample2">2. 在已接入代理的 Claude Code 会话发送新消息</div>
+            <div data-i18n="gSwitchExample3">3. 在日志中检查新请求:时间 / 供应商 B / 模型 / HTTP 状态</div>
+            <div data-i18n="gSwitchExample4">若实际去向不是 B,检查命中的路由规则与故障转移配置</div>
           </div>
         </div>
+      </section>
+
+      <section class="step" id="first-request">
+        <span class="stepnum">✓</span>
+        <div class="kicker" data-i18n="gVerifyKicker">实操验收</div>
+        <h2 data-i18n="gVerifyTitle">怎样确认第一条请求真的经过 Keyway?</h2>
+        <ol>
+          <li data-i18n="gVerify1"><b>先只配置一组:</b>选择你要用的 CLI 分组,添加一个供应商并点击「切换」。确认已经选中,而不只是出现在列表里。</li>
+          <li data-i18n="gVerify2"><b>检查代理:</b>保持 Keyway 运行。在终端执行 <code>curl http://127.0.0.1:9527/healthz</code>(PowerShell 可用 <code>curl.exe</code>)。返回状态、版本与当前供应商仅证明本地代理可访问,不证明上游已连通。</li>
+          <li data-i18n="gVerify3"><b>接管并新开会话:</b>在接管管理中接入目标 CLI。首次接管 Codex 需新开会话;其他 CLI 若仍读取旧配置,也请重新启动会话。Gemini 的环境变量可能受终端或项目配置影响。</li>
+          <li data-i18n="gVerify4"><b>发一条简单消息:</b>在 CLI 输入「只回复 OK,不要读写文件或调用工具」。这仍是一次真实上游请求,可能产生费用;不要先用长任务或敏感内容测试。</li>
+          <li data-i18n="gVerify5"><b>核对日志:</b>回到同一 CLI 分组的「日志」,点击刷新。检查是否出现刚才时间的新记录,供应商、模型和 HTTP 状态是否符合预期。CLI 收到回复且日志记录对应请求,才完成基本验收。</li>
+          <li data-i18n="gVerify6"><b>再测试切换:</b>添加备用供应商,切换后再发一条消息,核对新日志的实际去向。路由或故障转移可能覆盖默认选择;不要拿上一条请求的记录判断切换结果。</li>
+        </ol>
+        <div class="tip" data-i18n="gVerifyBoundary"><b>三个状态不要混淆:</b>「代理运行」说明监听服务存在;「已接管」说明配置指向代理;「新请求记录」才说明请求实际经过网关。新版首页的「最近实际去向」也是历史记录,不是当前会话的实时保证。</div>
       </section>
 
       <section class="step" id="advanced">
@@ -261,9 +293,21 @@
           <li data-i18n="gS5l6"><b>场景分流</b>:除长上下文外,还可为「深度思考」(请求开启 thinking 或 reasoning/thinking 档模型)与「后台轻量」(haiku / mini / flash / nano 档小任务)各指定一个供应商 —— 贵模型用在刀刃上,小任务走便宜渠道。</li>
           <li data-i18n="gS5l5"><b>长上下文分流</b>:超大数据量的请求(阈值可调,默认 6 万 token 估算)自动改走指定供应商 —— 大上下文走便宜渠道,日常对话不受影响。命中时响应头带 <code>x-keyway-route</code>。</li>
         </ul>
-        <p style="margin-top:18px;" data-i18n="gS5p2"><b>自动故障转移</b> —— 上游 5xx 或超时时,自动重试备用供应商,长任务不中断。把多个供应商加入候选链即可。发生回退时响应头带 <code>x-keyway-fallback</code>(链路与原因,如 A-&gt;B(502))。</p>
+        <p style="margin-top:18px;" data-i18n="gS5p2"><b>自动故障转移</b> —— 先分别验证主力与备用供应商,确认它们支持请求中的模型,再为目标分组启用故障转移并检查候选链。可重试的连接失败、429 或 5xx 会尝试后续候选;不是所有错误都重试,也不保证流式响应中途无缝恢复。发生回退时可检查 <code>x-keyway-fallback</code> 响应头。</p>
         <p style="margin-top:18px;" data-i18n="gS5p3"><b>用量与日志</b> —— 侧栏「用量」按 CLI / 供应商汇总 token 与成功率;「日志」可查最近 100 条请求(模型、上下行 token、状态码),排障一目了然;日志按天分组,「设置」里还可开启周期健康检测,定时测速当前供应商并同步到托盘。</p>
         <p style="margin-top:18px;" data-i18n="gS5p4"><b>配置档案与备份</b> —— 「设置」里可将当前供应商组合保存为档案(工作 / 个人 / 测试一键整组切换),也可导出 JSON 备份(不含密钥,系统保存对话框自选位置),换机无忧;另支持「配置导出/导入」:供应商、路由规则与预设导出为可分享的 JSON,导入按名称自动合并,团队共享配置一步到位。</p>
+      </section>
+
+      <section class="step" id="restore">
+        <span class="stepnum">6</span>
+        <div class="kicker" data-i18n="gRestoreKicker">安全退出与迁移</div>
+        <h2 data-i18n="gRestoreTitle">不再使用代理时,怎样恢复?</h2>
+        <ol>
+          <li data-i18n="gRestore1"><b>先结束正在执行的请求。</b>关闭 Keyway 窗口可以驻留托盘;完全退出会停止本地代理,仍指向代理的 CLI 将无法继续通过它请求。</li>
+          <li data-i18n="gRestore2"><b>打开接管管理,逐个还原已接管的 CLI。</b>旧版本还原前请另存当前配置,避免接管期间的新改动被覆盖。新版遇到目标字段冲突会中止并保留现场,不要删掉备份或反复强行覆盖。</li>
+          <li data-i18n="gRestore3"><b>检查手动设置。</b>手动添加到终端、shell 启动文件或项目中的代理环境变量不一定由自动还原移除;按自己的改动记录恢复原值。新开 CLI 会话并确认直连可用后,再退出或卸载 Keyway。</li>
+        </ol>
+        <p data-i18n="gMigration"><b>换机步骤:</b>在设置中导出供应商备份或可分享配置 → 妥善保存 JSON → 在新设备安装 Keyway 并导入 → 重新填写 API Key → 验证供应商 → 在新设备重新接管 CLI。配置档案只保存各分组的默认供应商选择,不是完整备份;导出配置不含密钥,也不替代 CLI 文件与请求日志的备份。</p>
       </section>
 
       <section class="step" id="faq">
@@ -271,6 +315,10 @@
         <div class="kicker" data-i18n="gFaqK">排障</div>
         <h2 data-i18n="gFaqH2">遇到问题?</h2>
         <ul>
+          <li data-i18n="gFaqNoLogs"><b>CLI 有回复,日志却没有新记录:</b>先刷新日志并确认分组;再检查终端环境变量、项目配置或其他切换工具是否覆盖了接管地址。不要仅凭供应商卡片的选中状态判断成功。</li>
+          <li data-i18n="gFaqLocal"><b>Connection refused / 本地代理不可达:</b>确认 Keyway 未完全退出,再检查 <code>/healthz</code>。如果启动时提示端口被占用,先确认占用进程是否为另一实例,不要随意终止未知进程。</li>
+          <li data-i18n="gFaqModel"><b>404 / 模型不存在:</b>核对 API Base URL、端点协议和 CLI 请求的模型名。Codex 使用 Responses 请求时,确认上游支持该接口;只支持 Chat 的渠道需要验证桥接兼容性。</li>
+          <li data-i18n="gFaqUpstream"><b>429 / 5xx:</b>分别检查供应商限流、额度与服务状态。先降低请求频率,必要时切换已验证的备用渠道;不要连续快速重试放大限流。</li>
           <li data-i18n="gFaqL1"><b>请求 401 / 403</b>:响应头带 <code>x-keyway-hint</code>,按提示检查 Key 是否有效、额度是否充足。</li>
           <li data-i18n="gFaqL2"><b>切换没生效</b>:先确认代理运行与 CLI 接管状态,再发送新请求并查看日志。模型路由可能覆盖默认供应商;首次接管 Codex 需新开会话。</li>
           <li data-i18n="gFaqL3"><b>想恢复原样</b>:分组页「还原」即可,原配置在接管时已备份。</li>
@@ -300,12 +348,52 @@
         en: {
           gNavHome: "Home", gNavDl: "Download",
           gH1: "The guide.",
-          gSub: "From install to advanced routing — everything about Keyway in 5 minutes.",
+          gSub: "Verify your first request step by step, then learn switching, routing, backups and troubleshooting.",
+          gTocVerify: "Walkthrough: verify your first request",
+          gTocRestore: "Restore, quit and migrate",
+          gVersionNote: '<b>Check your version:</b> These downloads point to v0.2.12. Website updates may precede installers. The redesigned gateway card, CLI-specific proxy paths and restore conflict protection are later changes; check the <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">release notes</a> for your installer. Browsing this site does not install or take over a CLI. Illustrations are not real requests.',
+          gPrereqCli: '<b>Prepare your CLI:</b> Install your AI CLI separately and confirm it starts in a terminal. Keyway manages where its requests go.',
+          gPrereqKey: '<b>Prepare a provider:</b> Obtain an API key, API Base URL and supported model names. Do not assume a web chat subscription includes API credits; check provider account permissions.',
+          gPrereqSafe: '<b>Protect existing settings:</b> Save a separate copy of CLI configuration before first takeover. Avoid multiple switching tools rewriting the same file. Start with one CLI.',
+          gFieldsTitle: 'What goes in each field?',
+          gFieldName: '<b>Name:</b> Use a recognizable name such as Primary or Backup. Before editing, check whether other CLI groups share the provider.',
+          gFieldUrl: '<b>Endpoint:</b> Use the API Base URL from provider documentation, not a website, dashboard or complete <code>/chat/completions</code> URL. Choose the actual protocol. <code>https://api.example.com/v1</code> is a placeholder, not a working service.',
+          gFieldKey: '<b>API key:</b> Paste the provider key and keep it out of tickets and screenshots. Leaving it blank when editing preserves the existing key. Re-enter keys after migrating configuration.',
+          gFieldModel: '<b>Model:</b> Use an exact model name supported upstream. The card’s model list is informational: it does not rename CLI models or grant access. Configure the requested model in your CLI.',
+          gTestLimit: '<b>A reachability test is not full validation.</b> Select the provider as current/default, take over the CLI and send a real request. Initially avoid complex routing and failover to make failures easier to isolate.',
+          gTakeoverExampleTitle: 'Takeover illustration · Not actual execution',
+          gTakeoverExample1: '1. Open takeover management → Claude Code → Take over',
+          gTakeoverExample2: '2. Required original configuration is backed up in the local encrypted database',
+          gTakeoverExample3: '3. After connecting, send a new request and check logs',
+          gSwitchExampleTitle: 'Switching illustration · Not real logs',
+          gSwitchExample1: '1. In the Claude Code group, change the default from provider A to B',
+          gSwitchExample2: '2. Send a new message in a Claude Code session already using the proxy',
+          gSwitchExample3: '3. Check the new log: time / provider B / model / HTTP status',
+          gSwitchExample4: 'If the destination is not B, inspect routing rules and failover settings',
+          gVerifyKicker: 'Practical verification',
+          gVerifyTitle: 'Did my first request actually go through Keyway?',
+          gVerify1: '<b>Start with one group:</b> Select your CLI, add a provider and click Switch. Confirm it is selected, not merely listed.',
+          gVerify2: '<b>Check the proxy:</b> Keep Keyway running. Run <code>curl http://127.0.0.1:9527/healthz</code> (use <code>curl.exe</code> in PowerShell). The returned status, version and defaults prove local reachability, not upstream connectivity.',
+          gVerify3: '<b>Take over and start a fresh session:</b> Connect the target CLI. Codex needs a new session after first takeover. Restart other CLI sessions if they retain old settings. Terminal or project settings may affect Gemini environment variables.',
+          gVerify4: '<b>Send a simple message:</b> Ask the CLI “Reply only OK; do not read or write files or call tools.” This is a real request and may incur charges. Avoid long tasks and sensitive content for the first test.',
+          gVerify5: '<b>Inspect logs:</b> Open Logs for the same group and refresh. Check the new entry’s time, provider, model and HTTP status. A CLI reply plus its matching log completes basic verification.',
+          gVerify6: '<b>Test switching:</b> Add a backup, switch and send another message. Check its new log. Routing or failover may override the default; an earlier log cannot prove a new switch worked.',
+          gVerifyBoundary: '<b>Three different states:</b> A running proxy means the listener exists; takeover means configuration points to it; a new log proves a request passed through it. The newer home screen’s last destination is historical, not a live session guarantee.',
+          gRestoreKicker: 'Safe exit and migration',
+          gRestoreTitle: 'How do I stop using the proxy safely?',
+          gRestore1: '<b>Finish ongoing requests.</b> Closing the window can leave Keyway in the tray. Fully quitting stops the proxy; CLIs still pointing to it cannot continue through it.',
+          gRestore2: '<b>Restore each connected CLI in takeover management.</b> On older versions, first save a copy of current configuration to protect newer edits. Newer conflict protection stops restoration and preserves files when managed fields changed. Do not delete backups or force overwrites.',
+          gRestore3: '<b>Review manual settings.</b> Variables added to terminals, shell startup files or projects may not be removed by automatic restore. Restore their original values from your change record. Verify direct access in a new CLI session before quitting or uninstalling.',
+          gMigration: '<b>Moving machines:</b> Export a provider backup or shareable configuration → save the JSON securely → install and import on the new device → re-enter API keys → verify providers → take over CLIs again. Profiles save default provider selections, not full backups. Configuration exports exclude keys and do not replace backups of CLI files or request logs.',
+          gFaqNoLogs: '<b>The CLI replies but no new log appears:</b> Refresh and confirm the group. Check terminal variables, project settings and other switching tools for overrides. A selected provider card alone is not proof.',
+          gFaqLocal: '<b>Connection refused:</b> Confirm Keyway has not fully quit and check <code>/healthz</code>. If the port is occupied, establish whether another instance owns it; do not terminate unknown processes blindly.',
+          gFaqModel: '<b>404 / model not found:</b> Check the Base URL, protocol and requested model. Codex Responses requests require upstream support; Chat-only channels need separate bridge compatibility testing.',
+          gFaqUpstream: '<b>429 / 5xx:</b> Check rate limits, quota and upstream availability. Reduce request frequency or switch to a verified backup. Avoid rapid retries that worsen rate limiting.',
           gToc: "On this page",
           gToc1: "Download & install", gToc2: "Add providers", gToc3: "One-click takeover",
           gToc4: "Switch and verify requests", gToc5: "Advanced: routing · failover · logs · profiles", gToc6: "Troubleshooting",
           gS1k: "Get ready", gS1h2: "Download & install",
-          gS1p: "Keyway is a free desktop app for macOS, Windows and Linux. Download the installer for your platform below — no other dependencies required.",
+          gS1p: "Keyway is a desktop local gateway, not an online chat tool, and does not install AI CLIs for you. Choose a chip-matched DMG on macOS, an installer on Windows, or an architecture-matched AppImage, deb or rpm on Linux.",
           gS1dl: "Download for Apple silicon (M1–M4)", gS1dlWin: "Windows", gS1dlLinux: "Linux AppImage", gS1dlDeb: "Linux .deb", gS1dlRpm: "Linux .rpm",
           gS1dlAlt: "Intel version",
           gS1dlAll: "All platforms ›",
@@ -334,7 +422,7 @@
           gS4l2: "Sessions already using the proxy need no restart. Switching affects new requests, not in-flight ones; routing rules may override the default provider.",
           gS4l3: "One provider can serve multiple CLIs per protocol (e.g. one relay key for both Claude Code and Codex).",
           gS4l9: "Responses bridge: per-provider toggle converts Codex /v1/responses requests to /v1/chat/completions for chat-only relays; enable it when editing a provider. Native Responses providers like official OpenAI do not need it.",
-          gS4l4: "Omnidirectional automatic protocol conversion: providers with only an OpenAI-compatible or Gemini endpoint work directly with Claude Code and other Anthropic-protocol CLIs, and Anthropic- or OpenAI-only channels serve Codex and Gemini CLI as well — Keyway converts requests, responses, streaming and tool calls locally; deep-thinking params are auto-mapped across formats (Claude thinking budget ↔ Gemini thinkingConfig ↔ OpenAI reasoning_effort), fully transparent to the CLI.",
+          gS4l4: "Protocol conversion has limits: Keyway implements selected Anthropic, OpenAI Chat and Gemini conversions. This does not guarantee lossless support for every model, tool, multimodal or reasoning parameter. Prefer native endpoints. Enable Codex Responses bridging separately and verify it with real tasks.",
         gS4l5: "Unified MCP management: define MCP servers once in Keyway and they are written into Claude Code's and Codex's configs automatically; manually configured entries are untouched.",
         gS4l6: "Unified Skills management: maintain skills in a local vault and sync them to Claude Code and Codex in one click; built-in or manually added skills are untouched.",
           gS4l7: "More in-app shortcuts: ⌘N new provider, ⌘1..5 switch CLI group, ⌘⇧M / ⌘⇧S jump to MCP / Skills management (Ctrl combos on Windows/Linux).",
@@ -348,7 +436,7 @@
           gS5l4: "Requests that matched a rule are tagged blue in the Logs page, so routing is visible at a glance.",
           gS5l5: "Long-context split: requests above a size threshold (adjustable, ~60k tokens estimated by default) automatically go to a designated provider — big contexts on the cheap channel, daily chats unaffected. Matched responses carry an x-keyway-route header.",
           gS5l6: "Scene-based split: besides long-context, designate providers for deep-think (thinking enabled or reasoning/thinking tier models) and background-lite (haiku / mini / flash / nano tier tasks) — premium models where they matter, cheap channels for small jobs.",
-          gS5p2: "Automatic failover — on upstream 5xx or timeouts, requests retry backup providers automatically. Add providers to the candidate chain to enable it. Failed-over responses carry an x-keyway-fallback header (chain and reason, e.g. A->B(502)).",
+          gS5p2: "Automatic failover — verify primary and backup providers, including support for the requested model. Enable failover for the group and inspect its candidate chain. Retryable connection failures, 429 and 5xx can try later candidates; not all errors retry and mid-stream recovery is not guaranteed. Check the x-keyway-fallback response header when fallback occurs.",
           gS5p3: "Usage & logs — the Usage page aggregates tokens and success rates by CLI and provider; Logs shows the last 100 requests (model, tokens in/out, status) for easy debugging; logs are grouped by day, and an optional periodic health check in Settings tests the current providers on a schedule and syncs to the tray.",
           gS5p4: "Profiles & backup — save the current provider set as a profile (work / personal / testing, one-tap switching) and export a JSON backup via the system save dialog (keys excluded) for moving machines. Config export / import shares providers, route rules and presets as a portable JSON — imports merge by name, so teams can share setups in one step.",
           gFaqK: "Troubleshooting", gFaqH2: "Having trouble?",
@@ -378,7 +466,7 @@
             if (v !== undefined) el.innerHTML = v;
           });
           root.setAttribute("lang", lang === "en" ? "en" : "zh-CN");
-          document.title = lang === "en" ? "Keyway Guide — master every AI CLI in 5 minutes" : zhTitle;
+          document.title = lang === "en" ? "Keyway Detailed Guide — setup, takeover, verification and troubleshooting" : zhTitle;
           toggle.textContent = lang === "en" ? "中文" : "EN";
           try { localStorage.setItem("site-lang", lang); } catch (e) {}
         }

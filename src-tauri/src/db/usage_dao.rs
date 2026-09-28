@@ -320,17 +320,52 @@ pub fn group_provider_model(
     Ok(rows.flatten().collect())
 }
 
-/// 近 1 小时各供应商错误率(告警横幅用):(provider_id, total, errors)。
-pub fn recent_error_rates(pool: &Pool) -> Result<Vec<(String, i64, i64)>> {
+/// 近 1 小时某分组各供应商错误率(告警横幅用):(provider_id, total, errors)。
+pub fn recent_error_rates(pool: &Pool, app_type: &str) -> Result<Vec<(String, i64, i64)>> {
     let conn = pool.get().map_err(|e| anyhow::anyhow!("{e}"))?;
     let since = chrono::Utc::now().timestamp() - 3600;
     let mut stmt = conn.prepare(
         "SELECT provider_id, COUNT(*), SUM(CASE WHEN status >= 400 THEN 1 ELSE 0 END)
-         FROM usage_log WHERE created_at >= ?1
+         FROM usage_log WHERE app_type = ?1 AND created_at >= ?2
          GROUP BY provider_id HAVING COUNT(*) >= 5",
     )?;
-    let rows = stmt.query_map(rusqlite::params![since], |r| {
+    let rows = stmt.query_map(rusqlite::params![app_type, since], |r| {
         Ok((r.get(0)?, r.get(1)?, r.get(2)?))
     })?;
     Ok(rows.flatten().collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recent_error_rates_are_scoped_to_the_requested_app() {
+        let dir = std::env::temp_dir().join(format!("keyway_usage_test_{}", uuid::Uuid::new_v4()));
+        let pool = crate::db::init_pool(dir.join("usage.db"), &"ab".repeat(32)).unwrap();
+        let conn = pool.get().unwrap();
+
+        for status in [500, 500, 500, 500, 200] {
+            conn.execute(
+                "INSERT INTO usage_log(app_type, provider_id, status, created_at) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params!["claude", "shared", status, chrono::Utc::now().timestamp()],
+            )
+            .unwrap();
+        }
+        for status in [500, 500, 500, 500, 500] {
+            conn.execute(
+                "INSERT INTO usage_log(app_type, provider_id, status, created_at) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params!["codex", "shared", status, chrono::Utc::now().timestamp()],
+            )
+            .unwrap();
+        }
+
+        assert_eq!(
+            recent_error_rates(&pool, "claude").unwrap(),
+            vec![("shared".to_string(), 5, 4)]
+        );
+
+        drop(conn);
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }

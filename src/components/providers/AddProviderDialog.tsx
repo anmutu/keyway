@@ -300,27 +300,34 @@ export function AddProviderDialog({
               </DialogDescription>
             </DialogHeader>
 
-            {/* 预设来源 + 返回重选 */}
-            {preset && (
-              <div className="flex items-center gap-2.5 rounded-md bg-accent px-3 py-2 text-sm">
+            {/* 来源 + 返回重选:预设和自定义都能无损回到第一步 */}
+            <div className={cn(
+              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm",
+              preset ? "bg-accent" : "border border-dashed border-border",
+            )}>
+              {preset ? (
                 <ProviderIcon
                   icon={preset.icon ?? ""}
                   name={preset.name}
                   size={16}
                 />
-                <span className="min-w-0 flex-1 truncate font-medium">{preset.name}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={back}
-                  className="h-7 px-2 text-xs"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-                  {t("preset.repick")}
-                </Button>
-              </div>
-            )}
+              ) : (
+                <Plus className="h-4 w-4 text-muted-foreground" />
+              )}
+              <span className="min-w-0 flex-1 truncate font-medium">
+                {preset?.name ?? t("preset.customItem")}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={back}
+                className="h-7 px-2 text-xs"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+                {t("preset.repick")}
+              </Button>
+            </div>
 
             <div className="grid gap-2">
               <Label htmlFor="provider-name">{t("dialog.name")}</Label>

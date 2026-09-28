@@ -9,9 +9,36 @@ use crate::types::{AppType, ProviderInput};
 
 const CONFIG_KEYS: [&str; 3] = ["route.", "responses.bridge.", "failover:"];
 
+fn profile_names(providers: &[crate::types::Provider], raw: Option<&str>) -> Value {
+    let Some(profiles) = raw.and_then(|value| serde_json::from_str::<Value>(value).ok()) else {
+        return json!({});
+    };
+    let by_id: std::collections::HashMap<&str, &str> = providers
+        .iter()
+        .map(|provider| (provider.id.as_str(), provider.name.as_str()))
+        .collect();
+    let mut output = json!({});
+    if let Some(profile_map) = profiles.as_object() {
+        for (name, apps) in profile_map {
+            let mut app_map = json!({});
+            if let Some(apps) = apps.as_object() {
+                for (app, provider_id) in apps {
+                    if let Some(provider_name) =
+                        provider_id.as_str().and_then(|id| by_id.get(id).copied())
+                    {
+                        app_map[app] = json!(provider_name);
+                    }
+                }
+            }
+            output[name] = app_map;
+        }
+    }
+    output
+}
+
 fn build_config(state: &AppState) -> Result<Value, String> {
-    let providers: Vec<Value> = provider_dao::list_all(&state.db)
-        .map_err(|e| e.to_string())?
+    let provider_records = provider_dao::list_all(&state.db).map_err(|e| e.to_string())?;
+    let providers: Vec<Value> = provider_records
         .iter()
         .map(|p| {
             let pid = p.id.clone();
@@ -38,33 +65,12 @@ fn build_config(state: &AppState) -> Result<Value, String> {
         .map(|(k, v)| json!({ "key": k, "value": v }))
         .collect();
     // 配置档案:name → {app → 供应商名}(用名称而非 ID,导入端可移植)
-    let profiles: Value = kv::get(&state.db, "profiles")
-        .map_err(|e| e.to_string())?
-        .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
-        .map(|ps| {
-            let by_id: std::collections::HashMap<String, String> =
-                provider_dao::list_all(&state.db)
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(|p| (p.id, p.name))
-                    .collect();
-            let mut out = json!({});
-            if let Some(obj) = ps.as_object() {
-                for (name, apps) in obj {
-                    let mut m = json!({});
-                    if let Some(apps) = apps.as_object() {
-                        for (app, pid) in apps {
-                            if let Some(n) = pid.as_str().and_then(|id| by_id.get(id)) {
-                                m[app] = json!(n);
-                            }
-                        }
-                    }
-                    out[name] = m;
-                }
-            }
-            out
-        })
-        .unwrap_or(json!({}));
+    let profiles = profile_names(
+        &provider_records,
+        kv::get(&state.db, "profiles")
+            .map_err(|e| e.to_string())?
+            .as_deref(),
+    );
     Ok(
         json!({ "format": "keyway-config", "version": 1, "providers": providers,
                 "route_rules": rules, "presets": presets, "profiles": profiles }),
@@ -151,7 +157,8 @@ fn do_import(db: &crate::db::Pool, cfg: &Value) -> Result<(usize, usize, usize),
                     url.as_str(),
                 ) {
                     if !u.trim().is_empty() {
-                        let _ = provider_dao::upsert_endpoint(state_db, &pid, protocol, u);
+                        provider_dao::upsert_endpoint(state_db, &pid, protocol, u)
+                            .map_err(|e| e.to_string())?;
                     }
                 }
             }
@@ -183,17 +190,18 @@ fn do_import(db: &crate::db::Pool, cfg: &Value) -> Result<(usize, usize, usize),
         };
         let mt = r["match_type"].as_str().unwrap_or("contains").to_string();
         let pattern = r["pattern"].as_str().unwrap_or("").to_string();
+        let app_key = app.as_str().to_string();
+        if !existing_cache.contains_key(&app_key) {
+            let seen = route_dao::list_by_app(state_db, app.as_str())
+                .map_err(|e| e.to_string())?
+                .into_iter()
+                .map(|x| (x.pattern, x.provider_id, x.match_type))
+                .collect();
+            existing_cache.insert(app_key.clone(), seen);
+        }
         let seen = existing_cache
-            .entry(app.as_str().to_string())
-            .or_insert_with(|| {
-                route_dao::list_by_app(state_db, app.as_str())
-                    .map(|rs| {
-                        rs.into_iter()
-                            .map(|x| (x.pattern, x.provider_id, x.match_type))
-                            .collect()
-                    })
-                    .unwrap_or_default()
-            });
+            .get_mut(&app_key)
+            .ok_or_else(|| format!("无法初始化 {app_key} 路由缓存"))?;
         let key = (pattern.clone(), pid.clone(), mt.clone());
         if seen.contains(&key) {
             rules_skipped += 1;
@@ -232,7 +240,7 @@ fn do_import(db: &crate::db::Pool, cfg: &Value) -> Result<(usize, usize, usize),
         {
             continue;
         }
-        let _ = kv::set(state_db, &key, &val);
+        kv::set(state_db, &key, &val).map_err(|e| e.to_string())?;
     }
     // 配置档案:按名称解析回本机 ID(供应商缺失的分组条目丢弃)
     if let Some(ps) = cfg.get("profiles").and_then(|v| v.as_object()) {
@@ -259,7 +267,7 @@ fn do_import(db: &crate::db::Pool, cfg: &Value) -> Result<(usize, usize, usize),
             }
         }
         if !out.is_empty() {
-            let _ = kv::set(db, "profiles", &Value::Object(out).to_string());
+            kv::set(db, "profiles", &Value::Object(out).to_string()).map_err(|e| e.to_string())?;
         }
     }
     Ok((created, rules_added, rules_skipped))
@@ -273,6 +281,34 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("cfg_{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         crate::db::init_pool(dir.join("t.db"), &"ab".repeat(32)).unwrap()
+    }
+
+    #[test]
+    fn profile_export_uses_loaded_provider_records() {
+        let providers = vec![crate::types::Provider {
+            id: "known".into(),
+            app_type: AppType::Claude,
+            name: "Known provider".into(),
+            base_url: "http://known".into(),
+            keychain_id: None,
+            endpoints: std::collections::HashMap::new(),
+            models: vec![],
+            is_current: false,
+            is_healthy: true,
+            sort_index: 0,
+            created_at: 0,
+            has_key: false,
+            meta_has_key: None,
+            last_test: None,
+        }];
+
+        let exported = profile_names(
+            &providers,
+            Some(r#"{"work":{"claude":"known","codex":"missing"}}"#),
+        );
+
+        assert_eq!(exported["work"]["claude"], "Known provider");
+        assert!(exported["work"].get("codex").is_none());
     }
 
     #[test]

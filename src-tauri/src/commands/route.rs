@@ -154,37 +154,68 @@ pub fn dry_run_route(
     let m = model.trim().to_string();
     let hit = crate::db::route_dao::match_provider(&state.db, app_type.as_str(), Some(&m))
         .map_err(|e| e.to_string())?;
-    let pid = hit.as_ref().map(|(pid, _, _)| pid.clone()).or_else(|| {
+    let failover_on = crate::db::kv::get(&state.db, &format!("failover:{}", app_type.as_str()))
+        .map_err(|e| e.to_string())?
+        .as_deref()
+        == Some("1");
+    let mut candidates = if failover_on {
+        crate::db::provider_dao::failover_candidates(&state.db, app_type)
+            .map_err(|e| e.to_string())?
+    } else {
         crate::db::provider_dao::get_current(&state.db, app_type)
-            .ok()
-            .flatten()
-            .map(|p| p.id)
-    });
-    let (provider_name, pattern, fallback_name) = match pid {
-        Some(id) => {
-            let name = crate::db::provider_dao::get_by_id(&state.db, &id)
-                .map_err(|e| e.to_string())?
-                .map(|p| p.name)
-                .unwrap_or_else(|| id.clone());
-            let pattern = hit.as_ref().map(|(_, p, _)| p.clone());
-            let fb = hit
-                .as_ref()
-                .and_then(|(_, _, f)| f.clone())
-                .and_then(|fid| {
-                    crate::db::provider_dao::get_by_id(&state.db, &fid)
-                        .ok()
-                        .flatten()
-                        .map(|p| p.name)
-                });
-            (name, pattern, fb)
-        }
-        None => (String::new(), None, None),
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .collect()
     };
+
+    if let Some((rule_provider_id, _, rule_fallback_id)) = hit.as_ref() {
+        if let Some(pos) = candidates.iter().position(|p| &p.id == rule_provider_id) {
+            let provider = candidates.remove(pos);
+            candidates.insert(0, provider);
+        } else if let Some(provider) =
+            crate::db::provider_dao::get_by_id(&state.db, rule_provider_id)
+                .map_err(|e| e.to_string())?
+        {
+            candidates.insert(0, provider);
+        }
+
+        if let Some(fallback_id) = rule_fallback_id
+            .as_ref()
+            .filter(|id| *id != rule_provider_id)
+        {
+            if let Some(pos) = candidates.iter().position(|p| &p.id == fallback_id) {
+                let fallback = candidates.remove(pos);
+                candidates.insert(1.min(candidates.len()), fallback);
+            } else if let Some(fallback) =
+                crate::db::provider_dao::get_by_id(&state.db, fallback_id)
+                    .map_err(|e| e.to_string())?
+            {
+                candidates.insert(1.min(candidates.len()), fallback);
+            }
+        }
+    }
+    candidates.truncate(3);
+
+    let provider_name = candidates
+        .first()
+        .map(|p| p.name.clone())
+        .or_else(|| {
+            hit.as_ref().map(|(id, _, _)| id.clone()).or_else(|| {
+                crate::db::provider_dao::get_current(&state.db, app_type)
+                    .ok()
+                    .flatten()
+                    .map(|p| p.name)
+            })
+        })
+        .unwrap_or_default();
+    let fallback_name = candidates.get(1).map(|p| p.name.clone());
+    let candidates = candidates.into_iter().map(|p| p.name).collect::<Vec<_>>();
     Ok(serde_json::json!({
         "model": m,
         "rule_hit": hit.is_some(),
-        "pattern": pattern,
+        "pattern": hit.as_ref().map(|(_, pattern, _)| pattern),
         "provider": provider_name,
         "fallback": fallback_name,
+        "candidates": candidates,
     }))
 }

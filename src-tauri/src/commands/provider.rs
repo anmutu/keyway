@@ -280,18 +280,21 @@ pub fn get_failover_chain(
 #[tauri::command]
 pub fn get_degraded_providers(
     state: State<'_, AppState>,
+    app_type: AppType,
 ) -> Result<Vec<serde_json::Value>, String> {
-    Ok(crate::db::usage_dao::recent_error_rates(&state.db)
-        .map_err(|e| e.to_string())?
-        .into_iter()
-        .filter(|(_, total, errs)| *errs as f64 / *total as f64 > 0.3)
-        .map(|(pid, total, errs)| {
-            let name = provider_dao::get_by_id(&state.db, &pid)
-                .ok()
-                .flatten()
-                .map(|p| p.name)
-                .unwrap_or_else(|| pid.clone());
-            serde_json::json!({ "id": pid, "name": name, "total": total, "errors": errs })
-        })
-        .collect())
+    Ok(
+        crate::db::usage_dao::recent_error_rates(&state.db, app_type.as_str())
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .filter(|(_, total, errs)| *errs as f64 / *total as f64 > 0.3)
+            .map(|(pid, total, errs)| {
+                let name = provider_dao::get_by_id(&state.db, &pid)
+                    .ok()
+                    .flatten()
+                    .map(|p| p.name)
+                    .unwrap_or_else(|| pid.clone());
+                serde_json::json!({ "id": pid, "name": name, "total": total, "errors": errs })
+            })
+            .collect(),
+    )
 }

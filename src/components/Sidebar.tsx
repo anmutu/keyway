@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { BarChart3, ScrollText, Plus, Plug, Search, Sparkles, Settings } from "lucide-react";
+import { ScrollText, Plus, Search } from "lucide-react";
+import { AdvancedNavMenu } from "@/components/AdvancedNavMenu";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
@@ -8,9 +8,6 @@ import { saveLastApp } from "@/lib/appPrefs";
 import type { AppType } from "@/types";
 
 // 窄图标栏:80px 纯图标,悬停 tooltip 显示名称
-// 首次使用时给 Skills/MCP 一次性高亮提示,用户交互过一次后不再出现
-const TOUR_KEY = "keyway-sidebar-tour";
-
 const appIconName: Record<AppType, string> = {
   claude: "claude",
   codex: "openai",
@@ -48,6 +45,7 @@ interface SidebarProps {
   proxyAddr: string;
   onTakeover: () => void;
   onAbout: () => void;
+  onGuide: () => void;
   /** 添加供应商(⌘N),入口放在 CLI 分组标题行 */
   onAdd: () => void;
   onQuickSwitch: () => void;
@@ -127,6 +125,7 @@ export function Sidebar({
   proxyAddr,
   onTakeover,
   onAbout,
+  onGuide,
   onAdd,
   onQuickSwitch,
   isMac,
@@ -138,16 +137,6 @@ export function Sidebar({
     saveLastApp(app);
     onSwitchApp(app);
     onViewChange("providers");
-  };
-
-  // 首次使用一次性高亮:Skills/MCP 图标语义不直观,交互过一次后不再提示
-  const [tourSeen, setTourSeen] = useState(
-    () => localStorage.getItem(TOUR_KEY) === "1",
-  );
-  const dismissTour = () => {
-    if (tourSeen) return;
-    localStorage.setItem(TOUR_KEY, "1");
-    setTourSeen(true);
   };
 
   return (
@@ -215,62 +204,24 @@ export function Sidebar({
 
       <div className="my-3 mx-3 w-auto self-stretch border-t border-border shrink-0" />
 
-      {/* 二级导航 */}
+      {/* 观察与工具导航 */}
       <nav className="flex flex-col gap-1 w-full shrink-0" data-tauri-no-drag>
-        <span className="hidden sm:block px-1 pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/50 lg:px-4 lg:text-left">
-          {t("sidebar.section.general")}
-        </span>
-        <RailItem
-          active={currentView === "usage"}
-          onClick={() => onViewChange("usage")}
-          title={t("dash.title")}
-          label={t("dash.title")}
-          edge={edge}
-        >
-          <BarChart3 className="w-[18px] h-[18px]" />
-        </RailItem>
         <RailItem
           active={currentView === "logs"}
           onClick={() => onViewChange("logs")}
           title={t("logs.title")}
           label={t("logs.title")}
           edge={edge}
-        >
+          >
           <ScrollText className="w-[18px] h-[18px]" />
         </RailItem>
-        <div onMouseEnter={dismissTour} onClick={dismissTour}>
-          <RailItem
-            active={currentView === "skills"}
-            onClick={() => onViewChange("skills")}
-            title={`${t("sk.title")} (⌘⇧S)`}
-            label={t("sk.title")}
-            edge={edge}
-            highlight={!tourSeen}
-          >
-            <Sparkles className="w-[18px] h-[18px]" />
-          </RailItem>
-        </div>
-        <div onMouseEnter={dismissTour} onClick={dismissTour}>
-          <RailItem
-            active={currentView === "mcp"}
-            onClick={() => onViewChange("mcp")}
-            title={`${t("mcp.title")} (⌘⇧M)`}
-            label={t("mcp.title")}
-            edge={edge}
-            highlight={!tourSeen}
-          >
-            <Plug className="w-[18px] h-[18px]" />
-          </RailItem>
-        </div>
-        <RailItem
-          active={currentView === "settings"}
-          onClick={() => onViewChange("settings")}
-          title={t("common.settings")}
-          label={t("common.settings")}
+        <AdvancedNavMenu
+          currentView={currentView}
+          onViewChange={onViewChange}
+          onGuide={onGuide}
+          mode="rail"
           edge={edge}
-        >
-          <Settings className="w-[18px] h-[18px]" />
-        </RailItem>
+        />
       </nav>
 
       <div className="flex-1" data-tauri-drag-region />
@@ -280,45 +231,45 @@ export function Sidebar({
         className="flex flex-col items-center gap-1 pb-3 w-full shrink-0"
         data-tauri-no-drag
       >
-        {proxyOk !== null && (
-          <div className="relative group">
-            <button
-              type="button"
-              onClick={onTakeover}
-              aria-label={proxyOk ? t("takeover.proxyTipOn", { addr: proxyAddr }) : t("takeover.proxyTipOff")}
-              className={cn(
-                "flex items-center justify-center h-9 w-9 rounded-lg transition-opacity hover:opacity-80 cursor-pointer lg:w-auto lg:mx-2 lg:px-3 lg:justify-start lg:gap-2",
-                proxyOk
-                  ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
-                  : "text-red-600 dark:text-red-400 bg-red-500/10",
-              )}
-              >
-              <span
-                className={cn(
-                  "h-2 w-2 rounded-full",
-                  proxyOk ? "bg-emerald-500" : "bg-red-500",
-                )}
-                />
-                <span className="hidden lg:inline text-xs font-medium">
-                  {proxyOk ? t("takeover.proxyOn") : t("takeover.proxyOff")}
-                </span>
-              </button>
-            {/* 悬停提示:靠内容区一侧浮出 */}
-            <span
-              role="tooltip"
-              className={cn(
-                "pointer-events-none absolute top-1/2 -translate-y-1/2 z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md opacity-0 scale-95 transition-all duration-100 group-hover:opacity-100 group-hover:scale-100 lg:hidden",
-                edge === "right"
-                  ? "right-full mr-2 origin-right"
-                  : "left-full ml-2 origin-left",
-              )}
+        <div className="relative group">
+          <button
+            type="button"
+            onClick={onTakeover}
+            aria-label={`${t(proxyOk === true ? "gw.running" : proxyOk === false ? "takeover.proxyOff" : "gw.unknown")} · ${t("gw.details")}`}
+            aria-haspopup="dialog"
+            title={`${t("gw.details")}${proxyAddr ? ` · ${proxyAddr}` : ""}`}
+            className={cn(
+              "flex items-center justify-center h-9 w-9 rounded-lg transition-opacity hover:opacity-80 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:w-auto lg:mx-2 lg:px-3 lg:justify-start lg:gap-2",
+              proxyOk === true
+                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                : proxyOk === false
+                  ? "text-red-600 dark:text-red-400 bg-red-500/10"
+                  : "text-muted-foreground bg-muted/60",
+            )}
             >
-              {proxyOk
-                ? t("takeover.proxyTipOn", { addr: proxyAddr })
-                : t("takeover.proxyTipOff")}
-            </span>
-          </div>
-        )}
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full",
+                proxyOk === true ? "bg-emerald-500" : proxyOk === false ? "bg-red-500" : "bg-muted-foreground",
+              )}
+              />
+              <span className="hidden lg:inline text-xs font-medium">
+                {t(proxyOk === true ? "gw.running" : proxyOk === false ? "takeover.proxyOff" : "gw.details")}
+              </span>
+            </button>
+          {/* 悬停提示:靠内容区一侧浮出 */}
+          <span
+            role="tooltip"
+            className={cn(
+              "pointer-events-none absolute top-1/2 -translate-y-1/2 z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md opacity-0 scale-95 transition-all duration-100 group-hover:opacity-100 group-hover:scale-100 lg:hidden",
+              edge === "right"
+                ? "right-full mr-2 origin-right"
+                : "left-full ml-2 origin-left",
+            )}
+          >
+            {t("gw.details")}
+          </span>
+        </div>
         <ModeToggle />
       </div>
     </aside>

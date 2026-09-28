@@ -12,8 +12,6 @@ interface ProviderActionsProps {
   /** 当前分组协议是否已配置端点(未配置则禁用"切换") */
   canSwitch?: boolean;
   app: AppType;
-  /** 当前分组接管是否实际生效(false = 被外部覆盖,按钮文案降级为「未接管」) */
-  takeoverEffective?: boolean;
   onSwitch: (provider: Provider) => void;
   onEdit: (provider: Provider) => void;
   onDuplicate: (provider: Provider) => void;
@@ -39,7 +37,6 @@ export function ProviderActions({
   isCurrent,
   canSwitch = true,
   app,
-  takeoverEffective,
   onSwitch,
   onEdit,
   onDuplicate,
@@ -49,7 +46,6 @@ export function ProviderActions({
 }: ProviderActionsProps) {
   const { t } = useI18n();
   const iconButtonClass = "h-8 w-8 p-1";
-  const switchDisabled = isCurrent || !canSwitch;
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState<TestResult | null>(null);
   const [balance, setBalance] = useState<Balance | null>(null);
@@ -103,24 +99,18 @@ export function ProviderActions({
             : `✗ ${result.message || t("provider.testFail")}`}
         </span>
       )}
-      <Button
-        size="sm"
-        variant={isCurrent ? "secondary" : "default"}
-        disabled={switchDisabled}
-        onClick={() => onSwitch(provider)}
-        title={canSwitch ? t("provider.switch") : t("provider.noEndpoint")}
-        className={
-          isCurrent && takeoverEffective === false
-            ? "text-amber-600 dark:text-amber-400"
-            : undefined
-        }
-      >
-        {isCurrent
-          ? takeoverEffective === false
-            ? t("provider.notTaken")
-            : t("provider.current")
-          : t("provider.switchBtn")}
-      </Button>
+      {!isCurrent && (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={!canSwitch}
+          onClick={() => onSwitch(provider)}
+          title={canSwitch ? t("provider.switch") : t("provider.noEndpoint")}
+        >
+          {t("provider.switchBtn")}
+        </Button>
+      )}
+      <div className="provider-secondary-actions flex items-center gap-1.5">
       <Button
         size="icon"
         variant="ghost"
@@ -190,6 +180,7 @@ export function ProviderActions({
       >
         <Trash2 className="h-4 w-4" />
       </Button>
+      </div>
     </div>
   );
 }

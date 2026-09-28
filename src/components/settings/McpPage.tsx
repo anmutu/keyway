@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Activity, Plug, Plus, RefreshCw, Server, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -86,18 +86,29 @@ export function McpPage({
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<McpServer | null>(null);
+  const reloadId = useRef(0);
 
   const reload = useCallback(() => {
+    const currentRequest = ++reloadId.current;
     if (IS_DEMO) {
       setServers(DEMO_SERVERS.map((s) => ({ ...s, config: { ...s.config }, apps: [...s.apps] })));
       return;
     }
     invoke<McpServer[]>("list_mcp_servers")
-      .then(setServers)
-      .catch(() => setServers([]));
+      .then((result) => {
+        if (reloadId.current === currentRequest) setServers(result);
+      })
+      .catch(() => {
+        if (reloadId.current === currentRequest) setServers([]);
+      });
   }, []);
 
-  useEffect(() => reload(), [reload]);
+  useEffect(() => {
+    reload();
+    return () => {
+      reloadId.current += 1;
+    };
+  }, [reload]);
 
   const save = (s: McpServer) => {
     if (saving) return;
@@ -160,14 +171,14 @@ export function McpPage({
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-start sm:gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Plug className="w-5 h-5 text-blue-500" />
             {t("mcp.title")}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t("mcp.desc")}</p>
         </div>
-        <div className="flex flex-wrap gap-2 sm:shrink-0">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
           <Button variant="outline" size="sm" onClick={syncNow} disabled={syncing}>
             <RefreshCw className={cn("w-4 h-4 mr-1", syncing && "animate-spin")} />
             {t("mcp.sync")}
@@ -213,10 +224,15 @@ export function McpPage({
                 disabled={testing === s.id}
                 onClick={() => void test(s.id)}
                 title={t("mcp.test")}
+                aria-label={`${t("mcp.test")}: ${s.name}`}
               >
                 <Activity className={"w-4 h-4 " + (testing === s.id ? "animate-pulse" : "")} />
               </Button>
-              <Switch checked={s.enabled} onCheckedChange={(v) => toggle(s, v)} />
+              <Switch
+                checked={s.enabled}
+                onCheckedChange={(v) => toggle(s, v)}
+                aria-label={t(s.enabled ? "mcp.disable" : "mcp.enable", { name: s.name })}
+              />
               <Button
                 variant="ghost"
                 size="sm"
@@ -230,6 +246,7 @@ export function McpPage({
                 size="sm"
                 className="h-8 px-2 text-muted-foreground hover:text-destructive"
                 onClick={() => setPendingDelete(s)}
+                aria-label={`${t("common.delete")}: ${s.name}`}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -327,8 +344,9 @@ function McpEditDialog({
         <fieldset disabled={saving} className="min-w-0 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>{t("mcp.fId")}</Label>
+              <Label htmlFor="mcp-server-id">{t("mcp.fId")}</Label>
               <Input
+                id="mcp-server-id"
                 value={draft.id}
                 disabled={exists}
                 placeholder="filesystem"
@@ -337,8 +355,9 @@ function McpEditDialog({
               <p className="text-[11px] text-muted-foreground">{t("mcp.fIdHint")}</p>
             </div>
             <div className="space-y-1.5">
-              <Label>{t("mcp.fName")}</Label>
+              <Label htmlFor="mcp-server-name">{t("mcp.fName")}</Label>
               <Input
+                id="mcp-server-name"
                 value={draft.name}
                 placeholder={t("mcp.fNamePh")}
                 onChange={(e) => set({ name: e.target.value })}
@@ -353,6 +372,7 @@ function McpEditDialog({
                 "rounded-md border px-3 py-1.5",
                 !isRemote ? "border-blue-500 text-blue-600" : "border-border text-muted-foreground",
               )}
+              aria-pressed={!isRemote}
               onClick={() => set({ config: { command: "", args: [] } })}
             >
               stdio
@@ -363,6 +383,7 @@ function McpEditDialog({
                 "rounded-md border px-3 py-1.5",
                 isRemote ? "border-blue-500 text-blue-600" : "border-border text-muted-foreground",
               )}
+              aria-pressed={isRemote}
               onClick={() => set({ config: { type: "http", url: "" } })}
             >
               http / sse
@@ -371,8 +392,9 @@ function McpEditDialog({
 
           {isRemote ? (
             <div className="space-y-1.5">
-              <Label>URL</Label>
+              <Label htmlFor="mcp-server-url">URL</Label>
               <Input
+                id="mcp-server-url"
                 value={draft.config.url ?? ""}
                 placeholder="https://mcp.example.com/sse"
                 onChange={(e) =>
@@ -384,8 +406,9 @@ function McpEditDialog({
           ) : (
             <>
               <div className="space-y-1.5">
-                <Label>{t("mcp.fCommand")}</Label>
+                <Label htmlFor="mcp-server-command">{t("mcp.fCommand")}</Label>
                 <Input
+                  id="mcp-server-command"
                   value={draft.config.command ?? ""}
                   placeholder="npx"
                   onChange={(e) =>
@@ -427,9 +450,10 @@ function McpEditDialog({
                 <p className="text-[11px] text-muted-foreground">{t("mcp.fArgsHint")}</p>
               </div>
               <div className="space-y-1.5">
-                <Label>{t("mcp.fEnv")}</Label>
+                <Label htmlFor="mcp-server-env">{t("mcp.fEnv")}</Label>
                 <textarea
-                  defaultValue={envText}
+                  id="mcp-server-env"
+                  value={envText}
                   placeholder={"API_TOKEN=xxx\nDEBUG=1"}
                   onChange={(e) =>
                     set({ config: { ...draft.config, env: parseEnv(e.target.value) } })
@@ -456,6 +480,7 @@ function McpEditDialog({
                         ? "border-blue-500 text-blue-600"
                         : "border-border text-muted-foreground",
                     )}
+                    aria-pressed={on}
                     onClick={() =>
                       set({
                         apps: on

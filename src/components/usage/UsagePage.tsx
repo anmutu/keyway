@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, RefreshCw } from "lucide-react";
 import { useI18n } from "@/i18n";
 import type { Provider } from "@/types";
 
@@ -63,11 +63,104 @@ function fmtCost(n: number): string {
   return `$${n.toFixed(4)}`;
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  detail,
+  emphasis = false,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+  emphasis?: boolean;
+  tone?: "neutral" | "positive" | "negative";
+}) {
+  const toneClass =
+    tone === "positive"
+      ? "text-emerald-600 dark:text-emerald-400"
+      : tone === "negative"
+        ? "text-red-600 dark:text-red-400"
+        : "text-foreground";
   return (
-    <div className="rounded-xl border border-border p-3 sm:p-4 bg-card text-center">
-      <div className="text-xl sm:text-2xl font-bold tabular-nums">{value}</div>
-      <div className="text-xs text-muted-foreground mt-1">{label}</div>
+    <div
+      className={
+        "rounded-xl border p-3.5 sm:p-4 " +
+        (emphasis
+          ? "border-blue-500/30 bg-blue-500/[0.06]"
+          : "border-border bg-card")
+      }
+    >
+      <div className="text-[11px] font-medium text-muted-foreground">{label}</div>
+      <div className={`mt-1 text-xl font-bold tabular-nums sm:text-2xl ${toneClass}`}>
+        {value}
+      </div>
+      {detail && (
+        <div className="mt-1 truncate text-[11px] text-muted-foreground">{detail}</div>
+      )}
+    </div>
+  );
+}
+
+function EmptyPanel({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
+      <BarChart3 className="h-6 w-6 text-muted-foreground/70" />
+      <p className="text-sm font-medium">{title}</p>
+      <p className="max-w-md text-xs leading-relaxed text-muted-foreground">{hint}</p>
+    </div>
+  );
+}
+
+function LoadingPanel() {
+  return (
+    <div className="space-y-3" aria-hidden="true">
+      <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+      <div className="h-2 animate-pulse rounded-full bg-muted" />
+      <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+      <div className="h-2 animate-pulse rounded-full bg-muted" />
+    </div>
+  );
+}
+
+function SectionCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        {description && (
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function formatDay(date: string): string {
+  const parts = date.split("-");
+  return parts.length === 3 ? `${parts[1]}-${parts[2]}` : date;
+}
+
+function formatTokenTotal(n: number): string {
+  return `${fmt(n)} tok`;
+}
+
+function TrendMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="mt-1 truncate text-sm font-semibold tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -105,17 +198,21 @@ function Bars({
 
 export function UsagePage({
   app,
+  appName,
   providers,
   onError,
   onInfo,
 }: {
   app: string;
+  appName: string;
   providers: Provider[];
   onError: (msg: string) => void;
   onInfo: (msg: string) => void;
 }) {
   const { t } = useI18n();
   const [data, setData] = useState<UsageDashboard | null>(null);
+  const [loading, setLoading] = useState(true);
+  const requestId = useRef(0);
   const [days, setDays] = useState(() => {
     const v = Number(localStorage.getItem("keyway.dash.days"));
     return [1, 7, 30].includes(v) ? v : 7;
@@ -126,16 +223,35 @@ export function UsagePage({
   const [priceOpen, setPriceOpen] = useState(false);
   const [newModel, setNewModel] = useState("");
 
-  useEffect(() => {
+  const reload = useCallback(async () => {
+    const currentRequest = ++requestId.current;
+    setLoading(true);
     if (IS_DEMO) {
-      setData(DEMO);
+      if (requestId.current === currentRequest) {
+        setData(DEMO);
+        setLoading(false);
+      }
       return;
     }
-    invoke<UsageDashboard>("get_usage_dashboard", { appType: app, days })
-      .then(setData)
-      .catch((e) => onError(String(e)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [app, days]);
+    try {
+      const result = await invoke<UsageDashboard>("get_usage_dashboard", {
+        appType: app,
+        days,
+      });
+      if (requestId.current === currentRequest) setData(result);
+    } catch (e) {
+      if (requestId.current === currentRequest) onError(String(e));
+    } finally {
+      if (requestId.current === currentRequest) setLoading(false);
+    }
+  }, [app, days, onError]);
+
+  useEffect(() => {
+    void reload();
+    return () => {
+      requestId.current += 1;
+    };
+  }, [reload]);
 
   const loadPrices = useCallback(() => {
     if (IS_DEMO) return;
@@ -179,9 +295,12 @@ export function UsagePage({
   const savePrice = async (model: string) => {
     const d = draft[model];
     if (!d) return;
-    const i = Number(d.i) || 0;
-    const o = Number(d.o) || 0;
-    if (i < 0 || o < 0 || Number.isNaN(i) || Number.isNaN(o)) return;
+    const i = d.i.trim() === "" ? 0 : Number(d.i);
+    const o = d.o.trim() === "" ? 0 : Number(d.o);
+    if (!Number.isFinite(i) || !Number.isFinite(o) || i < 0 || o < 0) {
+      onError(t("dash.priceInvalid"));
+      return;
+    }
     try {
       await invoke("set_model_price", { model, input: i, output: o });
       onInfo(t("dash.priceSaved", { n: model }));
@@ -215,41 +334,189 @@ export function UsagePage({
     providers.find((p) => p.id === id)?.name ?? id.slice(0, 8);
 
   const dayMax = Math.max(...(data?.by_day.map((d) => d.tokens) ?? [1]), 1);
+  const totalInput = data?.total.input_tokens ?? 0;
+  const totalOutput = data?.total.output_tokens ?? 0;
+  const totalTokens = totalInput + totalOutput;
+  const totalErrors = data?.total.errors ?? 0;
+  const successRate =
+    data && data.total.requests > 0
+      ? Math.round(((data.total.requests - totalErrors) / data.total.requests) * 100)
+      : 0;
+  const rangeRequests = data?.by_day.reduce((sum, day) => sum + day.requests, 0) ?? 0;
+  const rangeTokens = data?.by_day.reduce((sum, day) => sum + day.tokens, 0) ?? 0;
+  const peakDay = data?.by_day.reduce<DayUsage | null>(
+    (peak, day) => (!peak || day.tokens > peak.tokens ? day : peak),
+    null,
+  );
 
   return (
-    <div className="space-y-5 sm:space-y-6 w-full">
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
-          <BarChart3 className="h-4 w-4" />
+    <div className="w-full space-y-5 sm:space-y-6" aria-busy={loading}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+            <BarChart3 className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              {appName} · {t("dash.overview")}
+            </p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight">{t("dash.title")}</h2>
+            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{t("dash.pageDesc")}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-base font-semibold">{t("dash.title")}</h2>
-          <p className="text-xs text-muted-foreground">{t("dash.note")}</p>
-        </div>
+        <button
+          type="button"
+          onClick={() => void reload()}
+          disabled={loading}
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-wait disabled:opacity-60"
+          title={t("dash.refresh")}
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">{t("dash.refresh")}</span>
+        </button>
       </div>
+
       {/* 总览 */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-        <StatCard label={t("dash.requests")} value={fmt(data?.total.requests ?? 0)} />
-        <StatCard label={t("dash.input")} value={`↓ ${fmt(data?.total.input_tokens ?? 0)}`} />
-        <StatCard label={t("dash.output")} value={`↑ ${fmt(data?.total.output_tokens ?? 0)}`} />
+        <StatCard
+          label={t("dash.requests")}
+          value={data ? fmt(data.total.requests) : "—"}
+          detail={data ? t("dash.scopeAll") : "—"}
+          emphasis
+        />
+        <StatCard
+          label={t("dash.totalTokens")}
+          value={data ? formatTokenTotal(totalTokens) : "—"}
+          detail={data ? t("dash.inputOutput", { input: fmt(totalInput), output: fmt(totalOutput) }) : "—"}
+        />
         <StatCard
           label={t("dash.successRate")}
-          value={
-            data && data.total.requests > 0
-              ? `${Math.round(((data.total.requests - (data.total.errors ?? 0)) / data.total.requests) * 100)}%`
-              : "—"
-          }
+          value={data?.total.requests ? `${successRate}%` : "—"}
+          detail={data ? (totalErrors ? t("dash.fails", { n: totalErrors }) : t("dash.noFailures")) : "—"}
+          tone={!data?.total.requests ? "neutral" : totalErrors ? "negative" : "positive"}
+        />
+        <StatCard
+          label={t("dash.failures")}
+          value={data ? fmt(totalErrors) : "—"}
+          detail={data?.total.requests ? `${Math.round((totalErrors / data.total.requests) * 100)}%` : "—"}
+          tone={totalErrors ? "negative" : "neutral"}
         />
       </div>
 
-      {/* 近 7 日趋势 */}
-      <div className="rounded-xl border border-border p-4 bg-card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold">
-            {days === 1 ? t("dash.trendToday") : t("dash.trendN", { n: days })}
-          </h3>
+      {/* 趋势 */}
+      <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">
+              {days === 1 ? t("dash.trendToday") : t("dash.trendN", { n: days })}
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("dash.trendHint")}</p>
+          </div>
           <div className="flex items-center gap-2">
-          <button
+            <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5" role="group" aria-label={t("dash.trend")}>
+              {[1, 7, 30].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => {
+                    setDays(d);
+                    localStorage.setItem("keyway.dash.days", String(d));
+                  }}
+                  className={
+                    "h-6 rounded-md px-2 text-[11px] font-medium transition-all " +
+                    (days === d
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  {d}d
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {loading && !data ? (
+          <div className="mt-4 h-32 animate-pulse rounded-lg bg-muted/40" />
+        ) : data && data.by_day.length > 0 ? (
+          <div className="mt-4">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-y border-border/70 py-3 sm:grid-cols-4">
+              <TrendMetric
+                label={t("dash.requests")}
+                value={String(rangeRequests)}
+              />
+              <TrendMetric
+                label={t("dash.totalTokens")}
+                value={formatTokenTotal(rangeTokens)}
+              />
+              <TrendMetric
+                label={t("dash.peakDay")}
+                value={peakDay ? formatDay(peakDay.date) : "—"}
+              />
+              <TrendMetric
+                label={t("dash.avgTokens")}
+                value={rangeRequests ? formatTokenTotal(Math.round(rangeTokens / rangeRequests)) : "—"}
+              />
+            </dl>
+            <div className="mt-4 flex h-36 min-w-0 items-end gap-2 rounded-lg border border-border/70 bg-muted/10 px-3 pb-2 pt-3">
+              {data.by_day.map((day) => (
+                <div key={day.date} className="group flex h-full min-w-0 flex-1 flex-col items-center gap-1.5">
+                  <div className="flex min-h-0 w-full flex-1 items-end">
+                    <div
+                      className="w-full rounded-t-md bg-blue-500/70 transition-colors group-hover:bg-blue-500"
+                      style={{ height: `${Math.max((day.tokens / dayMax) * 100, 4)}%` }}
+                      title={`${day.date}: ${fmt(day.tokens)} tokens / ${day.requests} ${t("dash.reqUnit")}`}
+                      aria-label={`${day.date}: ${fmt(day.tokens)} tokens, ${day.requests} ${t("dash.reqUnit")}`}
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                    {formatDay(day.date)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <EmptyPanel title={t("dash.emptyTitle")} hint={t("dash.emptyHint")} />
+          </div>
+        )}
+      </section>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        {/* 按供应商 */}
+        <SectionCard
+          title={t("dash.byProvider")}
+          description={t("dash.distributionHint")}
+        >
+          {loading && !data ? (
+            <LoadingPanel />
+          ) : data && data.by_provider.length > 0 ? (
+            <Bars
+              rows={data.by_provider.map((p) => ({
+                key: p.key,
+                label: nameOf(p.key),
+                value: p.input_tokens + p.output_tokens,
+                sub:
+                  `${p.requests} ${t("dash.reqUnit")}` +
+                  ((p.errors ?? 0) > 0 ? ` · ${t("dash.fails", { n: p.errors ?? 0 })}` : "") +
+                  (p.avg_duration_ms && p.avg_duration_ms > 0
+                    ? ` · ${(p.avg_duration_ms / 1000).toFixed(1)}s`
+                    : ""),
+              }))}
+              format={fmt}
+            />
+          ) : (
+            <EmptyPanel title={t("dash.emptyTitle")} hint={t("dash.emptyHint")} />
+          )}
+        </SectionCard>
+
+        {/* 按模型 */}
+        <SectionCard
+          title={t("dash.byModel")}
+          description={t("dash.distributionHint")}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <button
             type="button"
             title={t("dash.exportModels")}
             onClick={async () => {
@@ -259,110 +526,43 @@ export function UsagePage({
                   filters: [{ name: "CSV", extensions: ["csv"] }],
                 });
                 if (!target) return;
-                const r = await invoke<{ path: string; count: number }>(
+                const result = await invoke<{ path: string; count: number }>(
                   "export_usage_models_csv",
                   { appType: app, days, target },
                 );
-                onInfo(t("dash.exported", { n: r.count, path: r.path }));
+                onInfo(t("dash.exported", { n: result.count, path: result.path }));
               } catch (e) {
                 onError(String(e));
               }
             }}
-            className="px-2 h-6 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground transition-all"
+            className="h-6 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             CSV
-          </button>
-          <div className="flex items-center gap-1 p-0.5 bg-muted rounded-lg">
-            {[1, 7, 30].map((d) => (
+            </button>
+            <div className="flex items-center gap-3">
+              {hasAnyPrice && totalCost > 0 && (
+                <span className="text-xs font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
+                  {t("dash.costTotal", { c: fmtCost(totalCost) })}
+                </span>
+              )}
               <button
-                key={d}
                 type="button"
-                onClick={() => {
-                  setDays(d);
-                  localStorage.setItem("keyway.dash.days", String(d));
-                }}
+                onClick={() => setPriceOpen((v) => !v)}
                 className={
-                  "px-2 h-6 rounded-md text-[11px] font-medium transition-all " +
-                  (days === d
-                    ? "bg-background text-foreground shadow-sm"
+                  "h-6 rounded-md px-2 text-[11px] font-medium transition-all " +
+                  (priceOpen || hasAnyPrice
+                    ? "text-blue-500"
                     : "text-muted-foreground hover:text-foreground")
                 }
               >
-                {d}d
+                {t("dash.priceTable")}
               </button>
-            ))}
+            </div>
           </div>
-          </div>
-        </div>
-        {data && data.by_day.length > 0 ? (
-          <div className="flex items-end gap-2 h-28">
-            {data.by_day.map((d) => (
-              <div key={d.date} className="flex-1 flex flex-col items-center gap-1.5 group">
-                <div
-                  className="w-full rounded-t-md bg-gradient-to-t from-blue-500/70 to-indigo-500/70 group-hover:from-blue-500 group-hover:to-indigo-500 transition-all"
-                  style={{ height: `${Math.max((d.tokens / dayMax) * 100, 4)}%` }}
-                  title={`${d.date}: ${fmt(d.tokens)} tokens / ${d.requests} 次`}
-                />
-                <span className="text-[10px] text-muted-foreground tabular-nums">
-                  {d.date.slice(5)}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground py-6 text-center">{t("dash.empty")}</p>
-        )}
-      </div>
-
-      {/* 按供应商 */}
-      <div className="rounded-xl border border-border p-4 bg-card">
-        <h3 className="text-sm font-semibold mb-4">{t("dash.byProvider")}</h3>
-        {data && data.by_provider.length > 0 ? (
-          <Bars
-            rows={data.by_provider.map((p) => ({
-              key: p.key,
-              label: nameOf(p.key),
-              value: p.input_tokens + p.output_tokens,
-              sub:
-                `${p.requests} ${t("dash.reqUnit")}` +
-                ((p.errors ?? 0) > 0 ? ` · ${t("dash.fails", { n: p.errors ?? 0 })}` : "") +
-                (p.avg_duration_ms && p.avg_duration_ms > 0
-                  ? ` · ${(p.avg_duration_ms / 1000).toFixed(1)}s`
-                  : ""),
-            }))}
-            format={fmt}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground py-4 text-center">{t("dash.empty")}</p>
-        )}
-      </div>
-
-      {/* 按模型 */}
-      <div className="rounded-xl border border-border p-4 bg-card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold">{t("dash.byModel")}</h3>
-          <div className="flex items-center gap-3">
-            {hasAnyPrice && totalCost > 0 && (
-              <span className="text-xs font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
-                {t("dash.costTotal", { c: fmtCost(totalCost) })}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => setPriceOpen((v) => !v)}
-              className={
-                "px-2 h-6 rounded-md text-[11px] font-medium transition-all " +
-                (priceOpen || hasAnyPrice
-                  ? "text-blue-500"
-                  : "text-muted-foreground hover:text-foreground")
-              }
-            >
-              {t("dash.priceTable")}
-            </button>
-          </div>
-        </div>
-        {data && data.by_model.length > 0 ? (
-          <Bars
+          {loading && !data ? (
+            <LoadingPanel />
+          ) : data && data.by_model.length > 0 ? (
+            <Bars
             rows={data.by_model.map((m) => {
               const cost = modelCost(m);
               return {
@@ -379,14 +579,15 @@ export function UsagePage({
               };
             })}
             format={fmt}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground py-4 text-center">{t("dash.empty")}</p>
-        )}
+              />
+          ) : (
+            <EmptyPanel title={t("dash.emptyTitle")} hint={t("dash.emptyHint")} />
+          )}
 
         {/* 单价表:本地保存,用于估算成本 */}
         {priceOpen && (
-          <div className="mt-4 border-t border-border pt-3 space-y-2">
+          <div className="mt-4 overflow-x-auto border-t border-border pt-3">
+            <div className="min-w-[420px] space-y-2">
             <p className="text-[11px] text-muted-foreground">{t("dash.priceHint")}</p>
             {Object.entries(draft).map(([model, d]) => (
               <div key={model} className="flex items-center gap-2 text-xs">
@@ -449,8 +650,10 @@ export function UsagePage({
                 {t("dash.priceAdd")}
               </button>
             </div>
+            </div>
           </div>
         )}
+        </SectionCard>
       </div>
 
       <p className="text-xs text-muted-foreground flex items-center justify-end gap-1.5">

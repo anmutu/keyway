@@ -4,9 +4,23 @@
 //! (读到即落库,此后不再触碰)。运行期全部走 DB,零 keychain 弹窗。
 
 use anyhow::Result;
+use std::future::Future;
+use std::time::Duration;
 
 use crate::db::{api_key_dao, Pool};
 use crate::types::Provider;
+
+const KEYCHAIN_MIGRATION_TIMEOUT: Duration = Duration::from_secs(8);
+
+async fn resolve_migrated_key<F>(future: F, timeout: Duration) -> Option<String>
+where
+    F: Future<Output = Result<Option<String>, tokio::task::JoinError>>,
+{
+    match tokio::time::timeout(timeout, future).await {
+        Ok(Ok(key)) => key,
+        Ok(Err(_)) | Err(_) => None,
+    }
+}
 
 /// 读取供应商 Key:DB → (旧数据)keychain 迁移 → None。
 pub fn load(pool: &Pool, provider: &Provider) -> Result<Option<String>> {
@@ -39,15 +53,13 @@ pub async fn load_async(pool: &Pool, provider: &Provider) -> Option<String> {
             .inspect(|k| {
                 let _ = api_key_dao::set(&pool2, &pid, k);
             })
-    })
-    .await;
-    match migrated {
-        Ok(Some(k)) => {
+    });
+    match resolve_migrated_key(migrated, KEYCHAIN_MIGRATION_TIMEOUT).await {
+        Some(k) => {
             tracing::info!(provider = %provider.id, "keychain Key 已迁移至加密库(异步)");
             Some(k)
         }
-        Ok(None) => None,
-        Err(_) => None,
+        None => None,
     }
 }
 
@@ -63,4 +75,24 @@ pub fn delete(pool: &Pool, provider: &Provider) -> Result<()> {
         let _ = crate::services::keychain::delete_provider_key(kid);
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[tokio::test]
+    async fn keychain_migration_times_out_without_blocking_proxy() {
+        let result = resolve_migrated_key(
+            async {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                Ok::<Option<String>, tokio::task::JoinError>(Some("late".into()))
+            },
+            Duration::from_millis(1),
+        )
+        .await;
+
+        assert_eq!(result, None);
+    }
 }

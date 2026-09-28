@@ -198,6 +198,15 @@ impl<S> MeteredStream<S> {
     }
 }
 
+impl<S> Drop for MeteredStream<S> {
+    fn drop(&mut self) {
+        if !self.finished {
+            self.finished = true;
+            self.meter.finish();
+        }
+    }
+}
+
 impl<S, E> Stream for MeteredStream<S>
 where
     S: Stream<Item = Result<bytes::Bytes, E>> + Unpin,
@@ -212,6 +221,10 @@ where
                 Poll::Ready(Some(Ok(chunk)))
             }
             Poll::Ready(Some(Err(e))) => {
+                if !self.finished {
+                    self.finished = true;
+                    self.meter.finish();
+                }
                 Poll::Ready(Some(Err(std::io::Error::other(e.to_string()))))
             }
             Poll::Ready(None) => {

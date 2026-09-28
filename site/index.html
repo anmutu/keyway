@@ -165,6 +165,30 @@
       .trio h3 { font-size: 30px; font-weight: 600; letter-spacing: -.01em; }
       .trio p { font-size: 15.5px; color: var(--fg-2); margin-top: 8px; line-height: 1.55; }
 
+      /* 本地边界:用一条清晰的请求路径解释产品差异 */
+      .local-first { background: #111113; color: #f5f5f7; }
+      .local-first .eyebrow { color: #6fb7ff; }
+      .local-first .sub { color: #a1a1a6; max-width: 680px; margin-left: auto; margin-right: auto; }
+      .eyebrow { color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+      .boundary-flow { display: grid; grid-template-columns: 1fr auto 1.15fr auto 1fr; align-items: center; gap: 18px; margin: 56px auto 0; max-width: 900px; }
+      .flow-node { min-height: 138px; padding: 24px 18px; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; background: rgba(255,255,255,.055); text-align: left; }
+      .flow-node-main { border-color: rgba(10,132,255,.7); background: linear-gradient(145deg, rgba(10,132,255,.25), rgba(255,255,255,.06)); box-shadow: 0 16px 40px rgba(10,132,255,.16); }
+      .flow-index { display: block; color: #88888f; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; margin-bottom: 18px; }
+      .flow-node strong { display: block; font-size: 20px; font-weight: 600; }
+      .flow-node small { display: block; color: #a1a1a6; font-size: 12px; line-height: 1.5; margin-top: 8px; }
+      .flow-arrow { color: #6fb7ff; font-size: 26px; }
+      .boundary-notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 34px auto 0; max-width: 900px; text-align: left; }
+      .boundary-notes div { padding-top: 16px; border-top: 1px solid rgba(255,255,255,.14); }
+      .boundary-notes b, .boundary-notes span { display: block; }
+      .boundary-notes b { font-size: 14px; }
+      .boundary-notes span { color: #a1a1a6; font-size: 13px; line-height: 1.55; margin-top: 5px; }
+      @media (max-width: 760px) {
+        .boundary-flow { grid-template-columns: 1fr; gap: 10px; margin-top: 40px; }
+        .flow-node { min-height: 0; }
+        .flow-arrow { transform: rotate(90deg); justify-self: center; }
+        .boundary-notes { grid-template-columns: 1fr; gap: 18px; }
+      }
+
       /* 快速切换面板演示(⌘⇧K,应用内真实功能) */
       .qs-demo { max-width: 560px; margin: 56px auto 0; }
       .qs-panel {
@@ -271,6 +295,7 @@
         </a>
         <div class="nav-links">
           <a class="nav-main" href="#features" data-i18n="navF">功能</a>
+          <a class="nav-main" href="#local-first" data-i18n="navL">本地优先</a>
           <a class="nav-main" href="#capabilities" data-i18n="navCap">能力</a>
           <a class="nav-main" href="#faq" data-i18n="navFAQ">FAQ</a>
           <a class="nav-main" href="./guide.html" data-i18n="navG">使用指南</a>
@@ -334,6 +359,39 @@
       </div>
     </section>
 
+    <!-- 本地边界 -->
+    <section class="local-first" id="local-first">
+      <div class="container">
+        <p class="eyebrow" data-i18n="localEyebrow">Local-first · 不是托管中转站</p>
+        <h2 data-i18n="localTitle">你的请求,经过哪里,你看得见。</h2>
+        <p class="sub" data-i18n="localSub">Keyway 把控制面留在本机:不托管你的 API Key,不替你销售模型,也不把默认供应商冒充成实际去向。</p>
+        <div class="boundary-flow" aria-label="Keyway request path">
+          <div class="flow-node">
+            <span class="flow-index">01</span>
+            <strong data-i18n="flowCli">你的 CLI</strong>
+            <small>Claude Code · Codex · Gemini</small>
+          </div>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <div class="flow-node flow-node-main">
+            <span class="flow-index">02</span>
+            <strong>Keyway</strong>
+            <small data-i18n="flowLocal">本机代理 · 127.0.0.1:9527</small>
+          </div>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <div class="flow-node">
+            <span class="flow-index">03</span>
+            <strong data-i18n="flowProvider">你选择的供应商</strong>
+            <small data-i18n="flowProviderSub">官方 · 中转 · 自建端点</small>
+          </div>
+        </div>
+        <div class="boundary-notes">
+          <div><b data-i18n="localNote1t">密钥留在本机</b><span data-i18n="localNote1d">本地加密存储,导出配置不含 API Key。</span></div>
+          <div><b data-i18n="localNote2t">状态分开看</b><span data-i18n="localNote2d">代理运行、CLI 接管、请求成功是三件事。</span></div>
+          <div><b data-i18n="localNote3t">改写可还原</b><span data-i18n="localNote3d">原配置自动备份,冲突时停止覆盖。</span></div>
+        </div>
+      </div>
+    </section>
+
     <!-- 终端 -->
     <section>
       <div class="container">
@@ -368,11 +426,11 @@
           </div>
           <div class="cap">
             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg><span data-i18n="c2t">模型路由规则</span></h3>
-            <p data-i18n="c2d">让特定模型走特定供应商:如 <code>claude-*</code> 官方、<code>deepseek-*</code> 中转,按模型名自动分发。</p>
+            <p data-i18n="c2d">让特定模型走特定供应商:如 <code>claude-*</code> 官方、<code>deepseek-*</code> 中转,先预览路径,再按模型名自动分发。</p>
           </div>
           <div class="cap">
             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg><span data-i18n="c3t">请求日志</span></h3>
-            <p data-i18n="c3d">最近 100 条请求逐条可见:供应商、模型、上下行 token、状态码与耗时,排障一目了然。</p>
+            <p data-i18n="c3d">最近 100 条请求逐条可见:实际供应商、模型、上下行 token、状态码与耗时,排障一目了然。</p>
           </div>
           <div class="cap">
             <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span data-i18n="c4t">用量与成功率</span></h3>
@@ -512,7 +570,7 @@
     <script>
       var I18N = {
         en: {
-          navF: "Features", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navQ: "Start", navD: "Download",
+          navF: "Features", navL: "Local-first", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navQ: "Start", navD: "Download",
           readGuide: "Read the guide", navG2: "Guide",
           tagline: "Know where your requests go.",
           heroSub: "The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.",
@@ -526,14 +584,21 @@
           f1t: "Switch with clarity.", f1d: "Sessions already using the proxy need no restart when changing the default provider. New requests follow the updated configuration; in-flight requests do not migrate.",
           f2t: "Encrypted key storage.", f2d: "API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.",
           f3t: "Errors you can inspect.", f3d: "Check providers, models, status codes and errors in request logs. When routing or failover changes the destination, you have more than a guess.",
+          localEyebrow: "Local-first · not a hosted relay",
+          localTitle: "Know where every request goes.",
+          localSub: "Keyway keeps the control plane on your machine: it does not host your API keys, sell model access, or present the default provider as the actual destination.",
+          flowCli: "Your CLI", flowLocal: "Local proxy · 127.0.0.1:9527", flowProvider: "Your chosen provider", flowProviderSub: "Official · relay · self-hosted endpoint",
+          localNote1t: "Keys stay local", localNote1d: "Stored in an encrypted local database; exports exclude API keys.",
+          localNote2t: "Separate the states", localNote2d: "Proxy running, CLI takeover and request success are three different things.",
+          localNote3t: "Reversible changes", localNote3d: "Original configs are backed up; conflicts stop an overwrite.",
           tTitle: "Switching, in a keystroke.", tSub: "Connect to the proxy first, then switch your default provider. Start a new Codex session after first-time takeover; later switches need no restart.",
           qsCap: "The ⌘⇧K quick switch panel — no config to touch",
           qsFoot: "↑↓ navigate · Enter switch · 1-9 pick · Esc close",
           capTitle: "Far more than switching.",
           capSub: "From key safety to request observability, Keyway is the local gateway for your AI CLIs.",
           c1t: "Automatic failover", c1d: "Configure and enable a backup chain to try the next candidate after retryable upstream failures. Recovery is not guaranteed once a streaming response has begun.",
-          c2t: "Model routing rules", c2d: "Route specific models to specific providers: e.g. claude-* to official, deepseek-* to a relay — dispatched automatically by model name.",
-          c3t: "Request logs", c3d: "The last 100 requests, item by item: provider, model, tokens in/out, status code and latency. Debugging at a glance.",
+          c2t: "Model routing rules", c2d: "Route specific models to specific providers: e.g. claude-* to official, deepseek-* to a relay — preview the path, then dispatch by model name.",
+          c3t: "Request logs", c3d: "The last 100 requests, item by item: actual provider, model, tokens in/out, status code and latency. Debugging at a glance.",
           c4t: "Usage & success rate", c4d: "Token usage and request success rate aggregated by CLI and by provider. Who's stable, who's costly — let data decide.",
           c5t: "Multiple profiles", c5d: "Work / personal / testing — snapshot provider sets, save and switch anytime without interference.",
           c6t: "Backup & migration", c6d: "Export provider configs to JSON with one click (keys excluded). Moving machines or sharing presets is easy. Imports from the 5 CLIs with automatic takeover.",

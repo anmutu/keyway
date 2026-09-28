@@ -293,7 +293,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div id="route-rules" className="scroll-mt-28 rounded-xl border border-border bg-card p-4">
       <div className="flex items-start gap-3">
         <div className="mt-0.5 text-muted-foreground">
           <Route className="w-4 h-4" />
@@ -315,6 +315,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
                   onClick={() => {
                     setApp(a);
                     setDryResult(null);
+                    setDryModel("");
                     setProviderId("");
                     reload(a);
                   }}
@@ -371,6 +372,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
                     type="button"
                     disabled={i === 0}
                     onClick={() => void move(r.id, -1)}
+                    aria-label={t("route.moveUp")}
                     className="text-muted-foreground hover:text-foreground disabled:opacity-30"
                   >
                     <ChevronUp className="w-3.5 h-3.5" />
@@ -379,6 +381,7 @@ export function RouteRulesCard({ onError }: { onError: (msg: string) => void }) 
                     type="button"
                     disabled={i === rules.length - 1}
                     onClick={() => void move(r.id, 1)}
+                    aria-label={t("route.moveDown")}
                     className="text-muted-foreground hover:text-foreground disabled:opacity-30"
                   >
                     <ChevronDown className="w-3.5 h-3.5" />

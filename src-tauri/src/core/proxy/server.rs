@@ -14,7 +14,7 @@ use anyhow::Result;
 use axum::{
     body::Body,
     extract::State,
-    http::{HeaderMap, HeaderName, HeaderValue, Request, Response, StatusCode},
+    http::{HeaderMap, HeaderName, HeaderValue, Method, Request, Response, StatusCode},
     response::IntoResponse,
     Router,
 };
@@ -582,7 +582,7 @@ pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) ->
                 let e = e.without_url();
                 let upstream_log = upstream.split('?').next().unwrap_or("");
                 warn!(upstream = upstream_log, "上游连接失败: {e}");
-                if i + 1 < candidates.len() {
+                if i + 1 < candidates.len() && can_failover(&method, &client_headers, None) {
                     fallbacks.push(format!(
                         "{}->{}(conn)",
                         provider.name,
@@ -602,7 +602,7 @@ pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) ->
             warn!(upstream = upstream_log, %status, "上游故障,切换候选");
             // 最后一个候选也记冷却:下个请求优先试别人(全员冷却时 fail-open 保序)
             set_cooldown(&state, &provider.id);
-            if i + 1 < candidates.len() {
+            if i + 1 < candidates.len() && can_failover(&method, &client_headers, Some(status)) {
                 fallbacks.push(format!(
                     "{}->{}({})",
                     provider.name,
@@ -778,14 +778,36 @@ fn meter_for(
 /// 常见错误的 actionable 提示(附在响应头 x-keyway-hint)。
 fn status_hint(code: u16) -> Option<&'static str> {
     match code {
-        401 | 403 => Some("Keyway: 鉴权失败 — API Key 无效或过期,请在 Keyway 中编辑该供应商重新填写 Key"),
-        404 => Some("Keyway: 端点不存在 — 请检查该供应商的接口地址(如 anthropic 端点应填根地址、openai 端点带 /v1)"),
-        402 => Some("Keyway: 余额不足 — 请充值该渠道,或在 Keyway 中切换其他供应商"),
-        408 => Some("Keyway: 上游超时 — 可重试,或为该分组配置故障转移候选"),
-        429 => Some("Keyway: 限流/额度不足 — 可在 Keyway 中切换其他供应商或开启故障转移"),
-        500..=599 => Some("Keyway: 上游服务异常 — 已在候选链内自动重试;持续失败请检查该渠道状态"),
+        401 | 403 => Some("auth_failed"),
+        404 => Some("endpoint_not_found"),
+        402 => Some("insufficient_balance"),
+        408 => Some("upstream_timeout"),
+        429 => Some("rate_limited"),
+        500..=599 => Some("upstream_server_error"),
         _ => None,
     }
+}
+
+/// 判断请求是否允许切换候选供应商。
+///
+/// 429 明确表示上游拒绝了请求,可安全尝试下一家。其它响应和连接错误只有
+/// 幂等方法或显式带幂等键时才重试,避免 POST 已被上游处理后造成重复请求。
+fn can_failover(method: &Method, headers: &HeaderMap, status: Option<StatusCode>) -> bool {
+    if headers.contains_key("idempotency-key") {
+        return true;
+    }
+    if status == Some(StatusCode::TOO_MANY_REQUESTS) {
+        return true;
+    }
+    matches!(
+        method,
+        &Method::GET
+            | &Method::HEAD
+            | &Method::OPTIONS
+            | &Method::PUT
+            | &Method::DELETE
+            | &Method::TRACE
+    )
 }
 
 /// 失败冷却时长(秒):期间该供应商在候选链中被后移
@@ -837,6 +859,7 @@ fn encode_path_segment(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::http::{HeaderMap, HeaderValue, Method, StatusCode};
 
     #[test]
     fn prefixed_routes_disambiguate_shared_protocol_paths() {
@@ -873,5 +896,48 @@ mod tests {
     fn legacy_root_routes_keep_existing_fallback_behavior() {
         assert_eq!(infer_app_type("/v1/messages"), Some(AppType::Claude));
         assert_eq!(infer_app_type("/v1/responses"), Some(AppType::Codex));
+    }
+
+    #[test]
+    fn only_safe_requests_retry_server_errors_without_idempotency_key() {
+        let headers = HeaderMap::new();
+
+        assert!(can_failover(
+            &Method::GET,
+            &headers,
+            Some(StatusCode::INTERNAL_SERVER_ERROR)
+        ));
+        assert!(!can_failover(
+            &Method::POST,
+            &headers,
+            Some(StatusCode::INTERNAL_SERVER_ERROR)
+        ));
+        assert!(can_failover(
+            &Method::POST,
+            &headers,
+            Some(StatusCode::TOO_MANY_REQUESTS)
+        ));
+        assert!(!can_failover(&Method::POST, &headers, None));
+    }
+
+    #[test]
+    fn idempotency_key_allows_post_failover() {
+        let mut headers = HeaderMap::new();
+        headers.insert("idempotency-key", HeaderValue::from_static("request-1"));
+
+        assert!(can_failover(
+            &Method::POST,
+            &headers,
+            Some(StatusCode::INTERNAL_SERVER_ERROR)
+        ));
+        assert!(can_failover(&Method::POST, &headers, None));
+    }
+
+    #[test]
+    fn status_hints_are_ascii_header_values() {
+        for code in [401, 402, 403, 404, 408, 429, 500] {
+            let hint = status_hint(code).expect("status should have a hint");
+            assert!(HeaderValue::from_str(hint).is_ok());
+        }
     }
 }

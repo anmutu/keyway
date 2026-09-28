@@ -117,6 +117,9 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
     if version < 9 {
         migrate_v8_to_v9(conn)?;
     }
+    conn.execute_batch(
+        "CREATE INDEX IF NOT EXISTS idx_usage_app_created ON usage_log(app_type, created_at);",
+    )?;
     conn.execute_batch("PRAGMA user_version = 9;")?;
     Ok(())
 }
@@ -205,9 +208,9 @@ fn migrate_v2_to_v3(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-/// v1 → v2:新增 endpoints 列;按名称(大小写/首尾空白归一)合并同名供应商,
+/// v1 → v2:新增 endpoints 列;仅在名称、凭证引用和同协议端点兼容时合并供应商,
 /// 每条旧行的 base_url 按其 app_type 对应协议写入主体的 endpoints;
-/// 各分组 `is_current` 指向合并后的主体;keychain 只保留主体的引用。
+/// 各分组 `is_current` 指向合并后的主体,不兼容的旧行保持独立以避免数据丢失。
 /// 注意:调用前已确认 user_version < 2,且外层(db/mod.rs)在启动时仅执行一次。
 fn migrate_v1_to_v2(conn: &Connection) -> Result<()> {
     // 旧库可能没有 endpoints 列(新装库由 CREATE TABLE 直接带上)
@@ -226,11 +229,13 @@ fn migrate_v1_to_v2(conn: &Connection) -> Result<()> {
         app_type: String,
         name: String,
         base_url: String,
+        keychain_id: Option<String>,
         is_current: bool,
     }
     let rows: Vec<OldRow> = {
         let mut stmt = conn.prepare(
-            "SELECT id, app_type, name, base_url, is_current FROM providers ORDER BY created_at, sort_index",
+            "SELECT id, app_type, name, base_url, keychain_id, is_current
+             FROM providers ORDER BY created_at, sort_index",
         )?;
         let iter = stmt.query_map([], |r| {
             Ok(OldRow {
@@ -238,7 +243,8 @@ fn migrate_v1_to_v2(conn: &Connection) -> Result<()> {
                 app_type: r.get(1)?,
                 name: r.get(2)?,
                 base_url: r.get(3)?,
-                is_current: r.get::<_, i64>(4)? != 0,
+                keychain_id: r.get(4)?,
+                is_current: r.get::<_, i64>(5)? != 0,
             })
         })?;
         iter.collect::<std::result::Result<_, _>>()?
@@ -252,23 +258,53 @@ fn migrate_v1_to_v2(conn: &Connection) -> Result<()> {
         }
     };
 
-    // 主体 = 同名组里最早创建的行;归集端点与各分组 current
-    let mut master: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    let mut endpoints: std::collections::HashMap<
-        String,
-        std::collections::HashMap<String, String>,
-    > = std::collections::HashMap::new();
+    #[derive(Debug)]
+    struct Group {
+        master_id: String,
+        name: String,
+        keychain_id: Option<String>,
+        primary_url: String,
+        endpoints: std::collections::HashMap<String, String>,
+    }
+
+    // 仅在凭证引用一致且同协议端点不冲突时合并,避免静默丢 Key 或覆盖 URL。
+    let mut groups: Vec<Group> = Vec::new();
+    let mut row_to_master: std::collections::HashMap<String, String> =
+        std::collections::HashMap::new();
     let mut current_of: std::collections::HashMap<String, String> =
         std::collections::HashMap::new(); // app_type -> master id(后写覆盖,保留最近切换)
     for row in &rows {
-        let key = normalize(&row.name);
-        let mid = master.entry(key).or_insert_with(|| row.id.clone());
-        endpoints
-            .entry(mid.clone())
-            .or_default()
-            .insert(protocol_of(&row.app_type).to_string(), row.base_url.clone());
+        let protocol = protocol_of(&row.app_type).to_string();
+        let group_index = groups.iter().position(|group| {
+            normalize(&group.name) == normalize(&row.name)
+                && group.keychain_id == row.keychain_id
+                && group
+                    .endpoints
+                    .get(&protocol)
+                    .is_none_or(|url| url == &row.base_url)
+        });
+        let master_id = if let Some(index) = group_index {
+            let group = &mut groups[index];
+            group
+                .endpoints
+                .entry(protocol)
+                .or_insert_with(|| row.base_url.clone());
+            group.master_id.clone()
+        } else {
+            let mut endpoints = std::collections::HashMap::new();
+            endpoints.insert(protocol, row.base_url.clone());
+            groups.push(Group {
+                master_id: row.id.clone(),
+                name: row.name.clone(),
+                keychain_id: row.keychain_id.clone(),
+                primary_url: row.base_url.clone(),
+                endpoints,
+            });
+            row.id.clone()
+        };
+        row_to_master.insert(row.id.clone(), master_id.clone());
         if row.is_current {
-            current_of.insert(row.app_type.clone(), mid.clone());
+            current_of.insert(row.app_type.clone(), master_id);
         }
     }
 
@@ -276,30 +312,37 @@ fn migrate_v1_to_v2(conn: &Connection) -> Result<()> {
     {
         let mut up =
             conn.prepare("UPDATE providers SET endpoints = ?1, base_url = ?2 WHERE id = ?3")?;
-        for (mid, eps) in &endpoints {
-            let json = serde_json::to_string(eps)?;
-            let primary = eps.values().next().cloned().unwrap_or_default();
-            up.execute(params![json, primary, mid])?;
+        for group in &groups {
+            let json = serde_json::to_string(&group.endpoints)?;
+            up.execute(params![json, group.primary_url, group.master_id])?;
         }
     }
-    // 2) 删除非主体同名行;usage_log 的 provider_id 归并到主体
+    // 2) 先归并引用,再删除非主体行,避免 usage/rules 悬空
     {
-        let master_ids: std::collections::HashSet<&String> = master.values().collect();
+        let master_ids: std::collections::HashSet<&String> =
+            groups.iter().map(|group| &group.master_id).collect();
         let del: Vec<&OldRow> = rows
             .iter()
             .filter(|r| !master_ids.contains(&r.id))
             .collect();
+        let mut re_usage =
+            conn.prepare("UPDATE usage_log SET provider_id = ?1 WHERE provider_id = ?2")?;
+        let mut re_rules =
+            conn.prepare("UPDATE route_rules SET provider_id = ?1 WHERE provider_id = ?2")?;
+        let mut re_fallbacks = conn.prepare(
+            "UPDATE route_rules SET fallback_provider_id = ?1 WHERE fallback_provider_id = ?2",
+        )?;
+        for row in &del {
+            let master_id = &row_to_master[&row.id];
+            re_usage.execute(params![master_id, row.id])?;
+            re_rules.execute(params![master_id, row.id])?;
+            re_fallbacks.execute(params![master_id, row.id])?;
+        }
         {
             let mut st = conn.prepare("DELETE FROM providers WHERE id = ?1")?;
             for r in &del {
                 st.execute(params![r.id])?;
             }
-        }
-        let mut re =
-            conn.prepare("UPDATE usage_log SET provider_id = ?1 WHERE provider_id = ?2")?;
-        for r in &del {
-            let mid = &master[&normalize(&r.name)];
-            re.execute(params![mid, r.id])?;
         }
     }
     // 3) 各分组的当前供应商写入 current_map(旧的 is_current 列停用,统一清零)
@@ -313,4 +356,156 @@ fn migrate_v1_to_v2(conn: &Connection) -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn legacy_db() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "
+            CREATE TABLE providers (
+                id TEXT PRIMARY KEY,
+                app_type TEXT NOT NULL,
+                name TEXT NOT NULL,
+                base_url TEXT NOT NULL,
+                keychain_id TEXT,
+                models TEXT NOT NULL DEFAULT '[]',
+                is_current INTEGER NOT NULL DEFAULT 0,
+                is_healthy INTEGER NOT NULL DEFAULT 1,
+                sort_index INTEGER NOT NULL DEFAULT 0,
+                created_at INTEGER NOT NULL DEFAULT 0,
+                meta TEXT NOT NULL DEFAULT '{}'
+            );
+            CREATE TABLE usage_log (provider_id TEXT NOT NULL);
+            CREATE TABLE current_map (app_type TEXT PRIMARY KEY, provider_id TEXT NOT NULL);
+            CREATE TABLE route_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider_id TEXT NOT NULL,
+                fallback_provider_id TEXT
+            );
+            ",
+        )
+        .unwrap();
+        conn
+    }
+
+    #[test]
+    fn migration_keeps_same_name_rows_with_conflicting_keys_or_endpoints() {
+        let conn = legacy_db();
+        conn.execute(
+            "INSERT INTO providers(id, app_type, name, base_url, keychain_id, is_current)
+             VALUES ('claude-1', 'claude', 'Relay', 'https://claude.example', 'key-1', 1),
+                    ('codex-1', 'codex', 'relay', 'https://codex.example', 'key-2', 1)",
+            [],
+        )
+        .unwrap();
+
+        migrate_v1_to_v2(&conn).unwrap();
+
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM providers", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(count, 2);
+        assert_eq!(
+            conn.query_row(
+                "SELECT provider_id FROM current_map WHERE app_type = 'claude'",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .unwrap(),
+            "claude-1"
+        );
+        assert_eq!(
+            conn.query_row(
+                "SELECT provider_id FROM current_map WHERE app_type = 'codex'",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .unwrap(),
+            "codex-1"
+        );
+    }
+
+    #[test]
+    fn migration_merges_same_name_rows_when_key_and_endpoint_are_compatible() {
+        let conn = legacy_db();
+        conn.execute(
+            "INSERT INTO providers(id, app_type, name, base_url, keychain_id, is_current)
+             VALUES ('claude-1', 'claude', 'Relay', 'https://relay.example/anthropic', 'key-1', 1),
+                    ('codex-1', 'codex', 'relay', 'https://relay.example/openai', 'key-1', 1)",
+            [],
+        )
+        .unwrap();
+        conn.execute("INSERT INTO usage_log(provider_id) VALUES ('codex-1')", [])
+            .unwrap();
+        conn.execute(
+            "INSERT INTO route_rules(provider_id, fallback_provider_id)
+             VALUES ('codex-1', 'claude-1')",
+            [],
+        )
+        .unwrap();
+
+        migrate_v1_to_v2(&conn).unwrap();
+
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM providers", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(count, 1);
+        let endpoints: String = conn
+            .query_row(
+                "SELECT endpoints FROM providers WHERE id = 'claude-1'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        let endpoints: serde_json::Value = serde_json::from_str(&endpoints).unwrap();
+        assert_eq!(endpoints["anthropic"], "https://relay.example/anthropic");
+        assert_eq!(endpoints["openai"], "https://relay.example/openai");
+        assert_eq!(
+            conn.query_row("SELECT provider_id FROM usage_log", [], |row| {
+                row.get::<_, String>(0)
+            })
+            .unwrap(),
+            "claude-1"
+        );
+        let (provider_id, fallback_id): (String, Option<String>) = conn
+            .query_row(
+                "SELECT provider_id, fallback_provider_id FROM route_rules",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(provider_id, "claude-1");
+        assert_eq!(fallback_id.as_deref(), Some("claude-1"));
+    }
+
+    #[test]
+    fn usage_app_created_index_is_added_after_legacy_migration() {
+        let conn = legacy_db();
+        conn.execute("ALTER TABLE route_rules ADD COLUMN app_type TEXT", [])
+            .unwrap();
+        conn.execute(
+            "ALTER TABLE usage_log ADD COLUMN app_type TEXT NOT NULL DEFAULT 'claude'",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "ALTER TABLE usage_log ADD COLUMN created_at INTEGER NOT NULL DEFAULT 0",
+            [],
+        )
+        .unwrap();
+        create_tables(&conn).unwrap();
+
+        let indexed: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'idx_usage_app_created'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(indexed, 1);
+    }
 }

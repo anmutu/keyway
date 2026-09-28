@@ -93,7 +93,7 @@ pub fn export(pool: &Pool, path: &std::path::Path) -> Result<usize> {
     let mut rules = Vec::new();
     let mut longctx = Vec::new();
     for app in crate::types::AppType::all() {
-        for r in route_dao::list_by_app(pool, app.as_str()).unwrap_or_default() {
+        for r in route_dao::list_by_app(pool, app.as_str())? {
             rules.push(BackupRule {
                 app_type: r.app_type,
                 pattern: r.pattern,
@@ -108,7 +108,7 @@ pub fn export(pool: &Pool, path: &std::path::Path) -> Result<usize> {
                 priority: r.priority,
             });
         }
-        if let Some((pid, threshold)) = route_dao::get_longctx(pool, app.as_str()).ok().flatten() {
+        if let Some((pid, threshold)) = route_dao::get_longctx(pool, app.as_str())? {
             let provider = id_to_name(&pid);
             if !provider.is_empty() {
                 longctx.push(BackupLongctx {
@@ -183,50 +183,40 @@ pub fn import(pool: &Pool, path: &std::path::Path) -> Result<(usize, usize)> {
         created += 1;
     }
     // v2:规则与长上下文预设按供应商名称重新挂接;找不到对应供应商的条目静默跳过
-    let name_to_id = |name: &str| {
-        provider_dao::find_by_name(pool, name)
-            .ok()
-            .flatten()
-            .map(|p| p.id)
+    let name_to_id = |name: &str| -> Result<Option<String>> {
+        Ok(provider_dao::find_by_name(pool, name)?.map(|p| p.id))
     };
     for r in &file.rules {
-        let (Some(pid), app) = (name_to_id(&r.provider), r.app_type.as_str()) else {
+        let (Some(pid), app) = (name_to_id(&r.provider)?, r.app_type.as_str()) else {
             continue;
         };
-        let exists = route_dao::list_by_app(pool, app)
-            .map(|rs| {
-                rs.iter()
-                    .any(|x| x.pattern.eq_ignore_ascii_case(&r.pattern))
-            })
-            .unwrap_or(true);
+        let exists = route_dao::list_by_app(pool, app)?
+            .iter()
+            .any(|x| x.pattern.eq_ignore_ascii_case(&r.pattern));
         if exists {
             continue;
         }
-        let id = route_dao::insert(pool, app, &r.pattern, &pid, &r.match_type).unwrap_or(-1);
-        if id >= 0 {
-            let _ = route_dao::set_enabled(pool, id, r.enabled);
-            let _ = route_dao::set_fallback(
-                pool,
-                id,
-                r.fallback.as_deref().and_then(name_to_id).as_deref(),
-            );
-        }
+        let id = route_dao::insert(pool, app, &r.pattern, &pid, &r.match_type)?;
+        route_dao::set_enabled(pool, id, r.enabled)?;
+        let fallback = match r.fallback.as_deref() {
+            Some(name) => name_to_id(name)?,
+            None => None,
+        };
+        route_dao::set_fallback(pool, id, fallback.as_deref())?;
     }
     for lc in &file.longctx {
-        if let Some(pid) = name_to_id(&lc.provider) {
-            let _ = route_dao::set_longctx(pool, &lc.app_type, &pid, lc.threshold);
+        if let Some(pid) = name_to_id(&lc.provider)? {
+            route_dao::set_longctx(pool, &lc.app_type, &pid, lc.threshold)?;
         }
     }
     // v3:MCP 与 Skills(已存在同 id 跳过;导入 Skills 后立即同步到各 CLI)
     let mut skills_imported = 0;
     for m in &file.mcp {
-        let exists = crate::db::mcp_dao::list(pool)
-            .map(|l| l.iter().any(|x| x.id == m.id))
-            .unwrap_or(true);
+        let exists = crate::db::mcp_dao::list(pool)?.iter().any(|x| x.id == m.id);
         if exists {
             continue;
         }
-        let _ = crate::db::mcp_dao::upsert(
+        crate::db::mcp_dao::upsert(
             pool,
             &crate::db::mcp_dao::McpServer {
                 id: m.id.clone(),
@@ -236,7 +226,7 @@ pub fn import(pool: &Pool, path: &std::path::Path) -> Result<(usize, usize)> {
                 enabled: m.enabled,
                 created_at: chrono::Utc::now().timestamp(),
             },
-        );
+        )?;
     }
     for s in &file.skills {
         if crate::services::skills::import_backup_skill(&s.id, &s.files)? {
@@ -244,7 +234,7 @@ pub fn import(pool: &Pool, path: &std::path::Path) -> Result<(usize, usize)> {
         }
     }
     if skills_imported > 0 {
-        let _ = crate::services::skills::sync_all();
+        crate::services::skills::sync_all()?;
     }
     Ok((created, skipped))
 }

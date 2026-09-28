@@ -32,8 +32,10 @@ interface ProviderCardProps {
   batchResult?: { ok: boolean; latency_ms: number; message: string } | null;
   testedAt?: number | null;
   onTestResult?: (result: { ok: boolean; latency_ms: number; message: string }) => void;
-  /** 当前分组接管是否实际生效(false = 配置被外部覆盖,徽章降级为「未接管」) */
+  /** 当前分组接管是否实际生效(false = 请求不会经过本地网关) */
   takeoverEffective?: boolean;
+  /** 当前分组是否登记为已接管,用于区分主动未接管与配置漂移 */
+  takeoverActive?: boolean;
 }
 
 // 供应商卡片:rounded-xl + 当前项蓝色边框/渐变 + hover 显示操作组 + 常显"当前"徽章。
@@ -55,6 +57,7 @@ export function ProviderCard({
   testedAt,
   onTestResult,
   takeoverEffective,
+  takeoverActive,
 }: ProviderCardProps) {
   const { t } = useI18n();
   // 该分组协议的端点;无端点 → 置灰(供应商实体仍在,只是未配置此协议)
@@ -96,7 +99,7 @@ export function ProviderCard({
         )}
       />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 min-w-0 items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           {/* 供应商图标:方形徽标(coderplan 等)全出血填满容器,避免双重边框 */}
           <div className="h-8 w-8 shrink-0 rounded-lg bg-muted flex items-center justify-center border border-border overflow-hidden group-hover:scale-105 transition-transform duration-300">
             <ProviderIcon
@@ -107,7 +110,7 @@ export function ProviderCard({
             />
           </div>
 
-          <div className="space-y-1 min-w-0">
+          <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2 min-h-7">
               <h3 className="text-base font-semibold leading-none">
                 {provider.name}
@@ -116,8 +119,13 @@ export function ProviderCard({
               {isCurrent &&
                 (takeoverEffective === false ? (
                   <span
-                    className="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                    title={t("takeover.overridden")}
+                    className={cn(
+                      "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
+                      takeoverActive
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                    title={t(takeoverActive ? "takeover.overridden" : "takeover.inactive")}
                   >
                     {t("provider.notTaken")}
                   </span>
@@ -162,6 +170,14 @@ export function ProviderCard({
             >
               <span className="truncate">{displayUrl}</span>
             </button>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              <span className={cn("inline-flex items-center gap-1", endpoint && "text-emerald-600 dark:text-emerald-400")}>
+                <span className={cn("h-1.5 w-1.5 rounded-full", endpoint ? "bg-emerald-500" : "bg-muted-foreground")} />
+                {endpoint ? t("provider.ready") : t("provider.noEndpoint")}
+              </span>
+              {batchResult?.ok && <span className="tabular-nums">{batchResult.latency_ms}ms</span>}
+              {provider.models.length > 0 && <span>{t("provider.modelsCount", { n: provider.models.length })}</span>}
+            </div>
           </div>
         </div>
 
@@ -203,7 +219,7 @@ export function ProviderCard({
             </div>
           </div>
           <div
-            className="provider-action-group flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 opacity-100 pointer-events-auto sm:w-auto sm:flex-nowrap sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:group-hover:pointer-events-auto sm:group-focus-within:pointer-events-auto transition-opacity duration-200"
+            className="provider-action-group flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:w-auto sm:flex-nowrap"
             onMouseUp={() => {
               // 鼠标点击会把焦点留在按钮上,操作组因 focus-within 常亮不再隐藏;
               // 点击后立即释放焦点恢复 hover 显隐(键盘 Tab 聚焦不受影响)
@@ -218,6 +234,7 @@ export function ProviderCard({
                   disabled={!onMoveUp}
                   onClick={onMoveUp}
                   title={t("provider.moveUp")}
+                  aria-label={t("provider.moveUp")}
                   className="h-4 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-25"
                 >
                   <ChevronUp className="h-3.5 w-3.5" />
@@ -227,6 +244,7 @@ export function ProviderCard({
                   disabled={!onMoveDown}
                   onClick={onMoveDown}
                   title={t("provider.moveDown")}
+                  aria-label={t("provider.moveDown")}
                   className="h-4 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-25"
                 >
                   <ChevronDown className="h-3.5 w-3.5" />
@@ -238,7 +256,6 @@ export function ProviderCard({
               isCurrent={isCurrent}
               canSwitch={!!endpoint}
               app={app}
-              takeoverEffective={takeoverEffective}
               onSwitch={onSwitch}
               onEdit={onEdit}
               onDuplicate={onDuplicate}

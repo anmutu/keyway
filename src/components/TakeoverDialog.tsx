@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ShieldCheck, ShieldOff, TriangleAlert, Copy, Check } from "lucide-react";
 import {
@@ -41,12 +41,14 @@ export function TakeoverDialog({
   onOpenChange,
   onError,
   onSuccess,
+  gatewayDetails,
 }: {
   open: boolean;
   initialApp?: AppType;
   onOpenChange: (open: boolean) => void;
   onError: (msg: string) => void;
   onSuccess: (msg: string) => void;
+  gatewayDetails?: ReactNode;
 }) {
   const [list, setList] = useState<TakeoverStatus[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -58,6 +60,7 @@ export function TakeoverDialog({
   const requestId = useRef(0);
   const mutationPending = useRef(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const { t } = useI18n();
   const baseUrl = `http://127.0.0.1:9527/__keyway/${manualApp}`;
   const snippet = [
@@ -158,20 +161,37 @@ export function TakeoverDialog({
     <Dialog open={open} onOpenChange={(nextOpen) => {
       if (!mutationPending.current) onOpenChange(nextOpen);
     }}>
-      <DialogContent closeDisabled={busy !== null} className="sm:max-w-[520px] max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        closeDisabled={busy !== null}
+        className="grid-cols-1 sm:max-w-[560px] max-h-[85vh] overflow-y-auto"
+        onOpenAutoFocus={() => {
+          returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        }}
+        onCloseAutoFocus={(event) => {
+          if (returnFocusRef.current?.isConnected) {
+            event.preventDefault();
+            returnFocusRef.current.focus();
+          }
+        }}
+      >
         <DialogHeader>
-          <DialogTitle>{t("takeover.title")}</DialogTitle>
+          <DialogTitle>{t(gatewayDetails ? "gw.detailsTitle" : "takeover.title")}</DialogTitle>
           <DialogDescription>
             {t("takeover.desc")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-relaxed text-muted-foreground">
-          <p>{t("takeover.sessionHint")}</p>
-          <p>{t("takeover.dependencyHint")}</p>
+        {open && gatewayDetails && <div className="min-w-0" inert={busy !== null}>{gatewayDetails}</div>}
+
+        <div className="flex gap-2.5 rounded-lg border border-amber-500/25 bg-amber-500/5 p-2.5 text-xs leading-relaxed text-muted-foreground">
+          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="space-y-1">
+            <p>{t("takeover.sessionHint")}</p>
+            <p>{t("takeover.dependencyHint")}</p>
+          </div>
         </div>
 
-        <div className="grid gap-3">
+        <div className="grid min-w-0 grid-cols-1 gap-3">
           {list.map((s) => (
             <div
               key={s.app}
@@ -201,7 +221,7 @@ export function TakeoverDialog({
                     {s.active && !s.effective && (
                       <>
                         <TriangleAlert className="w-3 h-3" />
-                        {t("takeover.overridden")}
+                        <span title={t("takeover.overridden")}>{t("takeover.driftShort")}</span>
                       </>
                     )}
                     {!s.active && (

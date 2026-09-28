@@ -159,6 +159,27 @@ html.dark {
     opacity: 1;
     pointer-events: auto;
   }
+
+  .provider-secondary-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .provider-secondary-actions {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(0.25rem);
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+
+  .group:hover .provider-secondary-actions,
+  .group:focus-within .provider-secondary-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
 }
 
 @layer utilities {

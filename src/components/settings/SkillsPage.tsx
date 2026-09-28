@@ -33,6 +33,10 @@ const DEMO_SKILLS: SkillEntry[] = [
   { id: "ship-checklist", name: "Ship Checklist", description: "发布前执行一组稳定性检查", apps: ["claude", "codex", "opencode"], has_files: false },
 ];
 
+function demoSkillContent(skill: SkillEntry): string {
+  return `---\nname: ${JSON.stringify(skill.name)}\ndescription: ${JSON.stringify(skill.description)}\n---\n\n# ${skill.name}\n`;
+}
+
 /** Skills 统一管理:vault(~/.keyway/skills)为源,同步复制到各 CLI 的 skills 目录。 */
 export function SkillsPage({
   onError,
@@ -151,14 +155,14 @@ export function SkillsPage({
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-start sm:gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Sparkles className="w-5 h-5 text-blue-500" />
             {t("sk.title")}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t("sk.desc")}</p>
         </div>
-        <div className="flex flex-wrap gap-2 sm:shrink-0">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
           <Button variant="outline" size="sm" onClick={openImport}>
             <Download className="w-4 h-4 mr-1" />
             {t("sk.import")}
@@ -227,17 +231,25 @@ export function SkillsPage({
                           ? "border-blue-500 text-blue-600"
                           : "border-border text-muted-foreground/60",
                       )}
-                      onClick={() =>
-                        invoke("set_skill_apps", {
-                          id: s.id,
-                          apps: on ? s.apps.filter((k) => k !== a.key) : [...s.apps, a.key],
-                        })
+                      aria-pressed={on}
+                      onClick={() => {
+                        const apps = on
+                          ? s.apps.filter((k) => k !== a.key)
+                          : [...s.apps, a.key];
+                        if (IS_DEMO) {
+                          setSkills((current) =>
+                            current.map((item) => item.id === s.id ? { ...item, apps } : item),
+                          );
+                          onSuccess(t("sk.saved"));
+                          return;
+                        }
+                        void invoke("set_skill_apps", { id: s.id, apps })
                           .then(() => {
                             reload();
                             onSuccess(t("sk.saved"));
                           })
-                          .catch((e) => onError(String(e)))
-                      }
+                          .catch((e) => onError(String(e)));
+                      }}
                     >
                       {a.label}
                     </button>
@@ -248,11 +260,15 @@ export function SkillsPage({
                 variant="ghost"
                 size="sm"
                 className="h-8 px-2 text-muted-foreground hover:text-foreground"
-                onClick={() =>
-                  invoke<string>("read_skill_content", { id: s.id }).then(
+                onClick={() => {
+                  if (IS_DEMO) {
+                    setEditing({ id: s.id, content: demoSkillContent(s), apps: [...s.apps], isNew: false });
+                    return;
+                  }
+                  void invoke<string>("read_skill_content", { id: s.id }).then(
                     (content) => setEditing({ id: s.id, content, apps: [...s.apps], isNew: false }),
-                  ).catch((e) => onError(String(e)))
-                }
+                  ).catch((e) => onError(String(e)));
+                }}
               >
                 {t("common.edit")}
               </Button>
