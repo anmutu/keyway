@@ -214,7 +214,7 @@
         <span class="stepnum">3</span>
         <div class="kicker" data-i18n="gS3k">接管</div>
         <h2 data-i18n="gS3h2">一键接管 CLI</h2>
-        <p data-i18n="gS3p">在分组页点击 <b>「接管」</b>,Keyway 会把该 CLI 的配置指向本地代理:</p>
+        <p data-i18n="gS3p">点击导航中的网关状态或分组页的 <b>「网关详情」</b>,在接管管理中选择目标 CLI。接管后,Keyway 会把该 CLI 的配置指向本地代理:</p>
         <ul>
           <li data-i18n="gS3l1">接管前<b>自动备份原配置</b>,可在接管管理中还原。还原前请确认是否有需要保留的手动修改。</li>
           <li data-i18n="gS3l2">首次接管 Codex 后请新开一次会话。接管期间保持 Keyway 运行;完全退出前如需直连,请先还原配置。</li>
@@ -238,6 +238,7 @@
         <div class="kicker" data-i18n="gS4k">日常</div>
         <h2 data-i18n="gS4h2">切换并确认请求去向</h2>
         <p data-i18n="gS4p">卡片上的默认供应商是选择,不是实际请求证明。切换后发送新请求,再从日志确认实际去向:</p>
+        <div class="tip blue" data-i18n="gNavigationTip"><b>高级功能在哪?</b>用量、MCP、Skills、设置和使用指南统一放在导航的「更多」中。选择页面后菜单自动收起;Esc 只关闭菜单,不会把你带离当前页面。</div>
         <ul>
           <li data-i18n="gS4l1">主界面点供应商卡片上的 <b>「切换」</b>,或直接在<b>菜单栏托盘</b>里选,两秒钟完成。</li>
           <li data-i18n="gS4l0">全局快捷键 <b>⌘⇧K</b>(Windows/Linux 为 Ctrl+Shift+K)随时唤起<b>快速切换面板</b>:↑↓ 选择、Enter 切换、Esc 关闭,手不离键盘。</li>
@@ -411,12 +412,13 @@
           gTip2: "Key storage: API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys. Authentication is still sent to the selected upstream when forwarding requests.",
           gS2p2: "After adding, hit the test button on a provider card to check reachability and latency before committing.",
           gS3k: "Takeover", gS3h2: "One-click CLI takeover",
-          gS3p: "Click “Take over” on a group page and Keyway points that CLI's config at the local proxy:",
+          gS3p: "Click the gateway status in navigation or “Gateway details” on a group page, then choose the target CLI in takeover management. After takeover, Keyway points that CLI's config at the local proxy:",
           gS3l1: "Original configs are backed up before takeover and can be restored in takeover management. Review any manual changes you want to keep first.",
           gS3l2: "Start a new Codex session after first-time takeover. Keep Keyway running while using the proxy; restore configs before fully quitting if you need direct connections.",
           gS3l3: "Prefer manual? Set the CLI's environment variables to 127.0.0.1:9527 instead (copyable from the app).",
           gS4k: "Daily", gS4h2: "Switch and verify requests",
           gS4p: "The default provider is a selection, not proof of the actual destination. After switching, send a new request and verify its provider in the logs:",
+          gNavigationTip: "<b>Looking for advanced tools?</b> Usage, MCP, Skills, Settings, and the guide are under “More” in navigation. Selecting a page closes the menu; Escape dismisses an open menu without leaving the current page.",
           gS4l0: "Global shortcut ⌘⇧K (Ctrl+Shift+K on Windows/Linux) opens the quick-switch panel anywhere: ↑↓ to select, Enter to switch, Esc to dismiss — hands stay on the keyboard.",
           gS4l1: "Click “Switch” on a provider card, or pick from the menu-bar tray. The selection applies to subsequent requests.",
           gS4l2: "Sessions already using the proxy need no restart. Switching affects new requests, not in-flight ones; routing rules may override the default provider.",

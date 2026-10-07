@@ -945,6 +945,7 @@ function App() {
                 <RoutePreviewCard
                   app={activeApp}
                   providers={providers}
+                  gatewayRevision={gatewayRevision}
                   onManage={() => {
                     setCurrentView("settings");
                     window.setTimeout(() => {

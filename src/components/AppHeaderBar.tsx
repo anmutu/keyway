@@ -51,21 +51,20 @@ export function AppHeaderBar({
   return (
     <header
       className={cn(
-        "shrink-0 z-50 w-full h-14 flex items-center gap-3 bg-background/80 backdrop-blur-md",
+        "shrink-0 z-50 flex min-h-14 w-full flex-wrap items-center gap-x-3 gap-y-1 bg-background/80 py-1 backdrop-blur-md sm:h-14 sm:flex-nowrap sm:py-0",
         position === "top" ? "border-b border-border" : "border-t border-border",
       )}
       data-tauri-drag-region
     >
       <div
         className={cn(
-          "flex items-center gap-3 flex-1 min-w-0",
-          position === "top" && isMac && "pl-[92px]",
-          position === "bottom" && "pl-3",
+          "flex min-w-0 flex-1 basis-full items-center gap-3 px-3 sm:basis-auto sm:pr-0",
+          position === "top" && isMac && "sm:pl-[92px]",
         )}
         data-tauri-no-drag
       >
         <AppSwitcher
-          activeApp={activeApp}
+          activeApp={currentView === "providers" ? activeApp : null}
           apps={apps}
           onSwitch={(app) => {
             onSwitchApp(app);
@@ -93,7 +92,7 @@ export function AppHeaderBar({
           <Search className="w-4 h-4" />
         </Button>
       </div>
-      <div className="flex items-center gap-1.5 pr-3" data-tauri-no-drag>
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 pr-3" data-tauri-no-drag>
         <Button
           variant="ghost"
           size="icon"
@@ -109,6 +108,7 @@ export function AppHeaderBar({
           onViewChange={onViewChange}
           onGuide={onGuide}
           mode="toolbar"
+          position={position}
         />
         <button
           type="button"

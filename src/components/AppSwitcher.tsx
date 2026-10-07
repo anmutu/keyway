@@ -35,7 +35,7 @@ export function AppSwitcher({
   apps = ALL_APPS,
   compact = false,
 }: {
-  activeApp: AppType;
+  activeApp: AppType | null;
   onSwitch: (app: AppType) => void;
   /** 可见分组(按设置中的顺序);缺省为全部 */
   apps?: AppType[];
@@ -53,7 +53,7 @@ export function AppSwitcher({
   const iconSize = 20;
 
   return (
-    <div className="inline-flex bg-muted rounded-xl p-1 gap-1">
+    <div className="inline-flex min-w-0 gap-1 overflow-x-auto rounded-xl bg-muted p-1">
       {visible.map((app) => (
         <button
           key={app}
@@ -63,7 +63,7 @@ export function AppSwitcher({
           aria-label={appDisplayName[app]}
           aria-current={activeApp === app ? "page" : undefined}
           className={cn(
-            "group inline-flex items-center h-8 rounded-md text-sm font-medium transition-all duration-200",
+            "group inline-flex h-8 shrink-0 items-center rounded-md text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
             iconOnly ? "w-9 justify-center" : "px-3",
             activeApp === app
               ? "bg-background text-foreground shadow-sm"

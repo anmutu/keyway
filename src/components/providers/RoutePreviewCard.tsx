@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ArrowRight, CircleAlert, FlaskConical, Route, Settings2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,8 @@ const IS_DEMO = new URLSearchParams(location.search).has("demo");
 function demoPreview(model: string, providers: Provider[]): RoutePreviewResult {
   const normalized = model.toLowerCase();
   const hit = normalized.includes("o3") || normalized.includes("reasoning");
-  const preferred = providers[0];
-  const fallback = providers.find((provider) => provider.id !== preferred?.id);
+  const preferred = hit ? providers[0] : providers.find((provider) => provider.is_current);
+  const fallback = preferred ? providers.find((provider) => provider.id !== preferred.id) : undefined;
   const candidates = [preferred?.name, fallback?.name].filter(
     (name): name is string => Boolean(name),
   );
@@ -39,10 +39,12 @@ function demoPreview(model: string, providers: Provider[]): RoutePreviewResult {
 export function RoutePreviewCard({
   app,
   providers,
+  gatewayRevision,
   onManage,
 }: {
   app: AppType;
   providers: Provider[];
+  gatewayRevision: number;
   onManage: () => void;
 }) {
   const { t } = useI18n();
@@ -51,24 +53,33 @@ export function RoutePreviewCard({
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const requestId = useRef(0);
+  const requestPending = useRef(false);
   const defaultProvider = providers.find((provider) => provider.is_current)?.name;
   const suggestions = Array.from(
     new Set(providers.flatMap((provider) => provider.models)),
   ).slice(0, 4);
 
-  useEffect(() => {
+  const resetPreview = useCallback(() => {
     requestId.current += 1;
+    requestPending.current = false;
     setResult(null);
     setFailed(false);
     setLoading(false);
-  }, [app]);
+  }, []);
+
+  useEffect(() => {
+    resetPreview();
+    return () => { requestId.current += 1; };
+  }, [app, providers, gatewayRevision, resetPreview]);
 
   const run = async (value = model) => {
     const requestedModel = value.trim();
-    if (!requestedModel) return;
+    if (!requestedModel || requestPending.current) return;
     const currentRequest = ++requestId.current;
+    requestPending.current = true;
     setModel(requestedModel);
     setLoading(true);
+    setResult(null);
     setFailed(false);
     try {
       const preview = IS_DEMO
@@ -84,7 +95,10 @@ export function RoutePreviewCard({
         setFailed(true);
       }
     } finally {
-      if (requestId.current === currentRequest) setLoading(false);
+      if (requestId.current === currentRequest) {
+        requestPending.current = false;
+        setLoading(false);
+      }
     }
   };
 
@@ -96,7 +110,7 @@ export function RoutePreviewCard({
   const inputId = `route-preview-${app}`;
 
   return (
-    <section id="route-preview" className="overflow-hidden rounded-xl border border-border bg-card">
+    <section id="route-preview" aria-busy={loading} className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-3 sm:px-5 lg:grid-cols-[minmax(170px,0.62fr)_minmax(300px,1.38fr)_auto] lg:items-center">
         <label htmlFor={inputId} className="flex min-w-0 items-center gap-2.5">
           <Route className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />
@@ -115,12 +129,14 @@ export function RoutePreviewCard({
               id={inputId}
               value={model}
               onChange={(event) => {
+                resetPreview();
                 setModel(event.target.value);
-                if (result) setResult(null);
-                if (failed) setFailed(false);
               }}
               onKeyDown={(event) => {
-                if (event.key === "Enter") void run();
+                if (event.key === "Enter" && !event.nativeEvent.isComposing && event.keyCode !== 229) {
+                  event.preventDefault();
+                  void run();
+                }
               }}
               placeholder={t("route.previewPh")}
               className="h-9 pl-8 pr-8 text-xs"
@@ -130,9 +146,8 @@ export function RoutePreviewCard({
                 type="button"
                 aria-label={t("route.previewClear")}
                 onClick={() => {
+                  resetPreview();
                   setModel("");
-                  setResult(null);
-                  setFailed(false);
                 }}
                 className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
               >
@@ -143,6 +158,7 @@ export function RoutePreviewCard({
           <Button
             size="sm"
             className="h-9 shrink-0"
+            aria-label={loading ? t("route.previewRunning") : t("route.previewRun")}
             disabled={loading || !model.trim()}
             onClick={() => void run()}
           >
@@ -173,8 +189,9 @@ export function RoutePreviewCard({
             <button
               key={suggestion}
               type="button"
+              disabled={loading}
               onClick={() => void run(suggestion)}
-              className="rounded-md border border-border bg-muted/50 px-2 py-1 font-mono text-[10px] hover:border-blue-400/60 hover:text-foreground"
+              className="rounded-md border border-border bg-muted/50 px-2 py-1 font-mono text-[10px] hover:border-blue-400/60 hover:text-foreground disabled:opacity-50"
             >
               {suggestion}
             </button>
@@ -183,14 +200,14 @@ export function RoutePreviewCard({
       )}
 
       {failed && (
-        <div className="flex items-center gap-2 border-t border-border/70 bg-amber-500/[0.05] px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300 sm:px-5">
+        <div role="alert" className="flex items-center gap-2 border-t border-border/70 bg-amber-500/[0.05] px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300 sm:px-5">
           <CircleAlert className="h-3.5 w-3.5 shrink-0" />
           {t("route.previewError")}
         </div>
       )}
 
       {result ? (
-        <div className="flex flex-col gap-2 border-t border-border/70 bg-muted/20 px-4 py-2.5 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+        <div role="status" className="flex flex-col gap-2 border-t border-border/70 bg-muted/20 px-4 py-2.5 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
             <span className="rounded-md bg-blue-500/10 px-2 py-1 font-medium text-blue-700 dark:text-blue-300">
               {result.rule_hit ? t("route.previewRule") : t("route.previewDefault")}
