@@ -1,6 +1,6 @@
 [package]
 name = "keyway"
-version = "0.2.12"
+version = "0.2.13"
 description = "Keyway — manage every AI CLI provider in one app"
 authors = ["you"]
 edition = "2021"
@@ -51,4 +51,5 @@ tauri-plugin-autostart = "2.5.1"
 tauri-plugin-global-shortcut = "2.3.2"
 base64 = "0.22"
 tauri-plugin-dialog = "2.7.2"
-
+tauri-plugin-deep-link = "=2.4.5"
+tauri-plugin-single-instance = { version = "=2.3.4", features = ["deep-link"] }

@@ -10,6 +10,8 @@ use anyhow::Result;
 use crate::db::{api_key_dao, provider_dao, Pool};
 use crate::types::{AppType, Protocol, Provider, ProviderInput};
 
+static CREATE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 /// 填充 `has_key`:优先 meta 落库值;未知时查加密库 api_keys;
 /// 仍未知且为旧数据时从旧 keychain 迁移一次,此后使用加密库。
 fn fill_has_key(pool: &Pool, list: &mut [Provider]) {
@@ -56,6 +58,24 @@ pub fn get_current(pool: &Pool, app: AppType) -> Result<Option<Provider>> {
 /// 创建供应商;若同名供应商已存在则**合并**:只追加当前分组协议的端点(不新建)。
 /// 提供了 API Key 时写入加密库(已有 Key 且新值为空则保留旧 Key)。
 pub fn create(pool: &Pool, input: ProviderInput) -> Result<Provider> {
+    let _guard = CREATE_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    create_inner(pool, input)
+}
+
+/// External connection intents must never merge into an existing provider.
+pub fn create_unique(pool: &Pool, input: ProviderInput) -> Result<Provider> {
+    let _guard = CREATE_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    if provider_dao::find_by_name(pool, &input.name)?.is_some() {
+        return Err(anyhow::anyhow!("供应商名称已存在，请重新确认"));
+    }
+    create_inner(pool, input)
+}
+
+fn create_inner(pool: &Pool, input: ProviderInput) -> Result<Provider> {
     // 同名合并:补端点即可
     if let Some(existing) = provider_dao::find_by_name(pool, &input.name)? {
         let protocol = input.app_type.protocol();
@@ -131,6 +151,39 @@ pub fn create(pool: &Pool, input: ProviderInput) -> Result<Provider> {
 /// 无需写 live 配置文件、无需重启终端。这是 Keyway 的核心体验差异化。
 pub fn switch(pool: &Pool, id: &str, app: AppType) -> Result<()> {
     provider_dao::set_current(pool, id, app)
+}
+
+#[cfg(test)]
+mod unique_tests {
+    use super::*;
+
+    #[test]
+    fn relay_import_never_merges_with_existing_name() {
+        let path = std::env::temp_dir().join(format!("keyway-relay-{}.db", uuid::Uuid::new_v4()));
+        let pool = crate::db::init_pool(&path, &"0".repeat(64)).unwrap();
+        let first = ProviderInput {
+            app_type: AppType::Codex,
+            name: "RELAY".into(),
+            base_url: "https://old.example/v1".into(),
+            models: vec![],
+            api_key: None,
+        };
+        create_unique(&pool, first).unwrap();
+        let second = ProviderInput {
+            app_type: AppType::Codex,
+            name: " relay ".into(),
+            base_url: "https://new.example/v1".into(),
+            models: vec![],
+            api_key: Some("new-secret".into()),
+        };
+        assert!(create_unique(&pool, second).is_err());
+        let list = list_by_app(&pool, AppType::Codex).unwrap();
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].base_url, "https://old.example/v1");
+        assert!(!list[0].has_key);
+        drop(pool);
+        let _ = std::fs::remove_file(path);
+    }
 }
 
 /// 更新某供应商的 API Key(写入加密库)。

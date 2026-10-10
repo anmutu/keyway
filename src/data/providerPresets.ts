@@ -30,7 +30,16 @@ export interface ProviderPreset {
   partner?: boolean;
   /** 内置模型列表(仅信息展示 + 创建时预填,可在编辑时修改) */
   models?: string[];
+  /** Endpoint is supplied by the user; no public production URL is bundled. */
+  requiresBaseUrl?: boolean;
 }
+
+const relayPreset: ProviderPreset = {
+  name: "RELAY",
+  baseUrl: "",
+  category: "aggregator",
+  requiresBaseUrl: true,
+};
 
 /** OpenAI 兼容通用端点,opencode / openclaw 共用 */
 const openaiCompatible: ProviderPreset[] = [
@@ -213,7 +222,7 @@ const anthropicCompatible: ProviderPreset[] = [
 
 export const providerPresets: Record<AppType, ProviderPreset[]> = {
   // Claude 分组:Anthropic 兼容端点
-  claude: anthropicCompatible,
+  claude: [relayPreset, ...anthropicCompatible],
   // Codex 分组:OpenAI 兼容 / Responses 端点
   codex: [
     {
@@ -224,6 +233,7 @@ export const providerPresets: Record<AppType, ProviderPreset[]> = {
       websiteUrl: "https://chatgpt.com/codex",
       apiKeyUrl: "https://platform.openai.com/api-keys",
     },
+    relayPreset,
     ...openaiCompatible,
   ],
   // Gemini 分组:Gemini 原生端点
@@ -237,8 +247,8 @@ export const providerPresets: Record<AppType, ProviderPreset[]> = {
       apiKeyUrl: "https://aistudio.google.com/apikey",
     },
   ],
-  opencode: openaiCompatible,
-  openclaw: openaiCompatible,
+  opencode: [relayPreset, ...openaiCompatible],
+  openclaw: [relayPreset, ...openaiCompatible],
   // Qwen Code CLI:OpenAI 兼容端点
   qwen: [
     {

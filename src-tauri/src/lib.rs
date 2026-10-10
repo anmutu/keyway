@@ -33,6 +33,14 @@ pub fn run() {
         tauri_plugin_global_shortcut::Code::KeyK,
     );
     tauri::Builder::default()
+        // Must be first: forwarded CLI URLs reach deep-link on Windows/Linux.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(
@@ -215,6 +223,8 @@ pub fn run() {
             commands::provider::list_all_providers,
             commands::provider::get_current_provider,
             commands::provider::create_provider,
+            commands::provider::create_relay_provider,
+            commands::provider::exchange_relay_handoff,
             commands::provider::switch_provider,
             commands::provider::delete_provider,
             commands::provider::update_provider,

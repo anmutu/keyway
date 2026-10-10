@@ -1,6 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrent, onOpenUrl } from "@tauri-apps/plugin-deep-link";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Activity, Boxes, CopyPlus, Download, Gauge, Plus, Search, TriangleAlert, X } from "lucide-react";
 import type { AppType, Provider, ProxyStatus, UsageSummary } from "@/types";
 import { APP_PROTOCOL } from "@/types";
@@ -8,10 +10,13 @@ import { Sidebar } from "@/components/Sidebar";
 import { AppHeaderBar } from "@/components/AppHeaderBar";
 import { ProviderCard } from "@/components/providers/ProviderCard";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
+import { RelayConnectDialog } from "@/components/providers/RelayConnectDialog";
+import { parseRelayDeepLink, type RelayConnectRequest } from "@/lib/relayDeepLink";
 import { GatewayStatusStrip } from "@/components/providers/GatewayStatusStrip";
 import { RoutePreviewCard } from "@/components/providers/RoutePreviewCard";
 import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ToastStack, type ToastItem, type ToastType } from "@/components/Toast";
 import { AboutDialog } from "@/components/AboutDialog";
 import { QuickSwitchPanel } from "@/components/QuickSwitchPanel";
@@ -176,6 +181,11 @@ function App() {
   const [usageMap, setUsageMap] = useState<Record<string, UsageSummary>>({});
   const [hasCache, setHasCache] = useState(false); // 当前 app 是否已有可展示数据
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [relayRequest, setRelayRequest] = useState<RelayConnectRequest | null>(null);
+  const [relayExisting, setRelayExisting] = useState<Provider[]>([]);
+  const [relayCurrent, setRelayCurrent] = useState<Provider | undefined>();
+  const [relaySavedApp, setRelaySavedApp] = useState<AppType | null>(null);
+  const pendingRelayUrl = useRef<string | null>(null);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Provider | null>(null);
   // 空分组引导:其他分组的供应商(点「从其他分组复制」时懒加载)
@@ -400,6 +410,56 @@ function App() {
   const handleQuickSwitch = useCallback(() => {
     setQuickOpen(true);
   }, []);
+
+  useEffect(() => {
+    if (IS_DEMO || !isTauri()) return;
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+    const receive = async (urls: string[]) => {
+      // A deep link can arrive while Keyway is minimized to the tray. Bring the
+      // existing singleton to the front before showing the import dialog.
+      try {
+        const window = getCurrentWindow();
+        await window.show();
+        await window.setFocus();
+      } catch {
+        // The browser build and older desktop runtimes do not expose window
+        // controls; handling the link itself can continue without them.
+      }
+      for (const raw of urls) {
+        // Loopback HTTP is intentionally allowed here for local RELAY testing.
+        // Public endpoints still require HTTPS in parseRelayDeepLink.
+        const request = parseRelayDeepLink(raw, true);
+        if (!request || raw === pendingRelayUrl.current) continue;
+        try {
+          const [all, current] = await Promise.all([
+            invoke<Provider[]>("list_all_providers"),
+            invoke<Provider | null>("get_current_provider", { appType: request.app }),
+          ]);
+          if (disposed) return;
+          if (raw === pendingRelayUrl.current) continue;
+          pendingRelayUrl.current = raw;
+          setRelayExisting(all);
+          setRelayCurrent(current ?? undefined);
+          setOnboardingOpen(false);
+          setIsAddOpen(false);
+          switchApp(request.app);
+          setRelayRequest(request);
+        } catch (error) {
+          handleError(String(error));
+        }
+      }
+    };
+    void onOpenUrl((urls) => { void receive(urls); })
+      .then((un) => {
+        if (disposed) un();
+        else unlisten = un;
+        return getCurrent();
+      })
+      .then((urls) => { if (!disposed && urls) void receive(urls); })
+      .catch((error) => handleError(String(error)));
+    return () => { disposed = true; unlisten?.(); };
+  }, [handleError, switchApp]);
 
   const refresh = useCallback(async (app: AppType) => {
     // 演示模式:不走 IPC,直接展示 mock 数据
@@ -1314,14 +1374,46 @@ function App() {
         open={isAddOpen}
         onOpenChange={setIsAddOpen}
         appId={activeApp}
-        onCreated={async (created) => {
+        onCreated={async (created, fromRelay) => {
           toast("success", t("toast.added", { name: created.name }));
           syncTray();
           await refresh(activeApp);
           focusProvider(created.id);
+          if (fromRelay) setRelaySavedApp(activeApp);
         }}
         onError={(msg) => toast("error", humanizeError(msg, t))}
       />
+
+      <RelayConnectDialog
+        request={relayRequest}
+        existingProviders={relayExisting}
+        currentProvider={relayCurrent}
+        onClose={() => { setRelayRequest(null); pendingRelayUrl.current = null; }}
+        onCreated={(created, app) => {
+          toast("success", t("toast.added", { name: created.name }));
+          syncTray();
+          void refresh(app).then(() => focusProvider(created.id));
+          setRelaySavedApp(app);
+        }}
+        onError={(message) => handleError(message)}
+      />
+
+      <Dialog open={relaySavedApp !== null} onOpenChange={(open) => { if (!open) setRelaySavedApp(null); }}>
+        <DialogContent className="sm:max-w-[430px]">
+          <DialogHeader>
+            <DialogTitle>{t("relay.savedTitle")}</DialogTitle>
+            <DialogDescription>{t("relay.savedDesc")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRelaySavedApp(null)}>{t("relay.later")}</Button>
+            <Button onClick={() => {
+              if (relaySavedApp) switchApp(relaySavedApp);
+              setRelaySavedApp(null);
+              setTakeoverOpen(true);
+            }}>{t("relay.manageTakeover")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <EditProviderDialog
         provider={editingProvider}

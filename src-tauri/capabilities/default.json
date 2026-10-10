@@ -9,6 +9,7 @@
     "core:default",
     "opener:default",
     "dialog:default",
+    "deep-link:allow-get-current",
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled"

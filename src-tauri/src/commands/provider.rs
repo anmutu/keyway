@@ -1,11 +1,116 @@
 //! 供应商相关命令。
 
+use serde::Deserialize;
 use tauri::State;
 
 use crate::db::provider_dao;
 use crate::services::provider as svc;
 use crate::state::AppState;
 use crate::types::{AppType, Protocol, Provider, ProviderInput};
+
+#[derive(Debug, Deserialize)]
+struct RelayHandoffEnvelope {
+    success: Option<bool>,
+    data: Option<RelayHandoffData>,
+    key: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RelayHandoffData {
+    key: Option<String>,
+    api_key: Option<String>,
+}
+
+fn valid_relay_handoff_code(code: &str) -> bool {
+    (16..=256).contains(&code.len()) && code.bytes().all(|b| b.is_ascii_alphanumeric())
+}
+
+fn valid_relay_handoff_base(base_url: &str) -> Result<reqwest::Url, String> {
+    let parsed =
+        reqwest::Url::parse(base_url.trim()).map_err(|_| "invalid RELAY URL".to_string())?;
+    let is_local_http =
+        parsed.scheme() == "http" && matches!(parsed.host_str(), Some("localhost" | "127.0.0.1"));
+    if (parsed.scheme() != "https" && !is_local_http)
+        || !parsed.username().is_empty()
+        || parsed.password().is_some()
+        || parsed.query().is_some()
+        || parsed.fragment().is_some()
+    {
+        return Err("RELAY handoff requires a clean HTTPS base URL".into());
+    }
+    Ok(parsed)
+}
+
+/// Exchange a short-lived RELAY handoff grant. The returned key stays in memory
+/// long enough for the caller to pass it to `create_relay_provider`; it is never
+/// put in the deep link or logged.
+#[tauri::command]
+pub async fn exchange_relay_handoff(base_url: String, code: String) -> Result<String, String> {
+    if !valid_relay_handoff_code(&code) {
+        return Err("invalid handoff code".into());
+    }
+    let _ = valid_relay_handoff_base(&base_url)?;
+    let endpoint = format!(
+        "{}/api/keyway/handoff/exchange",
+        base_url.trim_end_matches('/')
+    );
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .connect_timeout(std::time::Duration::from_secs(5))
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|_| "could not prepare RELAY connection".to_string())?;
+    let response = client
+        .post(endpoint)
+        .json(&serde_json::json!({ "code": code }))
+        .send()
+        .await
+        .map_err(|_| "RELAY handoff could not be reached".to_string())?;
+    if !response.status().is_success() {
+        return Err("RELAY rejected or expired this handoff".into());
+    }
+    let body = response
+        .bytes()
+        .await
+        .map_err(|_| "invalid RELAY handoff response".to_string())?;
+    if body.len() > 32 * 1024 {
+        return Err("invalid RELAY handoff response".into());
+    }
+    let envelope: RelayHandoffEnvelope =
+        serde_json::from_slice(&body).map_err(|_| "invalid RELAY handoff response".to_string())?;
+    if envelope.success == Some(false) {
+        return Err("RELAY rejected or expired this handoff".into());
+    }
+    let key = envelope
+        .data
+        .and_then(|data| data.key.or(data.api_key))
+        .or(envelope.key)
+        .filter(|key| !key.trim().is_empty())
+        .ok_or_else(|| "RELAY did not return an API key".to_string())?;
+    Ok(key)
+}
+
+#[cfg(test)]
+mod relay_handoff_tests {
+    use super::{valid_relay_handoff_base, valid_relay_handoff_code};
+
+    #[test]
+    fn validates_opaque_one_time_code() {
+        assert!(valid_relay_handoff_code(&"A".repeat(64)));
+        assert!(!valid_relay_handoff_code("short"));
+        assert!(!valid_relay_handoff_code(&"A".repeat(257)));
+        assert!(!valid_relay_handoff_code(&format!("{}-", "A".repeat(63))));
+    }
+
+    #[test]
+    fn rejects_credentialed_or_non_https_handoff_bases() {
+        assert!(valid_relay_handoff_base("https://relay.example/api").is_ok());
+        assert!(valid_relay_handoff_base("http://localhost:3000").is_ok());
+        assert!(valid_relay_handoff_base("http://relay.example").is_err());
+        assert!(valid_relay_handoff_base("https://user:pass@relay.example").is_err());
+        assert!(valid_relay_handoff_base("https://relay.example?key=secret").is_err());
+    }
+}
 
 #[tauri::command]
 pub fn list_providers(
@@ -34,6 +139,14 @@ pub fn create_provider(
     input: ProviderInput,
 ) -> Result<Provider, String> {
     svc::create(&state.db, input).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn create_relay_provider(
+    state: State<'_, AppState>,
+    input: ProviderInput,
+) -> Result<Provider, String> {
+    svc::create_unique(&state.db, input).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

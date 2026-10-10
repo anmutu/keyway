@@ -63,7 +63,7 @@ OpenClaw    ┘
 
 首次接管 Codex 后新开一次会话。发送新请求,在分组页点击「查看请求去向」,确认日志里的供应商与响应状态。接管状态反映配置,不是对每个正在运行的会话的实时探测。
 
-> 没有现成供应商?看看 [GLM 接入](./providers/glm.md)、[Kimi 接入](./providers/kimi.md) 和 [CoderPlan 接入](./providers/coderplan.md),国产模型的 Coding 套餐和中转站都提供 Anthropic 兼容端点。
+> 没有现成供应商?看看 [GLM 接入](./providers/glm.md)、[Kimi 接入](./providers/kimi.md)、[CoderPlan 接入](./providers/coderplan.md) 和 [RELAY 接入](./providers/relay.md)。
 
 ### 日常操作速查
 
@@ -120,6 +120,7 @@ Keyway 聚焦本地请求的运行与排查:现在配置了谁、CLI 是否接�
 | [GLM 接入](./providers/glm.md) | 智谱 Coding Plan 双端点接法 |
 | [Kimi 接入](./providers/kimi.md) | Moonshot Anthropic 端点接法 |
 | [CoderPlan 接入](./providers/coderplan.md) | CoderPlan 中转站接法(根地址,不带 `/v1`) |
+| [RELAY 接入](./providers/relay.md) | Keyway 预设与网页点选配置 |
 
 ---
 

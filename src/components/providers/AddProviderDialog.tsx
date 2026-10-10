@@ -22,13 +22,14 @@ import {
 } from "@/data/providerPresets";
 import { loadPresetOrder, savePresetOrder } from "@/lib/appPrefs";
 import { cn } from "@/lib/utils";
+import { isValidRelayBase, relayEndpointForApp, relayFormState } from "@/lib/relayDeepLink";
 import type { AppType, Provider } from "@/types";
 
 interface AddProviderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appId: AppType;
-  onCreated: (provider: Provider) => void;
+  onCreated: (provider: Provider, fromRelay?: boolean) => void;
   onError: (msg: string) => void;
 }
 
@@ -67,6 +68,11 @@ export function AddProviderDialog({
   const [apiKey, setApiKey] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [existingNames, setExistingNames] = useState<string[]>([]);
+  const [currentName, setCurrentName] = useState<string | null>(null);
+  const [relayStateLoaded, setRelayStateLoaded] = useState(false);
+  const [relayConfirmed, setRelayConfirmed] = useState(false);
+  const [relayDuplicate, setRelayDuplicate] = useState(false);
   const keyInputRef = useRef<HTMLInputElement>(null);
 
   // 拖拽排序:扁平列表全局排序;持久化到 localStorage
@@ -107,19 +113,35 @@ export function AddProviderDialog({
       setBaseUrl("");
       setApiKey("");
       setUrlError(null);
+      setRelayConfirmed(false);
+      setRelayDuplicate(false);
+      setRelayStateLoaded(false);
+      if (isTauri()) {
+        void Promise.all([
+          invoke<Provider[]>("list_all_providers"),
+          invoke<Provider | null>("get_current_provider", { appType: appId }),
+        ]).then(([all, current]) => {
+          setExistingNames(all.map((provider) => provider.name));
+          setCurrentName(current?.name ?? null);
+          setRelayStateLoaded(true);
+        }).catch((error) => onError(String(error)));
+      }
     }
-  }, [open]);
+  }, [open, appId]);
 
   // 选预设 → 预填并进入表单;自定义 → 空表单(可用搜索词作名称种子)
   const pick = (p: ProviderPreset | null, nameSeed?: string) => {
     setPreset(p);
     setStep("form");
-    setName(p?.name ?? nameSeed ?? "");
+    setName(p?.requiresBaseUrl ? relayFormState(existingNames, "").name : p?.name ?? nameSeed ?? "");
     setBaseUrl(p?.baseUrl ?? "");
+    setApiKey("");
     setUrlError(null);
+    setRelayConfirmed(false);
+    setRelayDuplicate(false);
     // 预填后焦点落到 API Key;自定义则从名称开始
     requestAnimationFrame(() => {
-      if (p) keyInputRef.current?.focus();
+      if (p && !p.requiresBaseUrl) keyInputRef.current?.focus();
     });
   };
 
@@ -129,6 +151,7 @@ export function AddProviderDialog({
     setStep("pick");
     setName("");
     setBaseUrl("");
+    setApiKey("");
     setUrlError(null);
   };
 
@@ -158,22 +181,43 @@ export function AddProviderDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const err = validateUrl(baseUrl, t);
+    const err = preset?.requiresBaseUrl && !isValidRelayBase(baseUrl.trim(), import.meta.env.DEV)
+      ? t("relay.invalidBase") : validateUrl(baseUrl, t);
     setUrlError(err);
     if (name.trim() === "" || baseUrl.trim() === "" || err) return;
+    if (preset?.requiresBaseUrl && (!relayStateLoaded || !apiKey.trim() || !relayConfirmed)) return;
     if (submitting) return;
     setSubmitting(true);
     try {
-      const created = await invoke<Provider>("create_provider", {
+      if (preset?.requiresBaseUrl) {
+        const [all, current] = await Promise.all([
+          invoke<Provider[]>("list_all_providers"),
+          invoke<Provider | null>("get_current_provider", { appType: appId }),
+        ]);
+        if ((current?.name ?? null) !== currentName) {
+          setCurrentName(current?.name ?? null);
+          setRelayConfirmed(false);
+          return;
+        }
+        if (all.some((provider) => provider.name.trim().toLowerCase() === name.trim().toLowerCase())) {
+          setRelayDuplicate(true);
+          setRelayConfirmed(false);
+          setExistingNames(all.map((provider) => provider.name));
+          setName(relayFormState(all.map((provider) => provider.name), apiKey).name);
+          return;
+        }
+      }
+      const created = await invoke<Provider>(preset?.requiresBaseUrl ? "create_relay_provider" : "create_provider", {
         input: {
           app_type: appId,
           name: name.trim(),
-          base_url: baseUrl.trim(),
+          base_url: preset?.requiresBaseUrl
+            ? relayEndpointForApp({ baseUrl: baseUrl.trim(), app: appId }) : baseUrl.trim(),
           models: preset?.models ?? [],
           api_key: apiKey.trim() || undefined,
         },
       });
-      onCreated(created);
+      onCreated(created, Boolean(preset?.requiresBaseUrl));
       onOpenChange(false);
     } catch (err) {
       onError(String(err));
@@ -246,7 +290,7 @@ export function AddProviderDialog({
                           )}
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          {p.baseUrl}
+                          {p.requiresBaseUrl ? t("relay.presetDesc") : p.baseUrl}
                         </span>
                       </span>
                     </button>
@@ -295,7 +339,7 @@ export function AddProviderDialog({
               <DialogTitle>{t("dialog.addTitle")}</DialogTitle>
               <DialogDescription>
                 {preset
-                  ? t("preset.formDesc", { name: preset.name })
+                  ? preset.requiresBaseUrl ? t("relay.presetDesc") : t("preset.formDesc", { name: preset.name })
                   : t("dialog.addDesc")}
               </DialogDescription>
             </DialogHeader>
@@ -334,10 +378,11 @@ export function AddProviderDialog({
               <Input
                 id="provider-name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); setRelayDuplicate(false); setRelayConfirmed(false); }}
                 placeholder={t("dialog.namePh")}
                 autoFocus={!preset}
               />
+              {relayDuplicate && <p className="text-xs text-red-500">{t("relay.duplicateName")}</p>}
             </div>
 
             <div className="grid gap-2">
@@ -347,15 +392,22 @@ export function AddProviderDialog({
                 value={baseUrl}
                 onChange={(e) => {
                   setBaseUrl(e.target.value);
+                  if (preset?.requiresBaseUrl) setRelayConfirmed(false);
                   if (urlError) setUrlError(validateUrl(e.target.value, t));
                 }}
-                onBlur={() => setUrlError(validateUrl(baseUrl, t))}
+                onBlur={() => setUrlError(preset?.requiresBaseUrl && !isValidRelayBase(baseUrl.trim(), import.meta.env.DEV)
+                  ? t("relay.invalidBase") : validateUrl(baseUrl, t))}
                 placeholder={t("dialog.urlPh")}
                 aria-invalid={!urlValid}
                 className={!urlValid ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
               {urlError && (
                 <p className="text-xs text-red-500">{urlError}</p>
+              )}
+              {preset?.requiresBaseUrl && baseUrl.trim() && isValidRelayBase(baseUrl.trim(), import.meta.env.DEV) && (
+                <p className="break-all text-xs text-muted-foreground">
+                  {t("relay.savedEndpoint", { url: relayEndpointForApp({ baseUrl: baseUrl.trim(), app: appId }) })}
+                </p>
               )}
               {preset?.models && preset.models.length > 0 && (
                 <p className="text-xs text-muted-foreground">
@@ -393,6 +445,17 @@ export function AddProviderDialog({
               />
             </div>
 
+            {preset?.requiresBaseUrl && (
+              <div className="grid gap-2 text-xs text-muted-foreground">
+                <p>{currentName ? t("relay.currentKept", { name: currentName }) : t("relay.firstActive")}</p>
+                <p>{t("relay.noTakeover")}</p>
+                <label className="flex items-start gap-2 text-foreground">
+                  <input type="checkbox" className="mt-0.5" checked={relayConfirmed} onChange={(e) => setRelayConfirmed(e.target.checked)} />
+                  <span>{t("relay.confirm")}</span>
+                </label>
+              </div>
+            )}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -405,6 +468,7 @@ export function AddProviderDialog({
                 type="submit"
                 disabled={
                   submitting || name.trim() === "" || baseUrl.trim() === "" || !urlValid
+                    || (preset?.requiresBaseUrl && (!relayStateLoaded || !isValidRelayBase(baseUrl.trim(), import.meta.env.DEV) || !apiKey.trim() || !relayConfirmed))
                 }
               >
                 <Plus className="w-4 h-4 mr-1" />
