@@ -36,6 +36,7 @@ interface ProviderCardProps {
   takeoverEffective?: boolean;
   /** 当前分组是否登记为已接管,用于区分主动未接管与配置漂移 */
   takeoverActive?: boolean;
+  takeoverExternalOwner?: string | null;
 }
 
 // 供应商卡片:rounded-xl + 当前项蓝色边框/渐变 + hover 显示操作组 + 常显"当前"徽章。
@@ -58,6 +59,7 @@ export function ProviderCard({
   onTestResult,
   takeoverEffective,
   takeoverActive,
+  takeoverExternalOwner,
 }: ProviderCardProps) {
   const { t } = useI18n();
   // 该分组协议的端点;无端点 → 置灰(供应商实体仍在,只是未配置此协议)
@@ -117,7 +119,14 @@ export function ProviderCard({
               </h3>
               {/* 当前项常显徽章:不依赖 hover,一眼可辨;接管被外部覆盖时降级为「未接管」 */}
               {isCurrent &&
-                (takeoverEffective === false ? (
+                (takeoverExternalOwner ? (
+                  <span
+                    className="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                    title={t("takeover.externalOwnerHint")}
+                  >
+                    {t("takeover.externalOwner")}
+                  </span>
+                ) : takeoverEffective === false ? (
                   <span
                     className={cn(
                       "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold",

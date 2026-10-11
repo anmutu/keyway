@@ -19,6 +19,9 @@ use crate::types::AppType;
 /// 本地代理地址(与 core::proxy::PROXY_ADDR 保持一致)
 pub const PROXY_URL: &str = "http://127.0.0.1:9527";
 
+const CC_SWITCH_OWNER: &str = "cc-switch";
+const CC_SWITCH_PROXY_TOKEN: &str = "PROXY_MANAGED";
+
 fn proxy_url_for(app: AppType) -> String {
     format!("{PROXY_URL}{}", app.proxy_prefix())
 }
@@ -40,6 +43,7 @@ pub struct TakeoverStatus {
     pub effective: bool,
     /// 故障转移开关
     pub failover: bool,
+    pub external_owner: Option<String>,
 }
 
 // ---------- settings KV ----------
@@ -92,6 +96,147 @@ fn write_atomic(path: &Path, content: &str) -> Result<()> {
 fn home_path(rel: &[&str]) -> Result<PathBuf> {
     let home = dirs::home_dir().ok_or_else(|| anyhow!("无法定位用户目录"))?;
     Ok(rel.iter().fold(home, |p, c| p.join(c)))
+}
+
+fn is_local_proxy_url(value: &str) -> bool {
+    let Ok(url) = reqwest::Url::parse(value.trim()) else {
+        return false;
+    };
+    let is_loopback = matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "::1"));
+    is_loopback && url.port().is_some()
+}
+
+fn env_value<'a>(line: &'a str, name: &str) -> Option<&'a str> {
+    let trimmed = line.trim();
+    let assignment = trimmed.strip_prefix("export ").unwrap_or(trimmed);
+    let (key, value) = assignment.split_once('=')?;
+    (key.trim() == name).then(|| value.trim().trim_matches(['\'', '"']))
+}
+
+fn cc_switch_state_attached(home: &Path, app: AppType) -> bool {
+    let state_path = home.join(".cc-switch").join("live-state.json");
+    let Ok(raw) = std::fs::read_to_string(state_path) else {
+        return false;
+    };
+    let Ok(root) = serde_json::from_str::<serde_json::Value>(&raw) else {
+        return false;
+    };
+    root.get("apps")
+        .and_then(|apps| apps.get(app.as_str()))
+        .and_then(|state| state.get("attached"))
+        .and_then(serde_json::Value::as_bool)
+        == Some(true)
+}
+
+fn json_has_proxy_marker(value: &serde_json::Value, keys: &[&str]) -> bool {
+    match value {
+        serde_json::Value::Object(object) => object.iter().any(|(key, value)| {
+            let matches_key = keys.is_empty() || keys.iter().any(|candidate| candidate == key);
+            (matches_key && value.as_str() == Some(CC_SWITCH_PROXY_TOKEN))
+                || (keys.is_empty() && json_has_proxy_marker(value, keys))
+        }),
+        serde_json::Value::Array(values) => values
+            .iter()
+            .any(|value| json_has_proxy_marker(value, keys)),
+        _ => false,
+    }
+}
+
+fn claude_cc_switch_markers(path: &Path) -> bool {
+    let Ok(raw) = std::fs::read_to_string(path) else {
+        return false;
+    };
+    let Ok(root) = serde_json::from_str::<serde_json::Value>(&raw) else {
+        return false;
+    };
+    let Some(env) = root.get("env") else {
+        return false;
+    };
+    let base_url = env
+        .get("ANTHROPIC_BASE_URL")
+        .and_then(serde_json::Value::as_str);
+    base_url.is_some_and(is_local_proxy_url)
+        && json_has_proxy_marker(
+            env,
+            &[
+                "ANTHROPIC_AUTH_TOKEN",
+                "ANTHROPIC_API_KEY",
+                "OPENAI_API_KEY",
+                "OPENROUTER_API_KEY",
+            ],
+        )
+}
+
+fn codex_selected_provider<'a>(doc: &'a toml_edit::DocumentMut) -> Option<&'a toml_edit::Item> {
+    let profile = doc.get("profile").and_then(|value| value.as_str());
+    let selected = profile
+        .and_then(|name| {
+            doc.get("profiles")?
+                .get(name)?
+                .get("model_provider")?
+                .as_str()
+        })
+        .or_else(|| doc.get("model_provider").and_then(|value| value.as_str()))
+        .unwrap_or("openai");
+    doc.get("model_providers")?.get(selected)
+}
+
+fn file_contains_proxy_marker(path: &Path) -> bool {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok())
+        .is_some_and(|root| json_has_proxy_marker(&root, &[]))
+}
+
+fn codex_cc_switch_markers(home: &Path, path: &Path) -> bool {
+    let Ok(raw) = std::fs::read_to_string(path) else {
+        return false;
+    };
+    let Ok(doc) = raw.parse::<toml_edit::DocumentMut>() else {
+        return false;
+    };
+    let Some(base_url) = codex_selected_provider(&doc)
+        .and_then(|provider| provider.get("base_url"))
+        .and_then(|value| value.as_str())
+    else {
+        return false;
+    };
+    if !is_local_proxy_url(base_url) {
+        return false;
+    }
+
+    let auth_has_proxy_marker = path
+        .parent()
+        .map(|parent| parent.join("auth.json"))
+        .into_iter()
+        .chain(std::iter::once(home.join(".codex").join("auth.json")))
+        .any(|candidate| file_contains_proxy_marker(&candidate));
+    codex_selected_provider(&doc)
+        .is_some_and(|provider| provider.to_string().contains(CC_SWITCH_PROXY_TOKEN))
+        || auth_has_proxy_marker
+}
+
+fn gemini_cc_switch_markers(path: &Path) -> bool {
+    let Ok(raw) = std::fs::read_to_string(path) else {
+        return false;
+    };
+    let base_url = raw.lines().find_map(|line| env_value(line, GEMINI_VAR));
+    let token = raw
+        .lines()
+        .find_map(|line| env_value(line, "GEMINI_API_KEY"));
+    base_url.is_some_and(is_local_proxy_url) && token == Some(CC_SWITCH_PROXY_TOKEN)
+}
+
+fn detect_external_owner_at(home: &Path, app: AppType, path: &Path) -> Option<&'static str> {
+    let attached = matches!(app, AppType::Claude | AppType::Codex | AppType::Gemini)
+        && cc_switch_state_attached(home, app);
+    let marked = match app {
+        AppType::Claude => claude_cc_switch_markers(path),
+        AppType::Codex => codex_cc_switch_markers(home, path),
+        AppType::Gemini => gemini_cc_switch_markers(path),
+        _ => false,
+    };
+    (attached || marked).then_some(CC_SWITCH_OWNER)
 }
 
 // ---------- Claude: ~/.claude/settings.json ----------
@@ -835,6 +980,7 @@ fn openclaw_effective(path: &Path) -> bool {
 // ---------- 对外接口 ----------
 
 pub fn status(pool: &Pool) -> Vec<TakeoverStatus> {
+    let home = dirs::home_dir();
     AppType::all()
         .iter()
         .map(|&app| {
@@ -846,23 +992,26 @@ pub fn status(pool: &Pool) -> Vec<TakeoverStatus> {
                     | AppType::OpenCode
                     | AppType::OpenClaw
             );
-            let (exists, effective) = if supported {
+            let (exists, effective, external_owner) = if supported {
                 match live_path(app) {
-                    Ok(p) => (
-                        p.exists(),
-                        match app {
+                    Ok(p) => {
+                        let effective = match app {
                             AppType::Claude => claude_effective(&p),
                             AppType::Codex => codex_effective(&p),
                             AppType::Gemini => gemini_effective(&p),
                             AppType::OpenCode => opencode_effective(&p),
                             AppType::OpenClaw => openclaw_effective(&p),
                             _ => false,
-                        },
-                    ),
-                    Err(_) => (false, false),
+                        };
+                        let external_owner = home.as_deref().and_then(|home| {
+                            detect_external_owner_at(home, app, &p).map(str::to_owned)
+                        });
+                        (p.exists(), effective, external_owner)
+                    }
+                    Err(_) => (false, false, None),
                 }
             } else {
-                (false, false)
+                (false, false, None)
             };
             let active = settings_get(pool, &active_key(app))
                 .ok()
@@ -881,6 +1030,7 @@ pub fn status(pool: &Pool) -> Vec<TakeoverStatus> {
                 active,
                 effective,
                 failover,
+                external_owner,
             }
         })
         .collect()
@@ -905,7 +1055,8 @@ pub fn apply(pool: &Pool, app: AppType) -> Result<()> {
         return Err(anyhow!("{} 暂不支持接管,下个版本支持", app.as_str()));
     }
     let path = live_path(app)?;
-    apply_at(pool, app, &path)
+    let home = dirs::home_dir().ok_or_else(|| anyhow!("无法定位用户目录"))?;
+    apply_at_with_home(pool, app, &path, &home)
 }
 
 fn apply_at(pool: &Pool, app: AppType, path: &Path) -> Result<()> {
@@ -945,6 +1096,16 @@ fn apply_at(pool: &Pool, app: AppType, path: &Path) -> Result<()> {
     settings_set(pool, &active_key(app), "1")?;
     tracing::info!("已接管 {} → {PROXY_URL}({})", app.as_str(), path.display());
     Ok(())
+}
+
+fn apply_at_with_home(pool: &Pool, app: AppType, path: &Path, home: &Path) -> Result<()> {
+    if let Some(owner) = detect_external_owner_at(home, app, path) {
+        return Err(anyhow!(
+            "{} 配置正由 {owner} 接管，Keyway 未写入。请先在 CC Switch 中关闭代理并回到直连，再由 Keyway 接管",
+            app.as_str(),
+        ));
+    }
+    apply_at(pool, app, path)
 }
 
 pub fn restore(pool: &Pool, app: AppType) -> Result<()> {
@@ -1237,6 +1398,169 @@ mod tests {
         std::fs::write(&path, original).unwrap();
         assert!(apply_at(&pool, AppType::Codex, &path).is_err());
         assert_eq!(std::fs::read_to_string(path).unwrap(), original);
+    }
+
+    #[test]
+    fn cc_switch_state_detects_an_attached_app() {
+        let home = tmp("cc_switch_state");
+        let state_dir = home.join(".cc-switch");
+        std::fs::create_dir_all(&state_dir).unwrap();
+        std::fs::write(
+            state_dir.join("live-state.json"),
+            r#"{"apps":{"claude":{"mode":"proxy","attached":true}}}"#,
+        )
+        .unwrap();
+        let path = home.join(".claude/settings.json");
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Claude, &path),
+            Some("cc-switch")
+        );
+    }
+
+    #[test]
+    fn cc_switch_markers_detect_claude_codex_and_gemini() {
+        let home = tmp("cc_switch_markers");
+        let claude = home.join("claude.json");
+        std::fs::write(
+            &claude,
+            r#"{"env":{"ANTHROPIC_BASE_URL":"http://127.0.0.1:15721","ANTHROPIC_AUTH_TOKEN":"PROXY_MANAGED"}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Claude, &claude),
+            Some("cc-switch")
+        );
+
+        let codex = home.join("config.toml");
+        std::fs::write(
+            &codex,
+            "model_provider = \"custom\"\n[model_providers.custom]\nbase_url = \"http://127.0.0.1:15721/v1\"\nexperimental_bearer_token = \"PROXY_MANAGED\"\n",
+        )
+        .unwrap();
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Codex, &codex),
+            Some("cc-switch")
+        );
+
+        let gemini = home.join("gemini.env");
+        std::fs::write(
+            &gemini,
+            "GEMINI_API_KEY=PROXY_MANAGED\nGOOGLE_GEMINI_BASE_URL=http://127.0.0.1:15721\n",
+        )
+        .unwrap();
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Gemini, &gemini),
+            Some("cc-switch")
+        );
+    }
+
+    #[test]
+    fn cc_switch_codex_auth_marker_detects_selected_local_provider() {
+        let home = tmp("cc_switch_codex_auth");
+        let codex_dir = home.join(".codex");
+        std::fs::create_dir_all(&codex_dir).unwrap();
+        let codex = codex_dir.join("config.toml");
+        std::fs::write(
+            &codex,
+            "model_provider = \"custom\"\n[model_providers.custom]\nbase_url = \"http://127.0.0.1:15721/v1\"\n",
+        )
+        .unwrap();
+        std::fs::write(
+            codex_dir.join("auth.json"),
+            r#"{"OPENAI_API_KEY":"PROXY_MANAGED"}"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Codex, &codex),
+            Some("cc-switch")
+        );
+    }
+
+    #[test]
+    fn unrelated_codex_provider_marker_does_not_block_direct_config() {
+        let home = tmp("cc_switch_codex_unrelated");
+        let codex = home.join("config.toml");
+        std::fs::write(
+            &codex,
+            "model_provider = \"custom\"\n[model_providers.custom]\nbase_url = \"http://127.0.0.1:15721/v1\"\n[model_providers.other]\nexperimental_bearer_token = \"PROXY_MANAGED\"\n",
+        )
+        .unwrap();
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Codex, &codex),
+            None
+        );
+    }
+
+    #[test]
+    fn apply_refuses_to_overwrite_a_cc_switch_owned_file() {
+        let home = tmp("cc_switch_guard");
+        let state_dir = home.join(".cc-switch");
+        std::fs::create_dir_all(&state_dir).unwrap();
+        std::fs::write(
+            state_dir.join("live-state.json"),
+            r#"{"apps":{"claude":{"mode":"proxy","attached":true}}}"#,
+        )
+        .unwrap();
+        let path = home.join("claude.json");
+        let original = r#"{"env":{"ANTHROPIC_BASE_URL":"http://127.0.0.1:15721","ANTHROPIC_AUTH_TOKEN":"PROXY_MANAGED"}}"#;
+        std::fs::write(&path, original).unwrap();
+        let pool = crate::db::init_pool(home.join("test.db"), &"ab".repeat(32)).unwrap();
+
+        let error = apply_at_with_home(&pool, AppType::Claude, &path, &home).unwrap_err();
+
+        assert!(error.to_string().contains("CC Switch"));
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
+        assert_eq!(
+            settings_get(&pool, &backup_key(AppType::Claude)).unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn direct_config_without_cc_switch_markers_is_not_blocked() {
+        let home = tmp("cc_switch_direct");
+        let path = home.join("claude.json");
+        std::fs::write(
+            &path,
+            r#"{"env":{"ANTHROPIC_BASE_URL":"https://provider.example","ANTHROPIC_API_KEY":"sk-test"}}"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Claude, &path),
+            None
+        );
+
+        std::fs::write(
+            &path,
+            r#"{"env":{"ANTHROPIC_BASE_URL":"http://127.0.0.1:15721","OTHER_SETTING":"PROXY_MANAGED"}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Claude, &path),
+            None
+        );
+    }
+
+    #[test]
+    fn cc_switch_state_for_unsupported_cli_does_not_block_takeover() {
+        let home = tmp("cc_switch_unsupported");
+        let state_dir = home.join(".cc-switch");
+        std::fs::create_dir_all(&state_dir).unwrap();
+        std::fs::write(
+            state_dir.join("live-state.json"),
+            r#"{"apps":{"opencode":{"attached":true}}}"#,
+        )
+        .unwrap();
+        let path = home.join("opencode.json");
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::OpenCode, &path),
+            None
+        );
     }
 }
 

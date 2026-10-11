@@ -55,7 +55,7 @@ export function GatewayStatusStrip({
   defaultProvider?: string;
   proxyRunning: boolean | null;
   proxyAddr: string;
-  takeover?: { active: boolean; effective: boolean };
+  takeover?: { active: boolean; effective: boolean; external_owner?: string | null };
   chain?: string[];
   onManage: () => void;
   onLogs: () => void;
@@ -123,13 +123,16 @@ export function GatewayStatusStrip({
     };
   }, [app, variant]);
 
-  const connected = takeover?.active && takeover.effective;
+  const hasExternalOwner = Boolean(takeover?.external_owner);
+  const connected = takeover?.active && takeover.effective && !hasExternalOwner;
   const isDrifted = takeover?.active === true && !takeover.effective;
   const last = st?.last?.[app];
   const statusKey = proxyRunning === false
     ? "gw.offlineHelp"
     : !takeover || proxyRunning === null
       ? "gw.unknownHelp"
+      : hasExternalOwner
+        ? "takeover.externalOwnerBanner"
       : takeover.active && !takeover.effective
         ? "takeover.driftBanner"
           : connected
@@ -137,6 +140,8 @@ export function GatewayStatusStrip({
             : "gw.notConnectedHelp";
   const takeoverLabel = !takeover
     ? t("gw.unknown")
+    : hasExternalOwner
+      ? t("takeover.externalOwnerShort")
     : takeover.active && takeover.effective
       ? t("takeover.active")
       : takeover.active
@@ -155,6 +160,8 @@ export function GatewayStatusStrip({
   const showGuidance = proxyRunning !== true || !connected || !last;
   const takeoverTone = connected
     ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+    : hasExternalOwner
+      ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
     : takeover?.active
       ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
       : "border-border bg-muted/60 text-muted-foreground";
@@ -259,7 +266,7 @@ export function GatewayStatusStrip({
             </p>
             <span
               className={cn("rounded-md border px-2 py-0.5 text-[11px] font-medium", takeoverTone)}
-              title={isDrifted ? t("takeover.overridden") : undefined}
+              title={hasExternalOwner ? t("takeover.externalOwnerHint") : isDrifted ? t("takeover.overridden") : undefined}
             >
               {takeoverLabel}
             </span>
@@ -277,7 +284,7 @@ export function GatewayStatusStrip({
         {showGuidance && (
           <div className={cn(
             "border-t border-border/70 px-4 py-2 text-xs leading-relaxed sm:px-5",
-            proxyRunning === false || takeover?.active && !takeover.effective
+            proxyRunning === false || hasExternalOwner || takeover?.active && !takeover.effective
               ? "bg-amber-500/[0.06] text-amber-700 dark:text-amber-300"
               : "bg-muted/25 text-muted-foreground",
           )}>

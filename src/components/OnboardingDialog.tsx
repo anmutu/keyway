@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Check, Download, Plus, ShieldCheck } from "lucide-react";
+import { Check, Download, Plus, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,6 +31,7 @@ interface TakeoverStatus {
   config_exists: boolean;
   active: boolean;
   effective: boolean;
+  external_owner: string | null;
 }
 
 /**
@@ -216,7 +217,15 @@ export function OnboardingDialog({
                     {t(`app.${s.app}`)}
                   </span>
                 </div>
-                {s.active ? (
+                {s.external_owner ? (
+                  <span
+                    className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+                    title={t("takeover.externalOwnerHint")}
+                  >
+                    <TriangleAlert className="w-3.5 h-3.5" />
+                    {t("takeover.externalOwner")}
+                  </span>
+                ) : s.active ? (
                   <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     {t("takeover.active")}

@@ -23,15 +23,16 @@ interface TakeoverStatus {
   active: boolean;
   effective: boolean;
   failover: boolean;
+  external_owner: string | null;
 }
 
 const IS_DEMO = new URLSearchParams(location.search).has("demo");
 const DEMO_TAKEOVER_STATUSES: TakeoverStatus[] = [
-  { app: "claude", supported: true, config_exists: true, active: true, effective: true, failover: true },
-  { app: "codex", supported: true, config_exists: false, active: false, effective: false, failover: false },
-  { app: "gemini", supported: true, config_exists: true, active: true, effective: false, failover: false },
-  { app: "opencode", supported: true, config_exists: false, active: false, effective: false, failover: false },
-  { app: "openclaw", supported: true, config_exists: false, active: false, effective: false, failover: false },
+  { app: "claude", supported: true, config_exists: true, active: true, effective: true, failover: true, external_owner: null },
+  { app: "codex", supported: true, config_exists: false, active: false, effective: false, failover: false, external_owner: null },
+  { app: "gemini", supported: true, config_exists: true, active: true, effective: false, failover: false, external_owner: null },
+  { app: "opencode", supported: true, config_exists: false, active: false, effective: false, failover: false, external_owner: null },
+  { app: "openclaw", supported: true, config_exists: false, active: false, effective: false, failover: false, external_owner: null },
 ];
 
 /** 接管管理:把各 CLI 的 live 配置指向本地代理(可随时还原) */
@@ -110,6 +111,7 @@ export function TakeoverDialog({
 
   const toggleFailover = async (app: AppType, enabled: boolean) => {
     if (mutationPending.current || loading) return;
+    if (list.find((status) => status.app === app)?.external_owner) return;
     mutationPending.current = true;
     setBusy(app);
     try {
@@ -133,6 +135,7 @@ export function TakeoverDialog({
 
   const act = async (app: AppType, restore: boolean) => {
     if (mutationPending.current || loading) return;
+    if (list.find((status) => status.app === app)?.external_owner) return;
     mutationPending.current = true;
     setBusy(app);
     try {
@@ -192,6 +195,15 @@ export function TakeoverDialog({
         </div>
 
         <div className="grid min-w-0 grid-cols-1 gap-3">
+          {list.some((status) => status.external_owner) && (
+            <div role="alert" className="flex gap-2.5 rounded-lg border border-amber-500/35 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300">
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium">{t("takeover.externalOwnerBanner")}</p>
+                <p>{t("takeover.externalOwnerHint")}</p>
+              </div>
+            </div>
+          )}
           {list.map((s) => (
             <div
               key={s.app}
@@ -206,25 +218,33 @@ export function TakeoverDialog({
                   <div
                     className={cn(
                       "text-xs flex items-center gap-1",
-                      s.active && s.effective
+                      s.external_owner
+                        ? "text-amber-600 dark:text-amber-400"
+                        : s.active && s.effective
                         ? "text-emerald-600 dark:text-emerald-400"
                         : s.active && !s.effective
                           ? "text-amber-600 dark:text-amber-400"
                           : "text-muted-foreground",
                     )}
                   >
-                    {s.active && s.effective && (
+                    {s.external_owner && (
+                      <>
+                        <TriangleAlert className="w-3 h-3" />
+                        <span title={t("takeover.externalOwnerHint")}>{t("takeover.externalOwner")}</span>
+                      </>
+                    )}
+                    {!s.external_owner && s.active && s.effective && (
                       <>
                         <ShieldCheck className="w-3 h-3" /> {t("takeover.active")}
                       </>
                     )}
-                    {s.active && !s.effective && (
+                    {!s.external_owner && s.active && !s.effective && (
                       <>
                         <TriangleAlert className="w-3 h-3" />
                         <span title={t("takeover.overridden")}>{t("takeover.driftShort")}</span>
                       </>
                     )}
-                    {!s.active && (
+                    {!s.external_owner && !s.active && (
                       <>
                         <ShieldOff className="w-3 h-3" />
                         {s.config_exists ? t("takeover.inactive") : t("takeover.noConfig")}
@@ -239,11 +259,20 @@ export function TakeoverDialog({
                   <Switch
                     aria-label={t("takeover.failoverFor", { name: t(`app.${s.app}`) })}
                     checked={s.failover}
-                    disabled={busy !== null || loading}
+                    disabled={busy !== null || loading || Boolean(s.external_owner)}
                     onCheckedChange={(v) => void toggleFailover(s.app, v)}
                   />
                 </div>
-                {s.active && s.effective ? (
+                {s.external_owner ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled
+                    title={t("takeover.externalOwnerHint")}
+                  >
+                    {t("takeover.externalOwnerShort")}
+                  </Button>
+                ) : s.active && s.effective ? (
                   <Button
                     size="sm"
                     variant="outline"

@@ -74,6 +74,7 @@ type TFunc = ReturnType<typeof useI18n>["t"];
 function humanizeError(raw: string, t: TFunc): string {
   const msg = raw.replace(/^Error:\s*/i, "");
   const m = msg.toLowerCase();
+  if (m.includes("cc switch") || m.includes("cc-switch")) return t("err.ccSwitchOwner");
   if (msg.includes("keychain")) return t("err.keychain");
   if (msg.includes("数据库") || msg.includes("database")) return t("err.db");
   if (msg.includes("invoke") || msg.includes("ipc")) return t("err.ipc");
@@ -242,7 +243,7 @@ function App() {
   const [latencySort, setLatencySort] = useState(false);
   // 接管状态:app → { active: 内部已接管, effective: 配置确实指向代理 }(批 54 漂移检测)
   const [takeoverMap, setTakeoverMap] = useState<
-    Record<string, { active: boolean; effective: boolean }>
+    Record<string, { active: boolean; effective: boolean; external_owner?: string | null }>
   >({});
   const [retaking, setRetaking] = useState(false);
 
@@ -556,18 +557,24 @@ function App() {
   const refreshTakeover = useCallback(() => {
     if (IS_DEMO) {
       setTakeoverMap({
-        claude: { active: true, effective: true },
-        codex: { active: false, effective: false },
-        gemini: { active: true, effective: false },
+        claude: { active: true, effective: true, external_owner: null },
+        codex: { active: false, effective: false, external_owner: null },
+        gemini: { active: true, effective: false, external_owner: null },
       });
       return;
     }
     invoke<
-      { app: string; supported: boolean; active: boolean; effective: boolean }[]
+      { app: string; supported: boolean; active: boolean; effective: boolean; external_owner: string | null }[]
     >("takeover_status")
       .then((list) => {
-        const m: Record<string, { active: boolean; effective: boolean }> = {};
-        for (const s of list) m[s.app] = { active: s.active, effective: s.effective };
+        const m: Record<string, { active: boolean; effective: boolean; external_owner: string | null }> = {};
+        for (const s of list) {
+          m[s.app] = {
+            active: s.active,
+            effective: s.effective,
+            external_owner: s.external_owner,
+          };
+        }
         setTakeoverMap(m);
       })
       .catch(() => setTakeoverMap({}));
@@ -580,14 +587,16 @@ function App() {
 
   const groupDrift =
     takeoverMap[activeApp]?.active === true &&
-    takeoverMap[activeApp]?.effective === false;
+    takeoverMap[activeApp]?.effective === false &&
+    !takeoverMap[activeApp]?.external_owner;
+  const groupExternalOwner = takeoverMap[activeApp]?.external_owner;
   const retakeOver = async () => {
     setRetaking(true);
     try {
       if (IS_DEMO) {
         setTakeoverMap((current) => ({
           ...current,
-          [activeApp]: { active: true, effective: true },
+          [activeApp]: { active: true, effective: true, external_owner: null },
         }));
       } else {
         await invoke("apply_takeover", {
@@ -983,6 +992,22 @@ function App() {
                 onTestAll={() => void runTestAll()}
                 testingAll={testingAll}
               />
+              {groupExternalOwner && (
+                <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5">
+                  <span className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+                    <TriangleAlert className="w-4 h-4 shrink-0" />
+                    {t("takeover.externalOwnerBanner")}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 shrink-0 border-amber-500/40 px-2.5 text-xs text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
+                    onClick={() => setTakeoverOpen(true)}
+                  >
+                    {t("takeover.externalOwnerAction")}
+                  </Button>
+                </div>
+              )}
               {/* 接管漂移:配置被外部覆盖,流量绕过了 Keyway(批 54) */}
               {groupDrift && (
                 <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5">
@@ -1194,6 +1219,7 @@ function App() {
                     app={activeApp}
                     takeoverEffective={takeoverMap[activeApp]?.effective}
                     takeoverActive={takeoverMap[activeApp]?.active}
+                    takeoverExternalOwner={takeoverMap[activeApp]?.external_owner}
                     highlight={p.id === highlightId}
                     onMoveUp={
                       !latencySort && providers.findIndex((x) => x.id === p.id) > 0

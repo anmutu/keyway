@@ -108,7 +108,10 @@ Keyway 聚焦本地请求的运行与排查:现在配置了谁、CLI 是否接�
 任何 Anthropic / OpenAI / Gemini 兼容的供应商:官方、GLM、Kimi、DeepSeek、各类中转站,或自建网关。
 
 **Q:和 cc-switch 能同时用吗?**
-不建议(都会改写同一批 CLI 配置文件,互相覆盖)。二选一即可;从 cc-switch 迁移:在 Keyway 里用「从现有 CLI 配置导入」一键带入。
+可以安装在同一台电脑上,但同一个 CLI 不要同时让两边接管。Keyway 会识别 CC Switch 的接管状态与配置标记;检测到 CC Switch 正在管理时,Keyway 会显示「由 CC Switch 接管」并停止写入,不会强行覆盖。要改用 Keyway:先在 CC Switch 中关闭代理并回到直连,再在 Keyway 里接管。反过来从 Keyway 切回 CC Switch,也先在 Keyway 里还原配置。迁移前可在 Keyway 使用「从现有 CLI 配置导入」带入供应商信息。
+
+**Q:为什么 Keyway 的「接管」按钮被禁用了?**
+检测到该 CLI 的配置由 CC Switch 管理。请先在 CC Switch 关闭代理/回到直连,再刷新 Keyway;在此之前 Keyway 不会备份或改写该配置,以免两个代理互相覆盖。
 
 ## 七、文档索引
 
