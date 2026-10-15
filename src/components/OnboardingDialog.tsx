@@ -45,6 +45,7 @@ export function OnboardingDialog({
   onAppsChange,
   onAdd,
   onImport,
+  onCcSwitchImport,
   providersCount,
   onDone,
 }: {
@@ -54,6 +55,7 @@ export function OnboardingDialog({
   onAppsChange: (apps: AppType[]) => void;
   onAdd: () => void;
   onImport: () => void;
+  onCcSwitchImport: () => void;
   providersCount: number;
   onDone: () => void;
 }) {
@@ -197,6 +199,16 @@ export function OnboardingDialog({
             >
               <Download className="w-4 h-4 mr-1" />
               {t("empty.import")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                localStorage.setItem(ONBOARD_KEY, "1");
+                onCcSwitchImport();
+              }}
+            >
+              <Download className="w-4 h-4 mr-1" />
+              {t("ccSwitch.open")}
             </Button>
             <Button variant="ghost" onClick={() => setStep(2)}>
               {providersCount > 0 ? t("common.next") : t("ob.skip")}

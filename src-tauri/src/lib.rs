@@ -282,6 +282,8 @@ pub fn run() {
             commands::backup::export_backup,
             commands::backup::import_backup,
             commands::import::import_existing,
+            commands::import::scan_cc_switch_providers,
+            commands::import::import_cc_switch_providers,
             commands::takeover::takeover_status,
             commands::takeover::apply_takeover,
             commands::takeover::restore_takeover,

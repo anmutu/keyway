@@ -52,6 +52,32 @@ codex CLI ──► Keyway 本地代理(127.0.0.1:9527)──► 默认选择 / 
 
 接管后请**新开一次** codex 会话并发送请求,在请求日志确认已经过 Keyway。之后切换默认供应商通常无需重启,但路由规则可能覆盖默认选择。
 
+## 从 CC Switch 迁移或交接
+
+Keyway 与 CC Switch 可以同时安装,但 Codex 的 live 配置不是两边各一份:
+
+```text
+供应商记录可以共存
+~/.codex/config.toml / ~/.codex/auth.json 同一时间只能由一个工具接管
+```
+
+在 Codex 分组页点击「从 CC Switch 导入」即可选择性复制供应商。Keyway 只读 `~/.cc-switch/cc-switch.db`(也兼容系统配置目录),不修改 CC Switch;本地代理地址、`PROXY_MANAGED` 和环境变量引用会被过滤。导入不会自动接管 Codex,也不会删除 CC Switch 中的记录。
+
+### 从 CC Switch 切到 Keyway
+
+1. 先导入需要的供应商,确认 Keyway 卡片中的地址和 Key 状态。
+2. 在 CC Switch 中关闭 Codex 代理并恢复直连,让它释放 `config.toml` 与数据库中的接管状态。
+3. 回到 Keyway,打开「管理接管」并点击 Codex「接管」。检测到 CC Switch 仍持有配置时,Keyway 会拒绝写入并提示原因。
+4. 新开 Codex 会话,发送请求,在「请求日志」确认实际去向。
+
+### 切回 CC Switch
+
+先在 Keyway 的 Codex 行点击「还原」,再在 CC Switch 中重新启用代理。不要通过同时启动两个不同端口的本地代理来规避交接:端口不同不代表 Codex 会同时使用两份配置,后写入的一方可能覆盖前一方,请求也会绕过另一方的日志和路由。
+
+### 导入限制
+
+官方 OAuth 登录、只引用环境变量的 Key、CC Switch 自己的本地代理记录无法安全复制为 Keyway 的 API Key,会在导入窗口标记为不可迁移。此时可在 Keyway 中手动添加供应商并粘贴 Key;原始 CC Switch 配置保持不变。
+
 ## 日常使用
 
 ### 切换默认供应商并确认

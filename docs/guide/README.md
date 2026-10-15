@@ -108,7 +108,20 @@ Keyway 聚焦本地请求的运行与排查:现在配置了谁、CLI 是否接�
 任何 Anthropic / OpenAI / Gemini 兼容的供应商:官方、GLM、Kimi、DeepSeek、各类中转站,或自建网关。
 
 **Q:和 cc-switch 能同时用吗?**
-可以安装在同一台电脑上,但同一个 CLI 不要同时让两边接管。Keyway 会识别 CC Switch 的接管状态与配置标记;检测到 CC Switch 正在管理时,Keyway 会显示「由 CC Switch 接管」并停止写入,不会强行覆盖。要改用 Keyway:先在 CC Switch 中关闭代理并回到直连,再在 Keyway 里接管。反过来从 Keyway 切回 CC Switch,也先在 Keyway 里还原配置。迁移前可在 Keyway 使用「从现有 CLI 配置导入」带入供应商信息。
+可以安装在同一台电脑上,但同一个 CLI 不要同时让两边接管。Keyway 会只读检查 CC Switch 的 live 标记、数据库接管开关与 live 备份;检测到 CC Switch 正在管理时,Keyway 会显示「由 CC Switch 接管」并停止写入,不会强行覆盖。要改用 Keyway:先在 CC Switch 中关闭代理并回到直连,再在 Keyway 里接管。反过来从 Keyway 切回 CC Switch,也先在 Keyway 里还原配置。迁移前可在 Keyway 使用「从现有 CLI 配置导入」带入供应商信息。
+
+**Q:我想把 CC Switch 里的供应商带到 Keyway,会覆盖原配置吗?**
+不会。Keyway 的「从 CC Switch 导入」只读 CC Switch 的数据库,不会写 CC Switch 数据库、供应商文件或 Codex live 配置。扫描时会排除 CC Switch 的本地代理地址(`127.0.0.1`、`localhost`、`::1`)和 `PROXY_MANAGED`/环境变量占位符;同名同地址会跳过,同名不同地址会自动加上「(CC Switch 2)」等后缀,不会覆盖已有 Key。导入供应商与接管 CLI 是两个独立动作。
+
+**Q:如果要在 CC Switch 和 Keyway 之间切换 Codex,具体怎么做?**
+同一时间只能有一个工具拥有 `~/.codex/config.toml` 的 live 配置。先在当前工具中关闭代理并恢复直连,再在另一个工具中执行接管;不要只因为两个本地端口不同就同时开启。推荐流程是:
+
+1. 在 Keyway 点击「从 CC Switch 导入」,勾选需要的供应商并导入。
+2. 在 CC Switch 的 Codex 设置中关闭代理/恢复直连,确认它不再把 `config.toml` 指向自己的本地端口。
+3. 回到 Keyway 刷新 Codex 状态,打开「管理接管」并点击「接管」。Keyway 检查到 CC Switch 标记仍在时会拒绝写入,不会覆盖现场。
+4. 新开一次 Codex 会话,发送请求并在 Keyway 日志中确认实际供应商。
+
+切回 CC Switch 时反向执行:先在 Keyway 的「管理接管」中「还原」,再让 CC Switch 接管。若某一方意外改写了配置,另一方会显示「配置漂移」或「由 CC Switch 接管」,先处理所有权再重试。
 
 **Q:为什么 Keyway 的「接管」按钮被禁用了?**
 检测到该 CLI 的配置由 CC Switch 管理。请先在 CC Switch 关闭代理/回到直连,再刷新 Keyway;在此之前 Keyway 不会备份或改写该配置,以免两个代理互相覆盖。

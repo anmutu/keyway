@@ -8,12 +8,14 @@
 //! - 状态三态:active(我们标记过)/ effective(配置当前确实指向代理,
 //!   可检测被 CLI 或其他工具覆盖的情况)
 
+use std::net::IpAddr;
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
 use serde::Serialize;
 
 use crate::db::Pool;
+use crate::services::cc_switch;
 use crate::types::AppType;
 
 /// 本地代理地址(与 core::proxy::PROXY_ADDR 保持一致)
@@ -102,8 +104,18 @@ fn is_local_proxy_url(value: &str) -> bool {
     let Ok(url) = reqwest::Url::parse(value.trim()) else {
         return false;
     };
-    let is_loopback = matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "::1"));
-    is_loopback && url.port().is_some()
+    if !matches!(url.scheme(), "http" | "https") {
+        return false;
+    }
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    let host = host.trim_start_matches('[').trim_end_matches(']');
+    host.eq_ignore_ascii_case("localhost")
+        || host
+            .parse::<IpAddr>()
+            .map(|address| address.is_loopback())
+            .unwrap_or(false)
 }
 
 fn env_value<'a>(line: &'a str, name: &str) -> Option<&'a str> {
@@ -167,7 +179,7 @@ fn claude_cc_switch_markers(path: &Path) -> bool {
         )
 }
 
-fn codex_selected_provider<'a>(doc: &'a toml_edit::DocumentMut) -> Option<&'a toml_edit::Item> {
+fn codex_selected_provider(doc: &toml_edit::DocumentMut) -> Option<&toml_edit::Item> {
     let profile = doc.get("profile").and_then(|value| value.as_str());
     let selected = profile
         .and_then(|name| {
@@ -230,13 +242,25 @@ fn gemini_cc_switch_markers(path: &Path) -> bool {
 fn detect_external_owner_at(home: &Path, app: AppType, path: &Path) -> Option<&'static str> {
     let attached = matches!(app, AppType::Claude | AppType::Codex | AppType::Gemini)
         && cc_switch_state_attached(home, app);
+    let database_owned = matches!(app, AppType::Claude | AppType::Codex | AppType::Gemini)
+        && match cc_switch::takeover_active_at(home, app) {
+            Ok(active) => active,
+            Err(error) => {
+                tracing::warn!(
+                    app = app.as_str(),
+                    error = %error,
+                    "无法确认 CC Switch 接管状态,按外部占用处理"
+                );
+                true
+            }
+        };
     let marked = match app {
         AppType::Claude => claude_cc_switch_markers(path),
         AppType::Codex => codex_cc_switch_markers(home, path),
         AppType::Gemini => gemini_cc_switch_markers(path),
         _ => false,
     };
-    (attached || marked).then_some(CC_SWITCH_OWNER)
+    (attached || marked || database_owned).then_some(CC_SWITCH_OWNER)
 }
 
 // ---------- Claude: ~/.claude/settings.json ----------
@@ -1141,6 +1165,15 @@ mod tests {
         d
     }
 
+    fn cc_switch_db(home: &Path, schema: &str, setup: &str) {
+        let directory = home.join(".cc-switch");
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("cc-switch.db");
+        let conn = rusqlite::Connection::open(path).unwrap();
+        conn.execute_batch(schema).unwrap();
+        conn.execute_batch(setup).unwrap();
+    }
+
     #[test]
     fn claude_apply_restore_roundtrip() {
         let p = tmp("claude").join("settings.json");
@@ -1543,6 +1576,73 @@ mod tests {
             detect_external_owner_at(&home, AppType::Claude, &path),
             None
         );
+    }
+
+    #[test]
+    fn cc_switch_database_enabled_flag_blocks_matching_app() {
+        let home = tmp("cc_switch_db_enabled");
+        cc_switch_db(
+            &home,
+            "CREATE TABLE proxy_config (app_type TEXT PRIMARY KEY, enabled INTEGER NOT NULL);",
+            "INSERT INTO proxy_config(app_type, enabled) VALUES ('claude', 1);",
+        );
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Claude, &home.join("claude.json")),
+            Some("cc-switch")
+        );
+    }
+
+    #[test]
+    fn legacy_cc_switch_live_takeover_flag_blocks_matching_app() {
+        let home = tmp("cc_switch_db_legacy_flag");
+        cc_switch_db(
+            &home,
+            "CREATE TABLE proxy_config (app_type TEXT PRIMARY KEY, live_takeover_active INTEGER NOT NULL);",
+            "INSERT INTO proxy_config(app_type, live_takeover_active) VALUES ('codex', 1);",
+        );
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Codex, &home.join("config.toml")),
+            Some("cc-switch")
+        );
+    }
+
+    #[test]
+    fn cc_switch_live_backup_blocks_even_without_an_active_flag() {
+        let home = tmp("cc_switch_db_backup");
+        cc_switch_db(
+            &home,
+            "CREATE TABLE proxy_live_backup (app_type TEXT PRIMARY KEY, original_config TEXT NOT NULL, backed_up_at TEXT NOT NULL);",
+            "INSERT INTO proxy_live_backup(app_type, original_config, backed_up_at) VALUES ('gemini', '{}', 'now');",
+        );
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Gemini, &home.join(".env")),
+            Some("cc-switch")
+        );
+    }
+
+    #[test]
+    fn unreadable_cc_switch_database_fails_closed() {
+        let home = tmp("cc_switch_db_unreadable");
+        let directory = home.join(".cc-switch");
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("cc-switch.db"), b"not a sqlite database").unwrap();
+
+        assert_eq!(
+            detect_external_owner_at(&home, AppType::Claude, &home.join("claude.json")),
+            Some("cc-switch")
+        );
+    }
+
+    #[test]
+    fn loopback_urls_include_all_ipv4_loopback_addresses_and_default_ports() {
+        assert!(is_local_proxy_url("http://127.0.0.1"));
+        assert!(is_local_proxy_url("http://127.0.0.255/v1"));
+        assert!(is_local_proxy_url("http://[::1]/v1"));
+        assert!(is_local_proxy_url("http://localhost/v1"));
+        assert!(!is_local_proxy_url("https://192.168.1.10/v1"));
     }
 
     #[test]

@@ -4,6 +4,7 @@
 //! 保持命令层"薄":只做参数校验和调用编排。
 
 pub mod backup;
+pub mod cc_switch;
 pub mod import;
 pub mod keychain;
 pub mod keys;

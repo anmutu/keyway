@@ -157,7 +157,7 @@
 
     <main class="container">
 
-      <div class="tip" data-i18n="gVersionNote"><b>先核对版本:</b>本页下载按钮目前指向 v0.2.12。官网内容可能先于安装包更新;新版网关状态卡、按 CLI 分组的专属代理路径和还原冲突保护属于后续改动,请以安装包对应的 <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">发布说明</a> 为准。浏览官网不会安装或接管本机 CLI,示意画面也不代表真实请求。</div>
+      <div class="tip" data-i18n="gVersionNote"><b>先核对版本:</b>本页下载按钮会跟随 GitHub 最新正式版;官网内容可能先于安装包更新,请以安装包对应的 <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">发布说明</a> 为准。浏览官网不会安装或接管本机 CLI,示意画面也不代表真实请求。</div>
 
       <section class="step" id="install">
         <span class="stepnum">1</span>
@@ -170,17 +170,17 @@
           <li data-i18n="gPrereqSafe"><b>保护已有配置:</b>首次接管前另存一份 CLI 配置。不要同时让多个切换工具改写同一份配置;不确定时先只接入一个 CLI。</li>
         </ul>
         <p style="margin-top:14px;">
-          <a class="dl-btn dl-direct" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_aarch64.dmg" data-i18n="gS1dl">下载 for Apple 芯片(M1/M2/M3/M4)</a>
-          <a class="dl-alt dl-direct-x64" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64.dmg" data-i18n="gS1dlAlt">Intel 芯片版</a>
-          <a class="dl-alt" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64-setup.exe" data-i18n="gS1dlWin">Windows 版</a>
-          <a class="dl-alt" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_amd64.AppImage" data-i18n="gS1dlLinux">Linux AppImage</a>
-          <a class="dl-alt" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_amd64.deb" data-i18n="gS1dlDeb">Linux .deb</a>
-          <a class="dl-alt" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway-0.2.12-1.x86_64.rpm" data-i18n="gS1dlRpm">Linux .rpm</a>
+          <a class="dl-btn dl-direct" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_aarch64.dmg" data-i18n="gS1dl">下载 for Apple 芯片(M1/M2/M3/M4)</a>
+          <a class="dl-alt dl-direct-x64" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64.dmg" data-i18n="gS1dlAlt">Intel 芯片版</a>
+          <a class="dl-alt" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_x64-setup.exe" data-i18n="gS1dlWin">Windows 版</a>
+          <a class="dl-alt" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_amd64.AppImage" data-i18n="gS1dlLinux">Linux AppImage</a>
+          <a class="dl-alt" data-release-asset="deb" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway_0.2.12_amd64.deb" data-i18n="gS1dlDeb">Linux .deb</a>
+          <a class="dl-alt" data-release-asset="rpm" href="https://github.com/anmutu/keyway/releases/download/v0.2.12/Keyway-0.2.12-1.x86_64.rpm" data-i18n="gS1dlRpm">Linux .rpm</a>
           <a class="dl-alt" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="gS1dlAll">全部平台安装包 ›</a>
         </p>
         <ul>
           <li data-i18n="gS1l1">首次打开若提示「无法验证开发者」:在「应用程序」里<b>右键点 Keyway → 打开</b>;或在 <b>系统设置 → 隐私与安全性</b> 中点击「仍要打开」。</li>
-          <li data-i18n="gS1l0">认准文件名 <code>Keyway_0.2.12_aarch64.dmg</code>(约 9 MB):如果双击时提示「没有可打开的应用」,多半是没下载完整,删掉重新下载即可。</li>
+          <li data-i18n="gS1l0">认准下载按钮显示的版本和文件名(Apple 芯片示例为 <code>Keyway_{版本}_aarch64.dmg</code>):如果双击时提示「没有可打开的应用」,多半是没下载完整,删掉重新下载即可。</li>
           <li data-i18n="gS1l2">启动后 Keyway 会常驻<b>菜单栏(托盘)</b>,关闭窗口不影响代理运行。</li>
           <li data-i18n="gS1l3">本地代理默认监听 <code>127.0.0.1:9527</code>,只接受本机请求。</li>
         </ul>
@@ -352,7 +352,7 @@
           gSub: "Verify your first request step by step, then learn switching, routing, backups and troubleshooting.",
           gTocVerify: "Walkthrough: verify your first request",
           gTocRestore: "Restore, quit and migrate",
-          gVersionNote: '<b>Check your version:</b> These downloads point to v0.2.12. Website updates may precede installers. The redesigned gateway card, CLI-specific proxy paths and restore conflict protection are later changes; check the <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">release notes</a> for your installer. Browsing this site does not install or take over a CLI. Illustrations are not real requests.',
+          gVersionNote: '<b>Check your version:</b> These download buttons follow the latest stable GitHub release. Website updates may precede installers; check the <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">release notes</a> for your installer. Browsing this site does not install or take over a CLI. Illustrations are not real requests.',
           gPrereqCli: '<b>Prepare your CLI:</b> Install your AI CLI separately and confirm it starts in a terminal. Keyway manages where its requests go.',
           gPrereqKey: '<b>Prepare a provider:</b> Obtain an API key, API Base URL and supported model names. Do not assume a web chat subscription includes API credits; check provider account permissions.',
           gPrereqSafe: '<b>Protect existing settings:</b> Save a separate copy of CLI configuration before first takeover. Avoid multiple switching tools rewriting the same file. Start with one CLI.',
@@ -398,9 +398,9 @@
           gS1dl: "Download for Apple silicon (M1–M4)", gS1dlWin: "Windows", gS1dlLinux: "Linux AppImage", gS1dlDeb: "Linux .deb", gS1dlRpm: "Linux .rpm",
           gS1dlAlt: "Intel version",
           gS1dlAll: "All platforms ›",
-          gS1l0: "On macOS, look for the file name Keyway_0.2.12_aarch64.dmg (about 9 MB). If it says “no application can open it”, delete the incomplete download and download again.",
+          gS1l0: "On macOS, check the version and file name shown by the download button (for example, Keyway_{version}_aarch64.dmg). If it says “no application can open it”, delete the incomplete download and download again.",
           gS1l1: "On macOS, if the developer cannot be verified, right-click Keyway in Applications and choose Open; on Windows, choose “More info” → “Run anyway” if SmartScreen appears.",
-          gS1l2: "On Linux, make the AppImage executable before opening it (for example, chmod +x Keyway_0.2.12_amd64.AppImage).",
+          gS1l2: "On Linux, make the AppImage executable before opening it (for example, chmod +x Keyway_{version}_amd64.AppImage).",
           gS1l3: "Keyway lives in the menu bar or system tray; closing the window keeps the local proxy running on 127.0.0.1:9527.",
           gTip1: "How does it work? Connected requests follow default providers, routing rules and failover settings. The default is not proof of the actual destination: check request logs. Sessions already using the proxy need no restart when changing defaults.",
           gS2k: "Set up", gS2h2: "Add providers",
@@ -482,5 +482,6 @@
         });
       })();
     </script>
+    <script src="./release-sync.js"></script>
   </body>
 </html>

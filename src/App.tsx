@@ -22,6 +22,7 @@ import { AboutDialog } from "@/components/AboutDialog";
 import { QuickSwitchPanel } from "@/components/QuickSwitchPanel";
 import { OnboardingDialog, hasOnboarded } from "@/components/OnboardingDialog";
 import { TakeoverDialog } from "@/components/TakeoverDialog";
+import { CcSwitchImportDialog } from "@/components/CcSwitchImportDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
@@ -74,6 +75,7 @@ type TFunc = ReturnType<typeof useI18n>["t"];
 function humanizeError(raw: string, t: TFunc): string {
   const msg = raw.replace(/^Error:\s*/i, "");
   const m = msg.toLowerCase();
+  if (m.includes("未找到 cc switch 数据库") || m.includes("cc switch database")) return t("err.ccSwitchDb");
   if (m.includes("cc switch") || m.includes("cc-switch")) return t("err.ccSwitchOwner");
   if (msg.includes("keychain")) return t("err.keychain");
   if (msg.includes("数据库") || msg.includes("database")) return t("err.db");
@@ -346,6 +348,7 @@ function App() {
     return provider.last_test?.ok ? provider.last_test.latency_ms : Infinity;
   };
   const [takeoverOpen, setTakeoverOpen] = useState(false);
+  const [ccSwitchImportOpen, setCcSwitchImportOpen] = useState(false);
   // 首启向导:零供应商且未看过向导时触发
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -770,6 +773,25 @@ function App() {
     if (!IS_DEMO) void invoke("refresh_tray").catch(() => {});
   }, []);
 
+  const openCcSwitchImport = useCallback(() => {
+    setOnboardingOpen(false);
+    setCcSwitchImportOpen(true);
+  }, []);
+
+  const handleCcSwitchImported = useCallback((apps: AppType[]) => {
+    for (const app of apps) delete cacheRef.current[app];
+    syncTray();
+    if (apps.includes(activeAppRef.current)) {
+      void refresh(activeAppRef.current);
+    }
+  }, [refresh, syncTray]);
+
+  const manageCcSwitchTakeover = useCallback((app: AppType) => {
+    setCcSwitchImportOpen(false);
+    switchApp(app);
+    window.setTimeout(() => setTakeoverOpen(true), 0);
+  }, [switchApp]);
+
   /** 新建/更新后:滚动到该卡片并短暂高亮 */
   const focusProvider = useCallback((id: string) => {
     setHighlightId(id);
@@ -974,10 +996,23 @@ function App() {
                     {t("provider.pageDesc")}
                   </p>
                 </div>
-                <Button size="sm" className="shrink-0" aria-label={t("common.add")} onClick={() => setIsAddOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t("common.add")}</span>
-                </Button>
+                <div className="flex shrink-0 items-center gap-2">
+                  {!IS_DEMO && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      aria-label={t("ccSwitch.open")}
+                      onClick={openCcSwitchImport}
+                    >
+                      <Download className="h-4 w-4" />
+                      <span className="hidden md:inline">{t("ccSwitch.open")}</span>
+                    </Button>
+                  )}
+                  <Button size="sm" aria-label={t("common.add")} onClick={() => setIsAddOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t("common.add")}</span>
+                  </Button>
+                </div>
               </div>
               <GatewayStatusStrip
                 app={activeApp}
@@ -998,14 +1033,25 @@ function App() {
                     <TriangleAlert className="w-4 h-4 shrink-0" />
                     {t("takeover.externalOwnerBanner")}
                   </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 shrink-0 border-amber-500/40 px-2.5 text-xs text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
-                    onClick={() => setTakeoverOpen(true)}
-                  >
-                    {t("takeover.externalOwnerAction")}
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 shrink-0 border-amber-500/40 px-2.5 text-xs text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
+                      onClick={openCcSwitchImport}
+                    >
+                      <Download className="mr-1 h-3.5 w-3.5" />
+                      {t("ccSwitch.open")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 shrink-0 border-amber-500/40 px-2.5 text-xs text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
+                      onClick={() => setTakeoverOpen(true)}
+                    >
+                      {t("takeover.externalOwnerAction")}
+                    </Button>
+                  </div>
                 </div>
               )}
               {/* 接管漂移:配置被外部覆盖,流量绕过了 Keyway(批 54) */}
@@ -1074,6 +1120,12 @@ function App() {
                       >
                         <Download className="w-4 h-4 mr-1" />
                         {importing ? t("empty.importing") : t("empty.import")}
+                      </Button>
+                    )}
+                    {!IS_DEMO && (
+                      <Button variant="outline" onClick={openCcSwitchImport}>
+                        <Download className="mr-1 h-4 w-4" />
+                        {t("ccSwitch.open")}
                       </Button>
                     )}
                   </div>
@@ -1310,6 +1362,15 @@ function App() {
 
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
 
+      <CcSwitchImportDialog
+        open={ccSwitchImportOpen}
+        onOpenChange={setCcSwitchImportOpen}
+        activeApp={activeApp}
+        onImported={handleCcSwitchImported}
+        onManageTakeover={manageCcSwitchTakeover}
+        onError={(message) => toast("error", humanizeError(message, t))}
+      />
+
       {guideOpen && (
         <Suspense fallback={null}>
           <GettingStartedDialog
@@ -1352,6 +1413,7 @@ function App() {
         onAppsChange={updateApps}
         onAdd={() => setIsAddOpen(true)}
         onImport={() => void runImport()}
+        onCcSwitchImport={openCcSwitchImport}
         providersCount={providers.length}
         onDone={() => {
           void refresh(activeApp);
