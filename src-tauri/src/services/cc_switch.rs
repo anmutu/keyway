@@ -85,7 +85,7 @@ fn db_path(home: &Path) -> Result<PathBuf> {
     candidate_paths(home)
         .into_iter()
         .find(|path| path.is_file())
-        .ok_or_else(|| anyhow!("未找到 CC Switch 数据库"))
+        .ok_or_else(|| anyhow!("未找到外部管理器数据"))
 }
 
 fn table_exists(conn: &Connection, table: &str) -> Result<bool> {
@@ -158,7 +158,7 @@ fn has_backup_for_app(conn: &Connection, app: AppType) -> Result<bool> {
     }
     let columns = table_columns(conn, "proxy_live_backup")?;
     if !columns.contains("app_type") {
-        return Err(anyhow!("CC Switch proxy_live_backup 表缺少 app_type 列"));
+        return Err(anyhow!("外部管理器备份表缺少 app_type 列"));
     }
     let count: i64 = conn.query_row(
         "SELECT COUNT(*) FROM proxy_live_backup WHERE app_type = ?1",
@@ -174,7 +174,7 @@ fn has_legacy_settings_flag(conn: &Connection, app: AppType) -> Result<bool> {
     }
     let columns = table_columns(conn, "settings")?;
     if !columns.contains("key") || !columns.contains("value") {
-        return Err(anyhow!("CC Switch settings 表结构无法识别"));
+        return Err(anyhow!("外部管理器设置表结构无法识别"));
     }
     let key = format!("proxy_takeover_{}", app.as_str());
     let mut stmt = conn.prepare("SELECT value FROM settings WHERE key = ?1 LIMIT 1")?;
@@ -201,7 +201,7 @@ pub(crate) fn takeover_active_at(home: &Path, app: AppType) -> Result<bool> {
         &path,
         rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_NO_MUTEX,
     )
-    .with_context(|| format!("无法读取 CC Switch 数据库: {}", path.display()))?;
+    .with_context(|| format!("无法读取外部管理器数据: {}", path.display()))?;
 
     let proxy_config_active = if table_exists(&conn, "proxy_config")? {
         let columns = table_columns(&conn, "proxy_config")?;
@@ -256,7 +256,7 @@ fn read_endpoint_map(conn: &Connection) -> Result<HashMap<(String, String), Vec<
         .into_iter()
         .all(|column| columns.contains(column))
     {
-        return Err(anyhow!("CC Switch provider_endpoints 表结构无法识别"));
+        return Err(anyhow!("外部管理器供应商表结构无法识别"));
     }
     let order = match (columns.contains("added_at"), columns.contains("id")) {
         (true, true) => " ORDER BY added_at ASC, id ASC",
@@ -290,7 +290,7 @@ fn read_sources_from(path: &Path) -> Result<Vec<SourceProvider>> {
         path,
         rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_NO_MUTEX,
     )
-    .with_context(|| format!("无法读取 CC Switch 数据库: {}", path.display()))?;
+    .with_context(|| format!("无法读取外部管理器数据: {}", path.display()))?;
     let mut stmt = conn.prepare(
         "SELECT id, app_type, name, settings_config, is_current
          FROM providers ORDER BY app_type, sort_index, created_at",
@@ -581,7 +581,7 @@ fn unique_name(pool: &Pool, name: &str) -> Result<String> {
     let mut candidate = base.to_string();
     let mut index = 2;
     while crate::db::provider_dao::find_by_name(pool, &candidate)?.is_some() {
-        candidate = format!("{base} (CC Switch {index})");
+        candidate = format!("{base} (外部管理器 {index})");
         index += 1;
     }
     Ok(candidate)
@@ -595,7 +595,7 @@ fn already_imported(pool: &Pool, source: &SourceProvider, base_url: &str) -> Res
     let expected = normalized_url(base_url);
     let protocol = source.app_type.protocol();
     let source_name = source.name.trim();
-    let variant_prefix = format!("{source_name} (CC Switch ");
+    let variant_prefix = format!("{source_name} (外部管理器 ");
     for provider in crate::db::provider_dao::list_all(pool)? {
         if provider.app_type != source.app_type {
             continue;
@@ -1029,7 +1029,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(result.imported.len(), 1);
-        assert_eq!(result.imported[0].name, "A (CC Switch 2)");
+        assert_eq!(result.imported[0].name, "A (外部管理器 2)");
         assert_eq!(result.imported[0].app_type, AppType::Claude);
         assert_eq!(result.imported[0].source_id, "source-b");
         assert!(result.skipped.is_empty());
@@ -1053,7 +1053,7 @@ mod tests {
         assert_eq!(repeated.skipped, vec!["A"]);
         let providers = crate::db::provider_dao::list_all(&pool).unwrap();
         assert_eq!(providers.len(), 2);
-        assert!(providers.iter().any(|item| item.name == "A (CC Switch 2)"));
+        assert!(providers.iter().any(|item| item.name == "A (外部管理器 2)"));
 
         drop(pool);
         let _ = std::fs::remove_dir_all(directory);

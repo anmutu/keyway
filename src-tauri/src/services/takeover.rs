@@ -249,7 +249,7 @@ fn detect_external_owner_at(home: &Path, app: AppType, path: &Path) -> Option<&'
                 tracing::warn!(
                     app = app.as_str(),
                     error = %error,
-                    "无法确认 CC Switch 接管状态,按外部占用处理"
+                    "无法确认外部管理器接管状态,按外部占用处理"
                 );
                 true
             }
@@ -1123,9 +1123,9 @@ fn apply_at(pool: &Pool, app: AppType, path: &Path) -> Result<()> {
 }
 
 fn apply_at_with_home(pool: &Pool, app: AppType, path: &Path, home: &Path) -> Result<()> {
-    if let Some(owner) = detect_external_owner_at(home, app, path) {
+    if detect_external_owner_at(home, app, path).is_some() {
         return Err(anyhow!(
-            "{} 配置正由 {owner} 接管，Keyway 未写入。请先在 CC Switch 中关闭代理并回到直连，再由 Keyway 接管",
+            "{} 配置正由其他管理器接管，Keyway 未写入。请先关闭对方代理并回到直连，再由 Keyway 接管",
             app.as_str(),
         ));
     }
@@ -1544,7 +1544,7 @@ mod tests {
 
         let error = apply_at_with_home(&pool, AppType::Claude, &path, &home).unwrap_err();
 
-        assert!(error.to_string().contains("CC Switch"));
+        assert!(error.to_string().contains("其他管理器"));
         assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
         assert_eq!(
             settings_get(&pool, &backup_key(AppType::Claude)).unwrap(),

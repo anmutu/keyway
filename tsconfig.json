@@ -20,7 +20,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* 路径别名,与 CC Switch 一致 */
+    /* Project path aliases */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

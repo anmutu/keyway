@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-// 视觉体系与 CC Switch(farion1231/cc-switch, MIT)保持一致
+// Keyway visual tokens
 module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: ["selector", ".dark"],
