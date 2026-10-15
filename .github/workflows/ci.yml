@@ -55,6 +55,9 @@ jobs:
       - name: Validate provider presets
         run: pnpm check:presets
 
+      - name: Frontend and website tests
+        run: node --test tests/*.test.ts tests/*.test.mjs
+
       - name: Typecheck (tsc)
         run: pnpm exec tsc --noEmit
 

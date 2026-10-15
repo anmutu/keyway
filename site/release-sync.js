@@ -83,7 +83,7 @@
 
   var fallback = { tag_name: fallbackTag, assets: [] };
   applyRelease(fallback);
-  fetch(repo + "/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+  fetch("https://api.github.com/repos/anmutu/keyway/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
     .then(function (response) { return response.ok ? response.json() : null; })
     .then(function (release) { if (validRelease(release)) applyRelease(release); })
     .catch(function () {});
