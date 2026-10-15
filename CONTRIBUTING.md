@@ -1,5 +1,18 @@
 # 贡献指南
 
+## 申请收录供应商
+
+供应商或社区成员可以通过 [供应商预设收录申请](https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml) 提交公开信息。应用内“添加供应商”窗口和官网也提供这个入口。
+
+流程是:
+
+1. 提交 Issue Form,只填写官网、公开 API 文档、Base URL、协议和模型等信息。
+2. 维护者核对官方文档、端点安全性、协议兼容性和实际连通性。
+3. 维护者把通过审核的内容整理为 `src/data/providerPresets.ts` 中的 PR。
+4. PR 通过 CI 并人工合并后,下一次版本发布会把该预设带入 Keyway。
+
+收录是公开代码贡献,不是远程配置下发。Keyway 不会从供应商服务器读取预设、远程执行代码或接收用户 API Key。供应商提交不能包含 API Key、账号密码、用户数据、推广参数或内部日志;`apiKeyUrl` 必须是干净的官方地址。
+
 ## 供应商预设收录(src/data/providerPresets.ts)
 
 欢迎通过 PR 补充供应商预设,按以下规则审核:

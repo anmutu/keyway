@@ -25,6 +25,9 @@ import { cn } from "@/lib/utils";
 import { isValidRelayBase, relayEndpointForApp, relayFormState } from "@/lib/relayDeepLink";
 import type { AppType, Provider } from "@/types";
 
+const PROVIDER_SUBMISSION_URL =
+  "https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml";
+
 interface AddProviderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -331,6 +334,22 @@ export function AddProviderDialog({
                 <Plus className="w-4 h-4 mr-2" />
                 {t("preset.customItem")}
               </button>
+              <a
+                href={PROVIDER_SUBMISSION_URL}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => {
+                  if (!isTauri()) return;
+                  e.preventDefault();
+                  void openUrl(PROVIDER_SUBMISSION_URL).catch(() => {});
+                }}
+                className="rounded-md px-3 py-1 text-center text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              >
+                {t("preset.submitProvider")}
+              </a>
+              <p className="text-center text-[11px] text-muted-foreground">
+                {t("preset.submitProviderHint")}
+              </p>
             </div>
           </div>
         ) : (

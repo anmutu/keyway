@@ -52,6 +52,9 @@ jobs:
       - name: Install JS deps
         run: pnpm install --frozen-lockfile
 
+      - name: Validate provider presets
+        run: pnpm check:presets
+
       - name: Typecheck (tsc)
         run: pnpm exec tsc --noEmit
 

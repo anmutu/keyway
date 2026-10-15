@@ -257,7 +257,7 @@ export const providerPresets: Record<AppType, ProviderPreset[]> = {
       baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
       category: "cn_official",
       websiteUrl: "https://bailian.console.aliyun.com",
-      apiKeyUrl: "https://bailian.console.aliyun.com/?apiKey=1",
+      apiKeyUrl: "https://bailian.console.aliyun.com/",
     },
     ...openaiCompatible,
   ],

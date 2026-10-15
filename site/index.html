@@ -299,6 +299,7 @@
           <a class="nav-main" href="#capabilities" data-i18n="navCap">能力</a>
           <a class="nav-main" href="#faq" data-i18n="navFAQ">FAQ</a>
           <a class="nav-main" href="./guide.html" data-i18n="navG">使用指南</a>
+          <a class="nav-main" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="navSubmit">提交供应商</a>
           <a class="nav-main" href="#quickstart" data-i18n="navQ">上手</a>
           <a href="#" id="langToggle">EN</a>
           <a class="nav-dl" id="navDownload" href="https://github.com/anmutu/keyway/releases" data-i18n="navD">下载</a>
@@ -483,6 +484,7 @@
         </div>
         <div class="links" style="margin-top:36px;">
           <a class="alink" href="./guide.html" data-i18n="qsGuide">查看图文指南</a>
+          <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="qsSubmit">提交供应商</a>
         </div>
       </div>
     </section>
@@ -547,6 +549,7 @@
         <div class="links" style="margin-top:40px;">
           <a class="alink" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
           <a class="alink" href="./guide.html" data-i18n="readGuide">阅读使用指南</a>
+          <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="submitProvider">提交供应商</a>
           <a class="alink dl-direct" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="freeDl2">免费下载</a>
         </div>
       </div>
@@ -570,12 +573,12 @@
     <script>
       var I18N = {
         en: {
-          navF: "Features", navL: "Local-first", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navQ: "Start", navD: "Download",
+          navF: "Features", navL: "Local-first", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navSubmit: "Suggest a provider", navQ: "Start", navD: "Download",
           readGuide: "Read the guide", navG2: "Guide",
           tagline: "Know where your requests go.",
           heroSub: "The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.",
           heroProof1: "Local proxy first", heroProof2: "9 AI CLIs", heroProof3: "Encrypted local storage · MIT",
-          learnMore: "Learn more", freeDl: "Download for Apple silicon", freeDl2: "Download free",
+          learnMore: "Learn more", freeDl: "Download for Apple silicon", freeDl2: "Download free", submitProvider: "Suggest a provider",
           intelDl: "macOS · Intel",
           appleDl: "macOS · Apple silicon",
           windowsDl: "Windows", linuxDl: "Linux AppImage", allDl: "All platforms",
@@ -606,7 +609,7 @@
           c8t: "Connectivity test", c8d: "One-click latency and reachability test per provider, before you switch.",
           c9t: "Onboarding + tray", c9d: "A three-step wizard: pick CLIs, add providers, take over in one click. Lives in the menu bar for instant switching.",
           qsTitle: "Up and running in three steps.",
-          qsGuide: "Step-by-step guide",
+          qsGuide: "Step-by-step guide", qsSubmit: "Suggest a provider",
           s1t: "Add a provider.", s1d: "Or import from existing CLI configs. GLM, Kimi, official, any relay.",
           s2t: "One-click takeover.", s2d: "Originals backed up, restorable anytime.",
           s3t: "Switch in a tap.", s3d: "Send a new request, then check its actual provider and response status in the logs.",

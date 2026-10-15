@@ -1,0 +1,98 @@
+name: 供应商预设收录申请
+description: 申请把你的 AI API 供应商加入 Keyway 的内置预设列表
+title: "[供应商收录] "
+labels:
+  - provider-submission
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你申请收录。请只填写公开信息，**不要提交 API Key、账号密码、用户数据或内部日志**。
+
+        收录后，信息会进入 Keyway 的公开代码库，并在审核合并后的下一个版本中随应用发布。
+
+  - type: input
+    id: provider-name
+    attributes:
+      label: 供应商名称
+      description: 用户在 Keyway 的“添加供应商”中看到的名称。
+      placeholder: 例如：Example AI
+    validations:
+      required: true
+
+  - type: input
+    id: website-url
+    attributes:
+      label: 官方网站
+      description: 供应商的官方主页，必须使用 HTTPS。
+      placeholder: https://example.com
+    validations:
+      required: true
+
+  - type: input
+    id: docs-url
+    attributes:
+      label: 官方 API 文档
+      description: 能验证 Base URL、认证方式和协议兼容性的公开文档。
+      placeholder: https://docs.example.com/api
+    validations:
+      required: true
+
+  - type: input
+    id: base-url
+    attributes:
+      label: API Base URL
+      description: 用户实际请求使用的 Base URL，不要填写完整请求路径、代理地址或带 Key 的 URL。
+      placeholder: https://api.example.com/v1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: protocols
+    attributes:
+      label: 支持的协议
+      description: 可在补充信息中说明不同协议对应的端点。
+      multiple: true
+      options:
+        - OpenAI-compatible
+        - Anthropic-compatible
+        - Gemini
+    validations:
+      required: true
+
+  - type: input
+    id: api-key-url
+    attributes:
+      label: API Key 获取地址
+      description: 官方控制台或 API Key 页面；不要添加推广参数、个人邀请链接或登录信息。
+      placeholder: https://example.com/console/keys
+
+  - type: textarea
+    id: models
+    attributes:
+      label: 推荐模型
+      description: 填写公开文档中明确可用的模型名，每行一个；没有也可以留空。
+      placeholder: |
+        example-chat
+        example-reasoning
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: 兼容性与验证说明
+      description: 说明已验证的 CLI、协议、模型，以及是否存在参数或流式响应限制。
+      placeholder: 例如：已验证 Codex 的 Chat Completions 请求；Responses API 尚未支持。
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: declarations
+    attributes:
+      label: 提交确认
+      options:
+        - label: 我代表该供应商，或已获得提交这些公开信息的授权。
+          required: true
+        - label: 我确认提交内容不包含 API Key、账号密码、用户数据或内部机密。
+          required: true
+        - label: 我理解收录不代表 Keyway 为该供应商背书，信息可能因失效或安全问题被修改或移除。
+          required: true
