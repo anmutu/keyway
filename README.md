@@ -10,6 +10,9 @@
 
 **让 AI CLI 的每一次请求,都有清楚、可控的去向。**
 
+**A local gateway for AI coding CLIs** — switch providers, route & fail over, and see exactly where every request goes. Works with Claude Code · Codex · Gemini CLI · OpenCode · OpenClaw. API keys never leave an encrypted store on your machine.
+
+
 为 **Claude Code · Codex · Gemini CLI · OpenCode · OpenClaw** 管理供应商、路由与故障转移,从请求日志查看实际去向。API Key 存储于本机加密数据库。
 
 [特性](#-核心特性) · [快速开始](#-快速开始)
@@ -49,6 +52,19 @@ pnpm tauri build   # 构建
 ```
 
 环境要求:Node 18+ / pnpm / Rust 1.85+ / Xcode CLT(macOS)。
+
+## ➕ 接入你的网关 / Add your own gateway
+
+Keyway 不绑定任何服务商。任意 Anthropic / OpenAI / Gemini 兼容端点都能加,例如:
+
+| 字段 | 示例值 |
+|---|---|
+| 名称 | `Teapot Router`(或任何你喜欢的名字) |
+| Anthropic Base URL | `https://api.teapotrouter.com` |
+| OpenAI Base URL | `https://api.teapotrouter.com/v1` |
+| API Key | 从该服务商后台创建,Keyway 加密存本机 |
+
+更多端点接法见 [GLM 接入](docs/guide/providers/glm.md) / [Kimi 接入](docs/guide/providers/kimi.md) / [CoderPlan 接入](docs/guide/providers/coderplan.md) 同款步骤。
 
 ## 📖 使用文档
 
