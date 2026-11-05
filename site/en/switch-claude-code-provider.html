@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>How to Switch Claude Code Providers (Without Restarting) — Keyway Guide</title>
+    <meta
+      name="description"
+      content="Switch Claude Code from the official API to GLM, Kimi, DeepSeek or any relay provider. Edit ANTHROPIC_BASE_URL manually, or use Keyway to switch providers from your menu bar with no session restart."
+    />
+    <meta name="keywords" content="switch claude code provider, claude code custom provider, claude code api base url, anthropic base url, claude code relay, claude code glm, claude code kimi, claude code proxy, change claude code api key" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Keyway" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:url" content="https://anmutu.github.io/keyway/en/switch-claude-code-provider.html" />
+    <meta property="og:title" content="How to Switch Claude Code Providers (Without Restarting)" />
+    <meta property="og:description" content="Manual settings.json edit vs. one-click switching with Keyway — GLM, Kimi, DeepSeek, official, or any relay. Running sessions keep working." />
+    <meta property="og:image" content="https://anmutu.github.io/keyway/app-light.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="How to Switch Claude Code Providers (Without Restarting)" />
+    <meta name="twitter:description" content="Manual settings.json edit vs. one-click switching with Keyway — GLM, Kimi, DeepSeek, official, or any relay. Running sessions keep working." />
+    <meta name="twitter:image" content="https://anmutu.github.io/keyway/app-light.png" />
+    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <link rel="canonical" href="https://anmutu.github.io/keyway/en/switch-claude-code-provider.html" />
+    <link rel="alternate" hreflang="en" href="https://anmutu.github.io/keyway/en/switch-claude-code-provider.html" />
+    <link rel="alternate" hreflang="zh-CN" href="https://anmutu.github.io/keyway/guides/claude-code-switch-provider.html" />
+    <link rel="alternate" hreflang="x-default" href="https://anmutu.github.io/keyway/en/switch-claude-code-provider.html" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "How to switch Claude Code providers",
+      "description": "Two ways to switch the model provider behind Claude Code: edit settings.json env vars manually, or switch without restarting sessions using the open-source Keyway app.",
+      "step": [
+        { "@type": "HowToStep", "name": "Get the provider endpoint", "text": "GLM's Anthropic-compatible endpoint is https://open.bigmodel.cn/api/anthropic, Kimi's is https://api.moonshot.cn/anthropic; relay providers document their own." },
+        { "@type": "HowToStep", "name": "Option A: edit config manually", "text": "Set ANTHROPIC_BASE_URL and ANTHROPIC_AUTH_TOKEN in the env section of ~/.claude/settings.json, then restart the Claude Code session." },
+        { "@type": "HowToStep", "name": "Option B: switch with Keyway", "text": "Install Keyway, add providers, take over Claude Code once — then switch with the ⌘⇧K panel. Sessions already routed through the proxy need no restart." },
+        { "@type": "HowToStep", "name": "Verify where requests go", "text": "Check the actual provider, model and status code in Keyway's request logs to confirm the switch." }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Do I need to restart Claude Code after switching providers?", "acceptedAnswer": { "@type": "Answer", "text": "If you edited settings.json manually, yes — the session must restart for new env vars to apply. Sessions routed through Keyway's local proxy (127.0.0.1:9527) switch immediately: new requests follow the new provider with no restart." } },
+        { "@type": "Question", "name": "Can Claude Code use GLM or Kimi models?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Zhipu GLM exposes an Anthropic-compatible endpoint at https://open.bigmodel.cn/api/anthropic and Moonshot Kimi at https://api.moonshot.cn/anthropic. Point ANTHROPIC_BASE_URL there and use that platform's API key." } },
+        { "@type": "Question", "name": "Does switching providers break my official subscription?", "acceptedAnswer": { "@type": "Answer", "text": "No. Switching only changes where requests are sent and how they authenticate. Keyway backs up your original config before takeover and can restore it in one click." } },
+        { "@type": "Question", "name": "Where are my API keys stored?", "acceptedAnswer": { "@type": "Answer", "text": "Manually, keys sit in plain text in settings.json. Keyway stores them in a local SQLCipher-encrypted database with the master key in the system keychain; exported configs exclude keys." } }
+      ]
+    }
+    </script>
+    <style>
+      :root { --fg: #1d1d1f; --fg-2: #62626d; --fg-3: #86868b; --blue: #0066cc; --bg: #fff; --bg-alt: #f5f5f7; --hair: #d2d2d7; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; color: var(--fg); background: var(--bg); font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 22px; }
+      nav { position: sticky; top: 0; z-index: 50; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+      .nav-inner { max-width: 720px; margin: 0 auto; padding: 10px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+      .nav-inner a { color: var(--fg-2); text-decoration: none; }
+      .nav-inner a:hover { color: #000; }
+      .brand { color: var(--fg); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+      .brand img { border-radius: 4px; }
+      header { padding: 56px 0 8px; }
+      .eyebrow { color: var(--blue); font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+      h1 { font-size: 36px; line-height: 1.15; letter-spacing: -.015em; margin: 10px 0 14px; font-weight: 700; }
+      .meta { color: var(--fg-3); font-size: 14px; }
+      article { padding: 26px 0 40px; }
+      h2 { font-size: 25px; margin: 44px 0 12px; letter-spacing: -.01em; scroll-margin-top: 64px; }
+      h3 { font-size: 19px; margin: 28px 0 8px; }
+      p { margin: 12px 0; color: var(--fg); }
+      ul, ol { margin: 12px 0 12px 22px; }
+      li { margin: 6px 0; }
+      a { color: var(--blue); }
+      code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; background: var(--bg-alt); padding: 2px 6px; border-radius: 6px; }
+      pre { background: #1d1d1f; color: #f5f5f7; border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 14px 0; font-size: 13.5px; line-height: 1.6; }
+      pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+      .note { background: var(--bg-alt); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 15px; color: var(--fg-2); }
+      .cta { background: var(--bg-alt); border-radius: 16px; padding: 28px; text-align: center; margin: 48px 0 8px; }
+      .cta h2 { margin-top: 0; }
+      .btn { display: inline-block; background: var(--blue); color: #fff; text-decoration: none; padding: 11px 24px; border-radius: 980px; font-weight: 500; margin: 8px 6px 0; }
+      .btn:hover { background: #0074dd; }
+      .btn.ghost { background: none; color: var(--blue); border: 1px solid var(--hair); }
+      details { border-bottom: 1px solid var(--hair); padding: 14px 0; }
+      summary { font-weight: 600; cursor: pointer; font-size: 17px; }
+      details p { color: var(--fg-2); font-size: 15.5px; }
+      footer { border-top: 1px solid var(--hair); margin-top: 40px; padding: 22px 0 44px; color: var(--fg-3); font-size: 13.5px; }
+      footer a { color: var(--fg-2); }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <a class="brand" href="./index.html"><img src="../logo.svg" width="18" height="18" alt="Keyway logo" />Keyway</a>
+        <span>
+          <a href="./index.html">Home</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../guides/claude-code-switch-provider.html">中文</a>
+        </span>
+      </div>
+    </nav>
+    <div class="wrap">
+      <header>
+        <p class="eyebrow">Keyway Guide</p>
+        <h1>How to Switch Claude Code Providers (Without Restarting)</h1>
+        <p class="meta">Updated Oct 2026 · Applies to Claude Code / GLM / Kimi / DeepSeek / relay endpoints</p>
+      </header>
+      <article>
+        <p>Want to move Claude Code from the official API to GLM, Kimi, DeepSeek or a relay provider — without editing config files and restarting the session every time? This guide covers both approaches: the <strong>manual settings.json edit</strong> (to understand how it works), and switching providers from your menu bar with the open-source app <strong><a href="./index.html">Keyway</a></strong>, where <strong>running sessions keep working</strong>.</p>
+
+        <h2 id="why">Why switch providers at all</h2>
+        <ul>
+          <li><strong>Cost</strong> — official API billing adds up fast; GLM and Kimi coding plans are dramatically cheaper;</li>
+          <li><strong>Availability</strong> — when the official endpoint rate-limits or degrades, fail over to a backup provider instead of stopping mid-task;</li>
+          <li><strong>Right model for the job</strong> — Claude for refactors, a cheaper model for routine edits, a long-context model for big files.</li>
+        </ul>
+        <p>Two environment variables decide Claude Code's provider: <code>ANTHROPIC_BASE_URL</code> (where requests go) and <code>ANTHROPIC_AUTH_TOKEN</code> (which key authenticates). "Switching providers" is just changing these two values.</p>
+
+        <h2 id="manual">Option A: edit the config manually</h2>
+        <p>Edit <code>~/.claude/settings.json</code> and set the target provider in <code>env</code>:</p>
+        <pre><code>{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "your GLM API key"
+  }
+}</code></pre>
+        <p>Anthropic-compatible endpoints for common providers:</p>
+        <ul>
+          <li><strong>Zhipu GLM</strong>: <code>https://open.bigmodel.cn/api/anthropic</code> (same endpoint for Coding Plan)</li>
+          <li><strong>Moonshot Kimi</strong>: <code>https://api.moonshot.cn/anthropic</code></li>
+          <li><strong>Official Anthropic</strong>: remove both variables to go back to direct access</li>
+          <li><strong>Relay providers</strong>: use whatever Anthropic-compatible base URL they document</li>
+        </ul>
+        <div class="note">⚠️ The manual pain points: you must <strong>restart the Claude Code session</strong> for changes to apply; juggling several providers means constant JSON editing with typo risk; keys sit in plain text; and when something breaks you debug by squinting at config files.</div>
+
+        <h2 id="keyway">Option B: switch with Keyway (recommended)</h2>
+        <p><a href="./index.html">Keyway</a> (MIT open source, macOS / Windows / Linux) runs a local proxy on <code>127.0.0.1:9527</code> that forwards Claude Code requests to whichever provider you select. Set it up once, and switching is a menu-bar click:</p>
+        <ol>
+          <li><strong>Add providers</strong> — pick presets like GLM or Kimi, enter any custom base URL, or import from your existing Claude Code config;</li>
+          <li><strong>One-click takeover</strong> — Keyway rewrites <code>settings.json</code> to point at the local proxy (<strong>backing up the original first</strong>, restorable anytime);</li>
+          <li><strong>Switch instantly</strong> — hit <code>⌘⇧K</code> for the quick-switch panel; <strong>sessions already on the proxy need no restart</strong>, the next request goes to the new provider.</li>
+        </ol>
+        <p>After switching, verify the <strong>actual</strong> provider, model and status code in the <strong>request log</strong> — you can see where a relay really sends your traffic instead of guessing. Add a <strong>failover chain</strong> (auto-switch to a backup when an upstream fails) and <strong>model routing rules</strong> (e.g. <code>claude-*</code> to official, <code>deepseek-*</code> to a relay). API keys live in a local SQLCipher-encrypted database with the master key in the system keychain; exports never include keys.</p>
+
+        <h2 id="faq">FAQ</h2>
+        <details>
+          <summary>Do running sessions restart after a switch?</summary>
+          <p>Manual edits require a restart. Sessions routed through Keyway's proxy switch immediately — new requests follow the new provider; in-flight requests are not migrated.</p>
+        </details>
+        <details>
+          <summary>Does this conflict with my official Claude subscription?</summary>
+          <p>No. Keyway backs up your config before takeover; click Restore in takeover management to return to your original values.</p>
+        </details>
+        <details>
+          <summary>GLM/Kimi returns 404 or 401 — what's wrong?</summary>
+          <p>404 usually means a wrong endpoint (use the Anthropic-compatible URLs above, not the OpenAI-compatible ones). 401 means an invalid key or the service isn't enabled for your account. Keyway can test connectivity and latency per provider in one click.</p>
+        </details>
+        <details>
+          <summary>Does Claude Code work after quitting Keyway?</summary>
+          <p>While under takeover, the CLI depends on the local proxy: closing the window keeps it in the tray; fully quitting stops the proxy — restore the config first to reconnect directly.</p>
+        </details>
+
+        <div class="cta">
+          <h2>Manage every AI CLI provider in one place</h2>
+          <p>Claude Code · Codex · Gemini CLI · OpenCode · OpenClaw — one menu-bar app.</p>
+          <a class="btn" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">Download free</a>
+          <a class="btn ghost" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">View source</a>
+        </div>
+      </article>
+      <footer>
+        <p>Keyway is an MIT-licensed open-source project, not affiliated with Anthropic, OpenAI or Google. Claude Code is an Anthropic product.</p>
+        <p><a href="./index.html">Home</a> · <a href="../guides/claude-code-switch-provider.html">中文版</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

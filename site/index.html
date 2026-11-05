@@ -10,15 +10,22 @@
     />
     <meta name="keywords" content="Claude Code 供应商切换, Codex 中转管理, AI CLI 代理, API Key 管理, claude code provider switch, 故障转移, 模型路由, AI CLI 网关" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Keyway" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" content="https://anmutu.github.io/keyway/" />
     <meta property="og:title" content="Keyway — AI CLI 的本地网关" />
     <meta property="og:description" content="让 AI CLI 的每一次请求,都有清楚、可控的去向。本地代理、供应商切换、故障转移与请求诊断,一个地方管理。" />
     <meta property="og:image" content="https://anmutu.github.io/keyway/app-light.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Keyway — AI CLI 的本地网关" />
     <meta name="twitter:description" content="让 AI CLI 的每一次请求,都有清楚、可控的去向。本地代理、供应商切换、故障转移与请求诊断,一个地方管理。" />
     <meta name="twitter:image" content="https://anmutu.github.io/keyway/app-light.png" />
-    <meta name="twitter:card" content="summary" />
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
     <link rel="canonical" href="https://anmutu.github.io/keyway/" />
+    <link rel="alternate" hreflang="zh-CN" href="https://anmutu.github.io/keyway/" />
+    <link rel="alternate" hreflang="en" href="https://anmutu.github.io/keyway/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://anmutu.github.io/keyway/en/" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -30,6 +37,21 @@
         { "@type": "Question", "name": "切换供应商后正在运行的会话要重启吗?", "acceptedAnswer": { "@type": "Answer", "text": "已通过代理的会话切换默认供应商无需重启,后续请求按新配置转发,已发出的请求不迁移。首次接管 Codex 需新开一次会话;路由规则仍优先生效。" } },
         { "@type": "Question", "name": "Keyway 收费吗?", "acceptedAnswer": { "@type": "Answer", "text": "完全免费且开源(MIT),只需为自己使用的模型供应商付费。" } }
       ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Keyway",
+      "operatingSystem": "macOS, Windows, Linux",
+      "applicationCategory": "DeveloperApplication",
+      "softwareVersion": "0.2.15",
+      "downloadUrl": "https://github.com/anmutu/keyway/releases",
+      "screenshot": "https://anmutu.github.io/keyway/app-light.png",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "description": "AI CLI 的开源本地网关:为 Claude Code、Codex、Gemini CLI 即时切换供应商,支持模型路由、故障转移、请求日志与本机加密密钥存储。",
+      "featureList": "无需重启会话切换供应商, 模型路由规则, 自动故障转移, 请求日志, Token 用量统计, 本机加密密钥存储, 多配置档案, 备份与迁移"
     }
     </script>
     <style>
@@ -92,7 +114,7 @@
       }
       .nav-inner a.nav-dl:hover { background: #0074dd; color: #fff; }
       .nav-links { display: flex; gap: 26px; align-items: center; }
-      .nav-links a#langToggle { margin-right: 6px; }
+      .nav-links a#langLink { margin-right: 6px; }
       @media (max-width: 640px) {
         .nav-links { gap: 16px; }
         .nav-main { display: none; }
@@ -301,7 +323,7 @@
           <a class="nav-main" href="./guide.html" data-i18n="navG">使用指南</a>
           <a class="nav-main" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="navSubmit">提交供应商</a>
           <a class="nav-main" href="#quickstart" data-i18n="navQ">上手</a>
-          <a href="#" id="langToggle">EN</a>
+          <a href="./en/" id="langLink">EN</a>
           <a class="nav-dl" id="navDownload" href="https://github.com/anmutu/keyway/releases" data-i18n="navD">下载</a>
         </div>
       </div>
@@ -322,13 +344,13 @@
         <a class="alink" href="#features" data-i18n="learnMore">进一步了解</a>
       </div>
       <div class="platform-links" id="platform-downloads" style="scroll-margin-top: 72px;">
-        <a class="alink" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_aarch64.dmg" data-i18n="appleDl">macOS · Apple 芯片</a>
-        <a class="alink" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_x64.dmg" data-i18n="intelDl">macOS · Intel 芯片</a>
-        <a class="alink" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_x64-setup.exe" data-i18n="windowsDl">Windows 版</a>
-        <a class="alink" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_amd64.AppImage" data-i18n="linuxDl">Linux AppImage</a>
+        <a class="alink" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_aarch64.dmg" data-i18n="appleDl">macOS · Apple 芯片</a>
+        <a class="alink" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_x64.dmg" data-i18n="intelDl">macOS · Intel 芯片</a>
+        <a class="alink" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_x64-setup.exe" data-i18n="windowsDl">Windows 版</a>
+        <a class="alink" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_amd64.AppImage" data-i18n="linuxDl">Linux AppImage</a>
         <a class="alink" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="allDl">全部平台</a>
       </div>
-      <p class="download-note" data-release-version>最新正式版 v0.2.14 · macOS / Windows / Linux</p>
+      <p class="download-note" data-release-version>最新正式版 v0.2.15 · macOS / Windows / Linux</p>
       <div class="hero-shot">
         <div class="win-bar"><i></i><i></i><i></i><span>Keyway</span></div>
         <img src="./app-light.png" alt="Keyway" />
@@ -571,65 +593,6 @@
     </footer>
 
     <script>
-      var I18N = {
-        en: {
-          navF: "Features", navL: "Local-first", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navSubmit: "Suggest a provider", navQ: "Start", navD: "Download",
-          readGuide: "Read the guide", navG2: "Guide",
-          tagline: "Know where your requests go.",
-          heroSub: "The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.",
-          heroProof1: "Local proxy first", heroProof2: "9 AI CLIs", heroProof3: "Encrypted local storage · MIT",
-          learnMore: "Learn more", freeDl: "Download for Apple silicon", freeDl2: "Download free", submitProvider: "Suggest a provider",
-          intelDl: "macOS · Intel",
-          appleDl: "macOS · Apple silicon",
-          windowsDl: "Windows", linuxDl: "Linux AppImage", allDl: "All platforms",
-          versionNote: "Latest stable release v0.2.14 · macOS / Windows / Linux",
-          fTitle: "More clarity. Not just switching.", fSub: "Default providers, connection status and actual requests — clearly distinguished.",
-          f1t: "Switch with clarity.", f1d: "Sessions already using the proxy need no restart when changing the default provider. New requests follow the updated configuration; in-flight requests do not migrate.",
-          f2t: "Encrypted key storage.", f2d: "API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.",
-          f3t: "Errors you can inspect.", f3d: "Check providers, models, status codes and errors in request logs. When routing or failover changes the destination, you have more than a guess.",
-          localEyebrow: "Local-first · not a hosted relay",
-          localTitle: "Know where every request goes.",
-          localSub: "Keyway keeps the control plane on your machine: it does not host your API keys, sell model access, or present the default provider as the actual destination.",
-          flowCli: "Your CLI", flowLocal: "Local proxy · 127.0.0.1:9527", flowProvider: "Your chosen provider", flowProviderSub: "Official · relay · self-hosted endpoint",
-          localNote1t: "Keys stay local", localNote1d: "Stored in an encrypted local database; exports exclude API keys.",
-          localNote2t: "Separate the states", localNote2d: "Proxy running, CLI takeover and request success are three different things.",
-          localNote3t: "Reversible changes", localNote3d: "Original configs are backed up; conflicts stop an overwrite.",
-          tTitle: "Switching, in a keystroke.", tSub: "Connect to the proxy first, then switch your default provider. Start a new Codex session after first-time takeover; later switches need no restart.",
-          qsCap: "The ⌘⇧K quick switch panel — no config to touch",
-          qsFoot: "↑↓ navigate · Enter switch · 1-9 pick · Esc close",
-          capTitle: "Far more than switching.",
-          capSub: "From key safety to request observability, Keyway is the local gateway for your AI CLIs.",
-          c1t: "Automatic failover", c1d: "Configure and enable a backup chain to try the next candidate after retryable upstream failures. Recovery is not guaranteed once a streaming response has begun.",
-          c2t: "Model routing rules", c2d: "Route specific models to specific providers: e.g. claude-* to official, deepseek-* to a relay — preview the path, then dispatch by model name.",
-          c3t: "Request logs", c3d: "The last 100 requests, item by item: actual provider, model, tokens in/out, status code and latency. Debugging at a glance.",
-          c4t: "Usage & success rate", c4d: "Token usage and request success rate aggregated by CLI and by provider. Who's stable, who's costly — let data decide.",
-          c5t: "Multiple profiles", c5d: "Work / personal / testing — snapshot provider sets, save and switch anytime without interference.",
-          c6t: "Backup & migration", c6d: "Export provider configs to JSON with one click (keys excluded). Moving machines or sharing presets is easy. Imports from the 5 CLIs with automatic takeover.",
-          c7t: "Key vault", c7d: "API keys are stored in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.",
-          c8t: "Connectivity test", c8d: "One-click latency and reachability test per provider, before you switch.",
-          c9t: "Onboarding + tray", c9d: "A three-step wizard: pick CLIs, add providers, take over in one click. Lives in the menu bar for instant switching.",
-          qsTitle: "Up and running in three steps.",
-          qsGuide: "Step-by-step guide", qsSubmit: "Suggest a provider",
-          s1t: "Add a provider.", s1d: "Or import from existing CLI configs. GLM, Kimi, official, any relay.",
-          s2t: "One-click takeover.", s2d: "Originals backed up, restorable anytime.",
-          s3t: "Switch in a tap.", s3d: "Send a new request, then check its actual provider and response status in the logs.",
-          pvTitle: "Two looks. Same excellence.",
-          lightMode: "Light", darkMode: "Dark",
-          faqTitle: "Frequently asked questions.",
-          q1: "How does Keyway work?", a1: "Keyway runs a local proxy (127.0.0.1:9527). Connected CLI requests follow your default provider, routing rules and failover settings. Request logs show actual destinations.",
-          q2: "How are my API keys stored?", a2: "API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys. Authentication is sent to the selected upstream when forwarding requests.",
-          q3: "Which AI CLIs are supported?", a3: "Keyway provides 9 CLI groups across the Anthropic / OpenAI / Gemini protocols. Claude Code, Codex CLI, Gemini CLI, OpenCode and OpenClaw support automatic takeover; other groups can be connected manually using the variables supported by each CLI.",
-          q4: "Do I need to restart running sessions after switching?", a4: "Sessions already using the proxy need no restart when changing the default provider. New requests follow the updated configuration; in-flight requests do not migrate. First-time Codex takeover needs a new session, and routing rules still take priority.",
-          q5: "Can I use multiple providers at once?", a5: "Yes. Model routing rules send different models to different providers; failover switches to backups on upstream errors; profiles swap whole work / personal setups in one tap.",
-          q6: "How do I revert to my original setup?", a6: "Click Restore in takeover management to undo Keyway's configuration changes while keeping unrelated edits. Conflicts in managed fields or generated entries stop the restore; the file and backup are retained for inspection.",
-          q7: "Is it free?", a7: "Keyway is completely free and open source (MIT). You only pay the model providers you use.",
-          q8: "Will my CLI work after quitting Keyway?", a8: "CLIs connected to the local proxy depend on Keyway running. Closing the window keeps it in the tray; fully quitting stops the proxy. Restore configs first if you need direct connections. An offline proxy and an upstream provider failure are different states.",
-          fn1: "* Configuration and usage records are stored in an encrypted local database. The proxy sends request content and authentication to the selected model provider; local storage does not mean offline inference.",
-          fn2: "** Claude Code, Codex, Gemini CLI, OpenCode and OpenClaw are products of their respective owners; Keyway is not affiliated with Anthropic, OpenAI or Google.",
-          darkVer: "Dark version"
-        },
-        zh: { darkVer: "暗色版本" }
-      };
       // 滚动入场:区块内容淡入上移(Apple 式克制,仅一次)
       (function () {
         var els = document.querySelectorAll(
@@ -651,70 +614,6 @@
             if (el.getBoundingClientRect().top < window.innerHeight * 1.25) el.classList.add("in");
           });
         }, 1400);
-      })();
-      (function () {
-        var root = document.documentElement;
-        var toggle = document.getElementById("langToggle");
-        var primaryDownload = document.getElementById("primaryDownload");
-        var navDownload = document.getElementById("navDownload");
-        var downloadTargets = {
-          macArm: "https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_aarch64.dmg",
-          macIntel: "https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_x64.dmg",
-          windows: "https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_x64-setup.exe",
-          linux: "https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_amd64.AppImage",
-          all: "https://github.com/anmutu/keyway/releases"
-        };
-        function syncPrimaryDownload() {
-          if (!primaryDownload) return;
-          var ua = navigator.userAgent || "";
-          var isWindows = /Windows/i.test(ua);
-          var isLinux = /Linux/i.test(ua) && !/Android/i.test(ua);
-          var isMac = /Macintosh|Mac OS X/i.test(ua);
-          var isMobile = /Android|iPhone|iPad|iPod/i.test(ua) || (isMac && navigator.maxTouchPoints > 1);
-          if (isMobile) {
-            primaryDownload.href = downloadTargets.all;
-            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "View all downloads" : "查看全部下载";
-          } else if (isWindows) {
-            primaryDownload.href = downloadTargets.windows;
-            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "Download for Windows" : "下载 Windows 版";
-          } else if (isLinux && /x86_64|amd64/i.test(ua)) {
-            primaryDownload.href = downloadTargets.linux;
-            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "Download for Linux" : "下载 Linux 版";
-          } else if (isMac) {
-            primaryDownload.href = "#platform-downloads";
-            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "Choose your Mac download" : "选择 macOS 安装包";
-          } else {
-            primaryDownload.href = downloadTargets.all;
-            primaryDownload.textContent = root.getAttribute("lang") === "en" ? "View all downloads" : "查看全部下载";
-          }
-          if (navDownload) navDownload.href = primaryDownload.href;
-        }
-        // 缓存 HTML 中的中文原文:英文切换会覆盖 textContent,回切中文时据此恢复
-        var zhOrig = {};
-        document.querySelectorAll("[data-i18n]").forEach(function (el) {
-          zhOrig[el.getAttribute("data-i18n")] = el.textContent;
-        });
-        var zhTitle = document.title;
-        function apply(lang) {          var dict = lang === "zh" ? {} : (I18N[lang] || {});
-          document.querySelectorAll("[data-i18n]").forEach(function (el) {
-            var k = el.getAttribute("data-i18n");
-            var v = dict[k] !== undefined ? dict[k] : zhOrig[k];
-            if (v !== undefined) el.textContent = v;
-          });
-          root.setAttribute("lang", lang === "en" ? "en" : "zh-CN");
-          document.title = lang === "en" ? "Keyway — The local gateway for AI CLIs" : zhTitle;
-          toggle.textContent = lang === "en" ? "中文" : "EN";
-          syncPrimaryDownload();
-          try { localStorage.setItem("site-lang", lang); } catch (e) {}
-        }
-        var saved = null;
-        try { saved = localStorage.getItem("site-lang"); } catch (e) {}
-        if (!saved) saved = /^en/i.test(navigator.language) ? "en" : "zh";
-        apply(saved);
-        toggle.addEventListener("click", function (e) {
-          e.preventDefault();
-          apply(root.getAttribute("lang") === "en" ? "zh" : "en");
-        });
       })();
     </script>
     <script src="./release-sync.js"></script>

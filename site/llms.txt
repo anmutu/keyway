@@ -1,0 +1,17 @@
+# Keyway
+
+> Keyway is a free, open-source (MIT) local gateway for AI coding CLIs. It manages providers, model routing, failover and request logs for Claude Code, Codex CLI, Gemini CLI, OpenCode and OpenClaw — switch providers without restarting sessions. API keys stay in an encrypted local database. Runs on macOS, Windows and Linux.
+
+Keyway（AI CLI 的本地网关）通过本机代理（127.0.0.1:9527）接管 AI 编程 CLI 的请求：不重启会话即时切换供应商、按模型配置路由规则、自动故障转移、请求日志与 token 用量统计。API Key 存储于本机加密数据库（SQLCipher，主密钥由系统钥匙串保管），导出的配置不含 API Key。支持从 cc-switch 一键导入迁移。完全免费、开源（MIT）。
+
+## Docs
+
+- [Keyway 详细使用指南（中文）](https://anmutu.github.io/keyway/guide.html): 安装、接管 CLI、切换供应商、验证请求去向、故障排查的完整指南
+- [如何给 Claude Code 切换供应商（中文教程）](https://anmutu.github.io/keyway/guides/claude-code-switch-provider.html): 不用重启会话，给 Claude Code 切换第三方供应商 / 中转站的完整步骤
+- [How to Switch Claude Code Providers (English)](https://anmutu.github.io/keyway/en/switch-claude-code-provider.html): Step-by-step guide to switching Claude Code providers (third-party endpoints, proxies) without restarting sessions
+- [English site](https://anmutu.github.io/keyway/en/): Keyway — Local gateway for Claude Code, Codex & Gemini CLI
+
+## Downloads
+
+- [Latest release](https://github.com/anmutu/keyway/releases/latest): macOS / Windows / Linux 安装包，免费下载
+- [GitHub repository](https://github.com/anmutu/keyway): 源码、Issue、设计文档

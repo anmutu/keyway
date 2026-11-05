@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://anmutu.github.io/keyway/</loc><priority>1.0</priority></url>
-  <url><loc>https://anmutu.github.io/keyway/guide.html</loc><priority>0.9</priority></url>
+  <url><loc>https://anmutu.github.io/keyway/</loc><lastmod>2026-11-05</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://anmutu.github.io/keyway/en/</loc><lastmod>2026-11-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://anmutu.github.io/keyway/guide.html</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
+  <url><loc>https://anmutu.github.io/keyway/guides/claude-code-switch-provider.html</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
+  <url><loc>https://anmutu.github.io/keyway/en/switch-claude-code-provider.html</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
 </urlset>
