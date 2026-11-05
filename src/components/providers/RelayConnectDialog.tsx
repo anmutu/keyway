@@ -24,7 +24,10 @@ export function RelayConnectDialog({ request, existingProviders, currentProvider
   const [exchanging, setExchanging] = useState(false);
   const [existingNames, setExistingNames] = useState<string[]>([]);
   const [currentName, setCurrentName] = useState<string | null>(null);
-  const form = useMemo(() => relayFormState(existingNames, apiKey), [existingNames, apiKey]);
+  // The gateway brand comes from the deep link; fall back to a neutral name
+  // when an older link does not carry one.
+  const sourceName = request?.name ?? t("relay.defaultName");
+  const form = useMemo(() => relayFormState(existingNames, apiKey, sourceName), [existingNames, apiKey, sourceName]);
 
   useEffect(() => {
     setApiKey("");
@@ -53,7 +56,7 @@ export function RelayConnectDialog({ request, existingProviders, currentProvider
         invoke<Provider[]>("list_all_providers"),
         invoke<Provider | null>("get_current_provider", { appType: request.app }),
       ]);
-      const fresh = relayFormState(latest.map((p) => p.name), apiKey);
+      const fresh = relayFormState(latest.map((p) => p.name), apiKey, sourceName);
       if (fresh.name !== form.name || (current?.name ?? null) !== currentName) {
         setExistingNames(latest.map((provider) => provider.name));
         setCurrentName(current?.name ?? null);
@@ -85,7 +88,7 @@ export function RelayConnectDialog({ request, existingProviders, currentProvider
       <DialogContent className="sm:max-w-[460px]" closeDisabled={submitting}>
         <form onSubmit={submit} className="grid gap-4">
           <DialogHeader>
-            <DialogTitle>{t("relay.connectTitle")}</DialogTitle>
+            <DialogTitle>{t("relay.connectTitle", { name: sourceName })}</DialogTitle>
             <DialogDescription>{t("relay.connectDesc")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-1 rounded-md border bg-muted/40 p-3 text-sm">
@@ -96,16 +99,16 @@ export function RelayConnectDialog({ request, existingProviders, currentProvider
           </div>
           {form.nameChanged && <p className="text-xs text-amber-600 dark:text-amber-400">{t("relay.nameChanged", { name: form.name })}</p>}
           <p className="text-xs text-muted-foreground">
-            {currentName ? t("relay.currentKept", { name: currentName }) : t("relay.firstActive")}
+            {currentName ? t("relay.currentKept", { name: currentName }) : t("relay.firstActive", { name: sourceName })}
           </p>
           <p className="text-xs text-muted-foreground">{t("relay.noTakeover")}</p>
           {request?.handoff ? (
             <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-3 text-xs text-muted-foreground">
-              {t("relay.handoffNotice")}
+              {t("relay.handoffNotice", { name: sourceName })}
             </p>
           ) : (
             <label className="grid gap-1.5 text-sm font-medium">
-              {t("relay.pasteKey")}
+              {t("relay.pasteKey", { name: sourceName })}
               <PasswordInput value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="off" required />
             </label>
           )}
@@ -115,7 +118,7 @@ export function RelayConnectDialog({ request, existingProviders, currentProvider
           </label>
           <DialogFooter>
             <Button type="button" variant="outline" disabled={submitting} onClick={onClose}>{t("common.cancel")}</Button>
-            <Button type="submit" disabled={!confirmed || (!form.canSave && !request?.handoff) || submitting || exchanging}>{exchanging ? t("relay.importing") : submitting ? t("dialog.adding") : t("relay.save")}</Button>
+            <Button type="submit" disabled={!confirmed || (!form.canSave && !request?.handoff) || submitting || exchanging}>{exchanging ? t("relay.importing") : submitting ? t("dialog.adding") : t("relay.save", { name: sourceName })}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

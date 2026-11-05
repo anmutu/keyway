@@ -136,7 +136,7 @@ export function AddProviderDialog({
   const pick = (p: ProviderPreset | null, nameSeed?: string) => {
     setPreset(p);
     setStep("form");
-    setName(p?.requiresBaseUrl ? relayFormState(existingNames, "").name : p?.name ?? nameSeed ?? "");
+    setName(p?.requiresBaseUrl ? relayFormState(existingNames, "", t("relay.defaultName")).name : p?.name ?? nameSeed ?? "");
     setBaseUrl(p?.baseUrl ?? "");
     setApiKey("");
     setUrlError(null);
@@ -206,7 +206,7 @@ export function AddProviderDialog({
           setRelayDuplicate(true);
           setRelayConfirmed(false);
           setExistingNames(all.map((provider) => provider.name));
-          setName(relayFormState(all.map((provider) => provider.name), apiKey).name);
+          setName(relayFormState(all.map((provider) => provider.name), apiKey, t("relay.defaultName")).name);
           return;
         }
       }

@@ -3,7 +3,9 @@ import type { AppType } from "../types.ts";
 export interface RelayConnectRequest {
   baseUrl: string;
   app: AppType;
-  /** Optional model selected in RELAY. Never contains an API key or secret. */
+  /** Display name of the connecting gateway, carried by the link. Never contains an API key or secret. */
+  name?: string;
+  /** Optional model selected in the connecting gateway. Never contains an API key or secret. */
   model?: string;
   /** Short-lived, single-use authorization grant. Never log or persist this value. */
   handoff?: string;
@@ -15,6 +17,14 @@ const MAX_MODEL_LENGTH = 128;
 // a deep link cannot smuggle query/control characters into a provider config.
 const MODEL_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/;
 const HANDOFF_PATTERN = /^[A-Za-z0-9]{16,256}$/;
+// The link-carried gateway name is display-only, but it still reaches the
+// provider database, so keep it to plain word characters in a sane length.
+const NAME_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} ._\-]{0,39}$/u;
+const MAX_NAME_LENGTH = 40;
+
+export function isValidRelayName(value: string): boolean {
+  return value.length > 0 && value.length <= MAX_NAME_LENGTH && NAME_PATTERN.test(value);
+}
 
 export function isValidRelayModel(value: string): boolean {
   return value.length > 0 && value.length <= MAX_MODEL_LENGTH && MODEL_ID_PATTERN.test(value);
@@ -55,8 +65,8 @@ export function parseRelayDeepLink(raw: string, allowLocalHttp = false): RelayCo
     if (url.protocol !== "keyway:" || url.hostname !== "connect" || url.pathname !== "/relay"
       || url.username || url.password || url.port || url.hash) return null;
     const keys = [...url.searchParams.keys()];
-    const allowedKeys = new Set(["v", "base", "app", "model", "handoff"]);
-    if ((keys.length < 3 || keys.length > 5)
+    const allowedKeys = new Set(["v", "base", "app", "model", "handoff", "name"]);
+    if ((keys.length < 3 || keys.length > 6)
       || keys.some((key) => !allowedKeys.has(key))
       || new Set(keys).size !== keys.length
       || !keys.includes("v") || !keys.includes("base") || !keys.includes("app")
@@ -68,9 +78,12 @@ export function parseRelayDeepLink(raw: string, allowLocalHttp = false): RelayCo
     if (keys.includes("model") && (!model || !isValidRelayModel(model))) return null;
     const handoff = url.searchParams.get("handoff");
     if (keys.includes("handoff") && (!handoff || !isValidRelayHandoff(handoff))) return null;
+    const name = url.searchParams.get("name");
+    if (keys.includes("name") && (!name || !isValidRelayName(name))) return null;
     return {
       baseUrl,
       app: app as AppType,
+      ...(name ? { name } : {}),
       ...(model ? { model } : {}),
       ...(handoff ? { handoff } : {}),
     };
@@ -86,12 +99,12 @@ export function relayEndpointForApp(request: RelayConnectRequest): string {
   return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
 }
 
-/** create_provider merges equal names, so use a distinct name for each RELAY import. */
-export function relayFormState(existingNames: string[], apiKey: string) {
+/** create_provider merges equal names, so use a distinct name for each import. */
+export function relayFormState(existingNames: string[], apiKey: string, sourceName: string) {
   const names = new Set(existingNames.map((name) => name.trim().toLowerCase()));
-  let name = "RELAY";
+  let name = sourceName;
   for (let suffix = 2; names.has(name.toLowerCase()); suffix += 1) {
-    name = `RELAY (${suffix})`;
+    name = `${sourceName} (${suffix})`;
   }
-  return { name, canSave: apiKey.trim().length > 0, nameChanged: name !== "RELAY" };
+  return { name, canSave: apiKey.trim().length > 0, nameChanged: name !== sourceName };
 }

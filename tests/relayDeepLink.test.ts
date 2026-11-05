@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { isValidRelayHandoff, isValidRelayModel, parseRelayDeepLink, relayEndpointForApp, relayFormState } from "../src/lib/relayDeepLink.ts";
 
-test("accepts only a public RELAY base and supported CLI", () => {
+test("accepts only a public relay base and supported CLI", () => {
   assert.deepEqual(
     parseRelayDeepLink("keyway://connect/relay?v=1&base=https%3A%2F%2Fapi.example.com%2Fv1&app=codex"),
     { baseUrl: "https://api.example.com/v1", app: "codex" },
@@ -115,13 +115,31 @@ test("uses the OpenAI v1 endpoint for Codex and the root for Anthropic CLIs", ()
 });
 
 test("form state requires a pasted key and chooses a fresh name", () => {
-  assert.deepEqual(relayFormState(["RELAY", "RELAY (2)"], "  "), {
-    name: "RELAY (3)", canSave: false, nameChanged: true,
+  assert.deepEqual(relayFormState(["Teapot Router", "Teapot Router (2)"], "  ", "Teapot Router"), {
+    name: "Teapot Router (3)", canSave: false, nameChanged: true,
   });
-  assert.deepEqual(relayFormState(["relay"], "sk-secret"), {
-    name: "RELAY (2)", canSave: true, nameChanged: true,
+  assert.deepEqual(relayFormState(["teapot router"], "sk-secret", "Teapot Router"), {
+    name: "Teapot Router (2)", canSave: true, nameChanged: true,
   });
-  assert.deepEqual(relayFormState([], "sk-secret"), {
-    name: "RELAY", canSave: true, nameChanged: false,
+  assert.deepEqual(relayFormState([], "sk-secret", "Teapot Router"), {
+    name: "Teapot Router", canSave: true, nameChanged: false,
   });
+  // Any gateway can brand its own import; the name always comes from the link.
+  assert.deepEqual(relayFormState([], "sk-secret", "Acme Relay"), {
+    name: "Acme Relay", canSave: true, nameChanged: false,
+  });
+});
+
+test("a link may carry the connecting gateway's display name", () => {
+  const withName = parseRelayDeepLink("keyway://connect/relay?v=1&base=https://gw.example&app=claude&name=Teapot%20Router");
+  assert.equal(withName?.name, "Teapot Router");
+  const withoutName = parseRelayDeepLink("keyway://connect/relay?v=1&base=https://gw.example&app=claude");
+  assert.equal(withoutName?.name, undefined);
+  // Malformed names are rejected with the whole link, like other strict params.
+  assert.equal(parseRelayDeepLink("keyway://connect/relay?v=1&base=https://gw.example&app=claude&name="), null);
+  assert.equal(parseRelayDeepLink("keyway://connect/relay?v=1&base=https://gw.example&app=claude&name=%3Cscript%3E"), null);
+  assert.equal(
+    parseRelayDeepLink(`keyway://connect/relay?v=1&base=https://gw.example&app=claude&name=${"x".repeat(41)}`),
+    null,
+  );
 });

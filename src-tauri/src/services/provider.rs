@@ -163,7 +163,7 @@ mod unique_tests {
         let pool = crate::db::init_pool(&path, &"0".repeat(64)).unwrap();
         let first = ProviderInput {
             app_type: AppType::Codex,
-            name: "RELAY".into(),
+            name: "Teapot Router".into(),
             base_url: "https://old.example/v1".into(),
             models: vec![],
             api_key: None,
@@ -171,7 +171,7 @@ mod unique_tests {
         create_unique(&pool, first).unwrap();
         let second = ProviderInput {
             app_type: AppType::Codex,
-            name: " relay ".into(),
+            name: " teapot router ".into(),
             base_url: "https://new.example/v1".into(),
             models: vec![],
             api_key: Some("new-secret".into()),

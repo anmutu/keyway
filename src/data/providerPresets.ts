@@ -35,7 +35,7 @@ export interface ProviderPreset {
 }
 
 const relayPreset: ProviderPreset = {
-  name: "RELAY",
+  name: "Relay Gateway",
   baseUrl: "",
   category: "aggregator",
   requiresBaseUrl: true,

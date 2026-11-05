@@ -188,6 +188,7 @@ function App() {
   const [relayExisting, setRelayExisting] = useState<Provider[]>([]);
   const [relayCurrent, setRelayCurrent] = useState<Provider | undefined>();
   const [relaySavedApp, setRelaySavedApp] = useState<AppType | null>(null);
+  const [relaySavedName, setRelaySavedName] = useState("");
   const pendingRelayUrl = useRef<string | null>(null);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Provider | null>(null);
@@ -431,7 +432,7 @@ function App() {
         // controls; handling the link itself can continue without them.
       }
       for (const raw of urls) {
-        // Loopback HTTP is intentionally allowed here for local RELAY testing.
+        // Loopback HTTP is intentionally allowed here for local relay-gateway testing.
         // Public endpoints still require HTTPS in parseRelayDeepLink.
         const request = parseRelayDeepLink(raw, true);
         if (!request || raw === pendingRelayUrl.current) continue;
@@ -1481,6 +1482,7 @@ function App() {
           toast("success", t("toast.added", { name: created.name }));
           syncTray();
           void refresh(app).then(() => focusProvider(created.id));
+          setRelaySavedName(created.name);
           setRelaySavedApp(app);
         }}
         onError={(message) => handleError(message)}
@@ -1489,7 +1491,7 @@ function App() {
       <Dialog open={relaySavedApp !== null} onOpenChange={(open) => { if (!open) setRelaySavedApp(null); }}>
         <DialogContent className="sm:max-w-[430px]">
           <DialogHeader>
-            <DialogTitle>{t("relay.savedTitle")}</DialogTitle>
+            <DialogTitle>{t("relay.savedTitle", { name: relaySavedName || t("relay.defaultName") })}</DialogTitle>
             <DialogDescription>{t("relay.savedDesc")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>

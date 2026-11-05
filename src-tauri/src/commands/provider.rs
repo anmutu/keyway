@@ -26,8 +26,8 @@ fn valid_relay_handoff_code(code: &str) -> bool {
 }
 
 fn valid_relay_handoff_base(base_url: &str) -> Result<reqwest::Url, String> {
-    let parsed =
-        reqwest::Url::parse(base_url.trim()).map_err(|_| "invalid RELAY URL".to_string())?;
+    let parsed = reqwest::Url::parse(base_url.trim())
+        .map_err(|_| "invalid relay gateway URL".to_string())?;
     let is_local_http =
         parsed.scheme() == "http" && matches!(parsed.host_str(), Some("localhost" | "127.0.0.1"));
     if (parsed.scheme() != "https" && !is_local_http)
@@ -36,12 +36,12 @@ fn valid_relay_handoff_base(base_url: &str) -> Result<reqwest::Url, String> {
         || parsed.query().is_some()
         || parsed.fragment().is_some()
     {
-        return Err("RELAY handoff requires a clean HTTPS base URL".into());
+        return Err("relay handoff requires a clean HTTPS base URL".into());
     }
     Ok(parsed)
 }
 
-/// Exchange a short-lived RELAY handoff grant. The returned key stays in memory
+/// Exchange a short-lived relay handoff grant. The returned key stays in memory
 /// long enough for the caller to pass it to `create_relay_provider`; it is never
 /// put in the deep link or logged.
 #[tauri::command]
@@ -59,34 +59,34 @@ pub async fn exchange_relay_handoff(base_url: String, code: String) -> Result<St
         .connect_timeout(std::time::Duration::from_secs(5))
         .timeout(std::time::Duration::from_secs(10))
         .build()
-        .map_err(|_| "could not prepare RELAY connection".to_string())?;
+        .map_err(|_| "could not prepare the relay connection".to_string())?;
     let response = client
         .post(endpoint)
         .json(&serde_json::json!({ "code": code }))
         .send()
         .await
-        .map_err(|_| "RELAY handoff could not be reached".to_string())?;
+        .map_err(|_| "the relay gateway could not be reached".to_string())?;
     if !response.status().is_success() {
-        return Err("RELAY rejected or expired this handoff".into());
+        return Err("the relay gateway rejected or expired this handoff".into());
     }
     let body = response
         .bytes()
         .await
-        .map_err(|_| "invalid RELAY handoff response".to_string())?;
+        .map_err(|_| "invalid relay handoff response".to_string())?;
     if body.len() > 32 * 1024 {
-        return Err("invalid RELAY handoff response".into());
+        return Err("invalid relay handoff response".into());
     }
     let envelope: RelayHandoffEnvelope =
-        serde_json::from_slice(&body).map_err(|_| "invalid RELAY handoff response".to_string())?;
+        serde_json::from_slice(&body).map_err(|_| "invalid relay handoff response".to_string())?;
     if envelope.success == Some(false) {
-        return Err("RELAY rejected or expired this handoff".into());
+        return Err("the relay gateway rejected or expired this handoff".into());
     }
     let key = envelope
         .data
         .and_then(|data| data.key.or(data.api_key))
         .or(envelope.key)
         .filter(|key| !key.trim().is_empty())
-        .ok_or_else(|| "RELAY did not return an API key".to_string())?;
+        .ok_or_else(|| "the relay gateway did not return an API key".to_string())?;
     Ok(key)
 }
 
