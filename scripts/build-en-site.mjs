@@ -100,6 +100,10 @@ html = html.replace(/(src|href)="\.\//g, '$1="../');
 html = html.replace('href="../privacy.html"', 'href="./privacy.html"');
 html = html.replace('href="../terms.html"', 'href="./terms.html"');
 
+// 英文页使用英文界面截图(正文相对路径;og/twitter/schema 在下方模板插入后统一替换)
+html = html.replace(/app-light\.png/g, "app-light-en.png");
+html = html.replace(/app-dark\.png/g, "app-dark-en.png");
+
 // 下载备注初始文案(网络失败时的兜底文本)
 html = html.replace(
   ">最新正式版 v0.2.14 · macOS / Windows / Linux<",
@@ -192,6 +196,10 @@ const enLd = `    <script type="application/ld+json">
 const styleAt = html.indexOf("    <style>");
 if (styleAt < 0) throw new Error("style anchor not found");
 html = html.slice(0, styleAt) + enLd + html.slice(styleAt);
+
+// 模板插入完成后再统一替换一次,覆盖 enHead/enLd 里的 og/twitter/schema 引用
+html = html.replace(/app-light\.png/g, "app-light-en.png");
+html = html.replace(/app-dark\.png/g, "app-dark-en.png");
 
 const outDir = resolve(siteDir, "en");
 mkdirSync(outDir, { recursive: true });
