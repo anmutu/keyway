@@ -567,13 +567,30 @@ pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) ->
             },
         };
 
-        let send_result = state
+        let send_result = match state
             .http
             .request(method.clone(), &upstream)
-            .headers(req_headers)
-            .body(send_body)
+            .headers(req_headers.clone())
+            .body(send_body.clone())
             .send()
-            .await;
+            .await
+        {
+            Ok(r) => Ok(r),
+            // 兜底:应用启动时继承的代理环境变量(HTTP_PROXY 等)若指向已失效的本地
+            // 代理,所有上游连接都会失败并误报 502。此处忽略任何代理直连重试一次;
+            // 直连结果(无论成败)都更接近真实网络状态。
+            Err(err) => {
+                let upstream_log = upstream.split('?').next().unwrap_or("");
+                warn!(upstream = upstream_log, "经代理连接失败,尝试直连重试: {err}");
+                state
+                    .http_direct
+                    .request(method.clone(), &upstream)
+                    .headers(req_headers)
+                    .body(send_body)
+                    .send()
+                    .await
+            }
+        };
 
         let resp = match send_result {
             Ok(r) => r,
@@ -581,6 +598,15 @@ pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) ->
                 // 日志与错误体都不带查询串(Gemini key 在 ?key= 里)
                 let e = e.without_url();
                 let upstream_log = upstream.split('?').next().unwrap_or("");
+                let mut cause = String::new();
+                let mut src: Option<&dyn std::error::Error> = std::error::Error::source(&e);
+                if let Some(s) = src {
+                    cause = s.to_string();
+                    src = s.source();
+                }
+                if let Some(s) = src {
+                    cause = format!("{cause} ← {s}");
+                }
                 warn!(upstream = upstream_log, "上游连接失败: {e}");
                 if i + 1 < candidates.len() && can_failover(&method, &client_headers, None) {
                     fallbacks.push(format!(
@@ -591,7 +617,12 @@ pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) ->
                     continue;
                 }
                 notify_fallbacks(&state, &fallbacks);
-                return text_resp(StatusCode::BAD_GATEWAY, &format!("上游请求失败: {e}"));
+                let detail = if cause.is_empty() {
+                    format!("上游请求失败: {e}")
+                } else {
+                    format!("上游请求失败: {e}({cause})")
+                };
+                return text_resp(StatusCode::BAD_GATEWAY, &detail);
             }
         };
 
