@@ -581,7 +581,10 @@ pub async fn proxy_handler(State(state): State<AppState>, req: Request<Body>) ->
             // 直连结果(无论成败)都更接近真实网络状态。
             Err(err) => {
                 let upstream_log = upstream.split('?').next().unwrap_or("");
-                warn!(upstream = upstream_log, "经代理连接失败,尝试直连重试: {err}");
+                warn!(
+                    upstream = upstream_log,
+                    "经代理连接失败,尝试直连重试: {err}"
+                );
                 state
                     .http_direct
                     .request(method.clone(), &upstream)
