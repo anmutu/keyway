@@ -26,6 +26,7 @@
     <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/" />
     <link rel="alternate" hreflang="x-default" href="https://keyway.one/" />
     <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -183,7 +184,10 @@
       .kw-ghost { position: absolute; color: var(--fg-3); opacity: 0; pointer-events: none; }
       .kw-spark { position: absolute; color: var(--blue); font-size: .42em; opacity: 0; pointer-events: none; }
       .kw-dust { position: absolute; width: .16em; height: .16em; border-radius: 50%; background: var(--fg-3); opacity: 0; pointer-events: none; }
-      .kw-underline { position: absolute; bottom: -.16em; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--blue), rgba(0,102,204,.3)); transform-origin: left center; transform: scaleX(0); pointer-events: none; }
+      .kw-underline { position: absolute; bottom: -.16em; height: 3px; border-radius: 3px; background: linear-gradient(100deg, var(--blue) 0%, #4da3ff 22%, var(--blue) 50%, #4da3ff 78%, var(--blue) 100%); background-size: 220% 100%; transform-origin: left center; transform: scaleX(0); pointer-events: none; }
+      .kw-ring { position: absolute; border: 2px solid var(--blue); border-radius: 50%; opacity: 0; pointer-events: none; }
+      .kw-glow { position: absolute; inset: -90px -170px; background: radial-gradient(closest-side, rgba(0,102,204,.13), transparent 72%); opacity: 0; pointer-events: none; }
+      .hero h1 { position: relative; }
       /* 开场演绎时压住其余 hero 元素,词序落定后再放行(移除类会重启它们的 fadeUp) */
       .hero.intro-hold .kw-motto, .hero.intro-hold .tagline, .hero.intro-hold .hero-proof, .hero.intro-hold .sub,
       .hero.intro-hold .links, .hero.intro-hold .platform-links, .hero.intro-hold .download-note,
@@ -683,6 +687,8 @@
           });
           W.one.classList.remove("kw-landed");
           seq.querySelectorAll(".kw-underline, .kw-spark, .kw-dust, .kw-ghost").forEach(function (el) { el.remove(); });
+          var oldGlow = h1.querySelector(".kw-glow");
+          if (oldGlow) oldGlow.remove();
 
           var c = seq.getBoundingClientRect();
           function rect(el) { var b = el.getBoundingClientRect(); return { x: b.left - c.left, y: b.top - c.top, w: b.width, h: b.height }; }
@@ -761,6 +767,24 @@
               { duration: 700, delay: delay }
             ).onfinish = function () { g.remove(); };
           }
+          function shockRing(x, y, delayMs, scaleTo) {
+            setTimeout(function () {
+              var r = document.createElement("span");
+              r.className = "kw-ring";
+              seq.appendChild(r);
+              var size = em * 0.7;
+              r.style.width = r.style.height = size + "px";
+              r.style.left = (x - size / 2) + "px";
+              r.style.top = (y - size / 2) + "px";
+              r.animate(
+                [
+                  { opacity: .9, transform: "scale(.15)" },
+                  { opacity: 0, transform: "scale(" + scaleTo + ")" }
+                ],
+                { duration: 480, easing: "cubic-bezier(.2,.7,.35,1)" }
+              ).onfinish = function () { r.remove(); };
+            }, delayMs);
+          }
           function dustPuff() {
             [-1, 1].forEach(function (side, i) {
               var d = document.createElement("span");
@@ -795,9 +819,9 @@
           W.one.style.opacity = "0";
           anims.push(W.one.animate(
             [
-              { opacity: 0, transform: "translate(" + dOne + "px," + -em * 1.3 + "px) scale(.7)", easing: "cubic-bezier(.45,0,.8,.5)" },
-              { opacity: 1, transform: "translate(" + dOne + "px,3px) scale(1.06,.9)", easing: "cubic-bezier(.3,.7,.4,1.4)" },
-              { opacity: 1, transform: "translate(" + dOne + "px,0) scale(1)" }
+              { opacity: 0, transform: "translate(" + dOne + "px," + -em * 1.5 + "px) scale(.75)", filter: "blur(7px)", easing: "cubic-bezier(.45,0,.8,.5)" },
+              { opacity: 1, transform: "translate(" + dOne + "px,3px) scale(1.06,.9)", filter: "blur(0px)", easing: "cubic-bezier(.3,.7,.4,1.4)" },
+              { opacity: 1, transform: "translate(" + dOne + "px,0) scale(1)", filter: "blur(0px)" }
             ],
             { duration: 380, delay: 140, fill: "both" }
           ));
@@ -805,8 +829,8 @@
             cfg[0].style.opacity = "0";
             anims.push(cfg[0].animate(
               [
-                { opacity: 0, transform: "translate(" + (cfg[1] + cfg[2] * em * 1.5) + "px,0) rotate(" + cfg[2] * 8 + "deg)" },
-                { opacity: 1, transform: "translate(" + cfg[1] + "px,0) rotate(0deg)" }
+                { opacity: 0, transform: "translate(" + cfg[1] + "px," + em * 0.55 + "px) rotate(" + cfg[2] * 6 + "deg)", filter: "blur(6px)" },
+                { opacity: 1, transform: "translate(" + cfg[1] + "px,0) rotate(0deg)", filter: "blur(0px)" }
               ],
               { duration: 340, delay: cfg[3], easing: "cubic-bezier(.25,.9,.35,1.1)", fill: "both" }
             ));
@@ -817,8 +841,8 @@
           // 第二幕:钥匙从天而降,砸在 one 旁边(标题震一下)
           anims.push(keyEl.animate(
             [
-              { opacity: 0, transform: "translateY(" + (-jump * 1.9) + "px) rotate(-24deg)" },
-              { opacity: 1, transform: "translateY(0) rotate(0deg) scaleY(1)", offset: .82, easing: "cubic-bezier(.55,0,.75,.5)" },
+              { opacity: 0, transform: "translateY(" + (-jump * 1.9) + "px) rotate(-24deg)", filter: "blur(5px)" },
+              { opacity: 1, transform: "translateY(0) rotate(0deg) scaleY(1)", filter: "blur(0px)", offset: .82, easing: "cubic-bezier(.55,0,.75,.5)" },
               { transform: "translateY(0) rotate(0deg) scaleY(.78)" },
               { transform: "translateY(0) rotate(0deg) scaleY(1)" }
             ],
@@ -856,17 +880,21 @@
               ],
               { duration: 300, fill: "both" }
             ));
-            setTimeout(sparkBurst, 190);
-            ghostTrail(80, 0.32);
-            ghostTrail(160, 0.18);
-            anims.push(W.one.animate(
-              [
-                { transform: "translate(" + dOne + "px,0) rotate(0deg)", easing: "cubic-bezier(.3,.5,.5,1)" },
-                { transform: "translate(" + dOne * 0.5 + "px," + -jump + "px) rotate(180deg)", easing: "cubic-bezier(.5,0,.7,.5)" },
-                { transform: "translate(0,0) rotate(360deg)" }
-              ],
-              { duration: 700, fill: "both" }
-            ));
+            setTimeout(sparkBurst, 200);
+            ghostTrail(230, 0.32);
+            ghostTrail(310, 0.18);
+            shockRing(xOne - em * 0.05, lineCy, 205, 3.1);
+            shockRing(fOne.x + fOne.w / 2, lineCy, 2660, 2.4);
+            setTimeout(function () {
+              anims.push(W.one.animate(
+                [
+                  { transform: "translate(" + dOne + "px,0) rotate(0deg)", filter: "blur(0px)", easing: "cubic-bezier(.3,.5,.5,1)" },
+                  { transform: "translate(" + dOne * 0.5 + "px," + -jump + "px) rotate(180deg)", filter: "blur(2px)", easing: "cubic-bezier(.5,0,.7,.5)" },
+                  { transform: "translate(0,0) rotate(360deg)", filter: "blur(0px)" }
+                ],
+                { duration: 700, fill: "both" }
+              ));
+            }, 150);
             [W.key, W.way].forEach(function (el, i) {
               var d = i === 0 ? dKey : dWay;
               anims.push(el.animate(
@@ -914,10 +942,24 @@
               ],
               { duration: 340 }
             ));
-          }, 2480);
+          }, 2630);
 
-          // 尾声:品牌蓝下划线扫过 keyway.one,末端跳出一颗星收尾
-          setTimeout(underlineSweep, 2920);
+          // 尾声:流光下划线 + 环境光晕 + 整体 spring 收尾 + 末端跳星
+          setTimeout(function () {
+            underlineSweep();
+            var g = document.createElement("span");
+            g.className = "kw-glow";
+            h1.appendChild(g);
+            g.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 600, fill: "forwards" });
+            anims.push(seq.animate(
+              [{ transform: "scale(1.05)" }, { transform: "scale(1)" }],
+              { duration: 420, easing: "cubic-bezier(.25,.9,.3,1.35)" }
+            ));
+            setTimeout(function () {
+              var u = seq.querySelector(".kw-underline");
+              if (u) u.animate([{ backgroundPosition: "130% 0" }, { backgroundPosition: "-30% 0" }], { duration: 750, easing: "ease-out" });
+            }, 470);
+          }, 2990);
           setTimeout(function () {
             var st = document.createElement("span");
             st.className = "kw-spark";
@@ -933,7 +975,7 @@
               ],
               { duration: 460 }
             ).onfinish = function () { st.remove(); };
-          }, 3330);
+          }, 3400);
 
           // 收尾:清掉动画保持态与钥匙,回到自然终态(DOM 顺序即 keyway.one)
           setTimeout(function () {
@@ -945,7 +987,7 @@
             if (keyEl.parentNode) keyEl.remove();
             W.one.classList.add("kw-landed"); // 类在收尾后保留,维持蓝色 .one
             playing = false;
-          }, 3220);
+          }, 3350);
         }
 
         h1.addEventListener("click", function () { play(false); });
