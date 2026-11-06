@@ -43,7 +43,7 @@
 
 从 [Releases](https://github.com/anmutu/keyway/releases/latest) 下载对应平台安装包。
 
-> **macOS 首次打开**:安装包未做 Apple 公证(个人开源项目),双击若提示「无法验证开发者」——在 Finder 里**右键点 Keyway.app → 打开 → 再点「打开」**即可,仅首次需要。
+> **macOS 首次打开**:安装包未做 Apple 公证(个人开源项目)。若提示「无法验证开发者」——在 Finder 里**右键点 Keyway.app → 打开 → 再点「打开」**;若提示**「已损坏」**(浏览器下载常见),在终端执行 `xattr -dr com.apple.quarantine /Applications/Keyway.app` 后再启动——应用本身完好,只是被 Gatekeeper 误标。
 > **Windows**:SmartScreen 提示时选「仍要运行」。
 
 ## 🚀 快速开始

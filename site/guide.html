@@ -203,7 +203,7 @@
           <a class="dl-alt" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="gS1dlAll">全部平台安装包 ›</a>
         </p>
         <ul>
-          <li data-i18n="gS1l1">首次打开若提示「无法验证开发者」:在「应用程序」里<b>右键点 Keyway → 打开</b>;或在 <b>系统设置 → 隐私与安全性</b> 中点击「仍要打开」。</li>
+          <li data-i18n="gS1l1">首次打开若提示「无法验证开发者」或<b>「已损坏」</b>:前者可右键点 Keyway → 打开;提示「已损坏」时,在「终端」执行 <code>xattr -dr com.apple.quarantine /Applications/Keyway.app</code> 后再启动(浏览器下载的未公证应用会被 macOS 误标,应用本身完好)。</li>
           <li data-i18n="gS1l0">认准下载按钮显示的版本和文件名(Apple 芯片示例为 <code>Keyway_{版本}_aarch64.dmg</code>):如果双击时提示「没有可打开的应用」,多半是没下载完整,删掉重新下载即可。</li>
           <li data-i18n="gS1l2">启动后 Keyway 会常驻<b>菜单栏(托盘)</b>,关闭窗口不影响代理运行。</li>
           <li data-i18n="gS1l3">本地代理默认监听 <code>127.0.0.1:9527</code>,只接受本机请求。</li>
