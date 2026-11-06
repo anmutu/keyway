@@ -184,8 +184,9 @@
       .prov-wall { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 26px; max-width: 760px; margin-left: auto; margin-right: auto; }
       .prov { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--hair); border-radius: 999px; padding: 8px 16px; font-size: 14.5px; color: var(--fg-2); background: rgba(255,255,255,.7); }
       .prov img { width: 18px; height: 18px; object-fit: contain; display: block; }
-      .prov.mine { border-color: rgba(0,102,204,.35); color: var(--fg); }
-      .prov.mine i { font-style: normal; font-size: 10.5px; color: var(--blue); border: 1px solid rgba(0,102,204,.3); border-radius: 999px; padding: 1px 7px; margin-left: 2px; }
+      .prov.linked { text-decoration: none; color: var(--fg); transition: border-color .15s, transform .15s; }
+      .prov.linked:hover { border-color: var(--blue); transform: translateY(-1px); }
+      .prov.linked::after { content: "↗"; font-size: 11px; color: var(--fg-3); margin-left: 2px; }
       .prov.more { border-style: dashed; }
       .pv-note { font-size: 13px; color: var(--fg-3); max-width: 640px; margin: 18px auto 0; }
       .pv-note a { color: var(--blue); }
@@ -554,11 +555,11 @@
           <span class="prov"><img src="./icons/qwen.svg" alt="Qwen" />Qwen</span>
           <span class="prov"><img src="./icons/siliconflow.svg" alt="SiliconFlow" />SiliconFlow</span>
           <span class="prov"><img src="./icons/openrouter.svg" alt="OpenRouter" />OpenRouter</span>
-          <span class="prov mine" title="与 Keyway 同一维护者,关系披露"><img src="./icons/coderplan.svg" alt="CoderPlan" />CoderPlan<i data-i18n="pvMine">关联项目</i></span>
-          <span class="prov mine" title="与 Keyway 同一维护者,关系披露"><img src="./icons/teapotrouter.png" alt="TeapotRouter" />TeapotRouter<i data-i18n="pvMine">关联项目</i></span>
+          <a class="prov linked" href="https://coderplan.ai" target="_blank" rel="noreferrer"><img src="./icons/coderplan.svg" alt="CoderPlan" />CoderPlan</a>
+          <a class="prov linked" href="https://teapotrouter.com" target="_blank" rel="noreferrer"><img src="./icons/teapotrouter.png" alt="TeapotRouter" />TeapotRouter</a>
           <span class="prov more" data-i18n="pvMore">+ 自定义兼容端点</span>
         </div>
-        <p class="pv-note" data-i18n="pvNote">标注「关联项目」的条目由 Keyway 维护者同时维护;所有收录供应商执行相同的连通性与安全检查,关系如实披露。想推荐你的服务?<a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer" data-i18n="pvSubmitLink">提交收录申请</a>。</p>
+        <p class="pv-note" data-i18n="pvNote">CoderPlan 与 TeapotRouter 由 Keyway 维护者同时维护;所有收录供应商执行相同的连通性与安全检查,关系如实披露。想推荐你的服务?<a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer" data-i18n="pvSubmitLink">提交收录申请</a>。</p>
       </div>
     </section>
 
