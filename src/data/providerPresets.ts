@@ -35,7 +35,8 @@ export interface ProviderPreset {
 }
 
 const relayPreset: ProviderPreset = {
-  name: "Relay Gateway",
+  name: "TeapotRouter",
+  icon: "teapotrouter",
   baseUrl: "",
   category: "aggregator",
   requiresBaseUrl: true,

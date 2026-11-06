@@ -1,5 +1,6 @@
 import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { providerBrandKey } from "@/lib/providerBrand";
 
 /**
  * 品牌图标:lobehub 静态 SVG(MIT)。
@@ -27,6 +28,7 @@ const BRAND: Record<string, { src: string; darkInvert?: boolean; full?: boolean 
   stepfun: { src: "icons/stepfun.svg" },
   modelscope: { src: "icons/modelscope-color.svg" },
   coderplan: { src: "icons/coderplan.svg", full: true },
+  teapotrouter: { src: "icons/teapotrouter.png", full: true },
   // CLI 分组品牌(官方发布渠道获取;商标归各自所有者)
   iflow: { src: "icons/iflow.png", full: true },
   crush: { src: "icons/crush.png", full: true },
@@ -46,8 +48,8 @@ export function ProviderIcon({
   /** 占满父容器(父容器需有固定尺寸并自行圆角/裁切);与 size 互斥 */
   fill?: boolean;
 }) {
-  const key = icon?.toLowerCase() ?? "";
-  const brand = BRAND[key] ?? BRAND[name?.toLowerCase() ?? ""];
+  const key = providerBrandKey(icon ?? "", name);
+  const brand = BRAND[key];
 
   if (brand) {
     if (brand.full) {

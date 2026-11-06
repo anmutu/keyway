@@ -11,7 +11,7 @@ use rusqlite::{params, Connection};
 
 /// 当前 schema 版本,用于未来迁移校验。
 #[allow(dead_code)]
-pub const SCHEMA_VERSION: u32 = 9;
+pub const SCHEMA_VERSION: u32 = 10;
 
 pub fn create_tables(conn: &Connection) -> Result<()> {
     let version: u32 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
@@ -117,10 +117,83 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
     if version < 9 {
         migrate_v8_to_v9(conn)?;
     }
+    if version < 10 {
+        migrate_v9_to_v10(conn)?;
+    }
     conn.execute_batch(
         "CREATE INDEX IF NOT EXISTS idx_usage_app_created ON usage_log(app_type, created_at);",
     )?;
-    conn.execute_batch("PRAGMA user_version = 9;")?;
+    conn.execute_batch("PRAGMA user_version = 10;")?;
+    Ok(())
+}
+
+/// v9 → v10: relabel saved TeapotRouter endpoints so old generic Relay entries
+/// display the gateway brand. Only the exact production API hostname is changed.
+fn migrate_v9_to_v10(conn: &Connection) -> Result<()> {
+    let mut statement = conn
+        .prepare("SELECT id, name, base_url, endpoints FROM providers ORDER BY created_at, id")?;
+    let providers = statement
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+            ))
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    drop(statement);
+
+    let mut names = {
+        let mut statement = conn.prepare("SELECT LOWER(TRIM(name)) FROM providers")?;
+        let names = statement
+            .query_map([], |row| row.get::<_, String>(0))?
+            .collect::<std::result::Result<std::collections::HashSet<_>, _>>()?;
+        names
+    };
+
+    for (id, current_name, base_url, endpoints) in providers {
+        let mut endpoint_values = vec![base_url];
+        if let Ok(serde_json::Value::Object(map)) = serde_json::from_str(&endpoints) {
+            endpoint_values.extend(
+                map.into_values()
+                    .filter_map(|value| value.as_str().map(str::to_owned)),
+            );
+        }
+        let has_teapot_endpoint = endpoint_values
+            .into_iter()
+            .filter_map(|endpoint| reqwest::Url::parse(&endpoint).ok())
+            .any(|url| url.scheme() == "https" && url.host_str() == Some("api.teapotrouter.com"));
+        let normalized_name = current_name.trim().to_lowercase();
+        let is_legacy_relay_name = ["relay", "relay gateway", "中转网关", "teapot router"]
+            .iter()
+            .any(|legacy| {
+                normalized_name == *legacy
+                    || (normalized_name.starts_with(&format!("{legacy} ("))
+                        && normalized_name.ends_with(')')
+                        && normalized_name[legacy.len() + 2..normalized_name.len() - 1]
+                            .parse::<u32>()
+                            .is_ok())
+            });
+
+        if !has_teapot_endpoint || !is_legacy_relay_name {
+            continue;
+        }
+
+        names.remove(&current_name.trim().to_lowercase());
+        let mut candidate = "TeapotRouter".to_owned();
+        let mut suffix = 2;
+        while names.contains(&candidate.to_lowercase()) {
+            candidate = format!("TeapotRouter ({suffix})");
+            suffix += 1;
+        }
+        conn.execute(
+            "UPDATE providers SET name = ?1 WHERE id = ?2",
+            params![candidate, id],
+        )?;
+        names.insert(candidate.to_lowercase());
+    }
+
     Ok(())
 }
 
@@ -507,5 +580,54 @@ mod tests {
             )
             .unwrap();
         assert_eq!(indexed, 1);
+    }
+
+    #[test]
+    fn v9_migration_renames_only_teapotrouter_relay_records() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE providers (
+                id TEXT PRIMARY KEY,
+                app_type TEXT NOT NULL,
+                name TEXT NOT NULL,
+                base_url TEXT NOT NULL,
+                keychain_id TEXT,
+                models TEXT NOT NULL DEFAULT '[]',
+                is_current INTEGER NOT NULL DEFAULT 0,
+                is_healthy INTEGER NOT NULL DEFAULT 1,
+                sort_index INTEGER NOT NULL DEFAULT 0,
+                created_at INTEGER NOT NULL DEFAULT 0,
+                meta TEXT NOT NULL DEFAULT '{}',
+                endpoints TEXT NOT NULL DEFAULT '{}'
+            );
+            PRAGMA user_version = 9;",
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO providers(id, app_type, name, base_url, endpoints)
+             VALUES
+                ('teapot-1', 'claude', 'Relay', 'https://api.teapotrouter.com', '{}'),
+                ('teapot-2', 'codex', 'Relay Gateway', 'https://api.example', '{\"openai\":\"https://api.teapotrouter.com/v1\"}'),
+                ('custom-relay', 'claude', 'Relay', 'https://relay.example', '{}'),
+                ('personal-name', 'claude', 'My Teapot', 'https://api.teapotrouter.com', '{}'),
+                ('lookalike-host', 'claude', 'Relay', 'https://api.teapotrouter.com.example/v1', '{}')",
+            [],
+        )
+        .unwrap();
+
+        create_tables(&conn).unwrap();
+
+        let names: std::collections::HashMap<String, String> = conn
+            .prepare("SELECT id, name FROM providers")
+            .unwrap()
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+            .unwrap()
+            .map(Result::unwrap)
+            .collect();
+        assert_eq!(names["teapot-1"], "TeapotRouter");
+        assert_eq!(names["teapot-2"], "TeapotRouter (2)");
+        assert_eq!(names["custom-relay"], "Relay");
+        assert_eq!(names["personal-name"], "My Teapot");
+        assert_eq!(names["lookalike-host"], "Relay");
     }
 }
