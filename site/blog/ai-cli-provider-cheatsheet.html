@@ -52,9 +52,18 @@
     .next:hover { border-color:var(--blue); }
     .next .tag { color:var(--blue); font-size:12px; font-weight:600; }
     .next h2 { margin:6px 0 4px; font-size:18px; }
+
+      .bnav { position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; height: 46px; padding: 0 22px; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,.06); }
+      .bnav .brand { font-weight: 600; color: #1d1d1f; text-decoration: none; font-size: 14px; }
+      .bnav nav { display: flex; gap: 20px; align-items: center; }
+      .bnav nav a { color: rgba(0,0,0,.78); text-decoration: none; font-size: 13px; }
+      .bnav nav a:hover { color: #000; }
+      .bnav nav a.dl { color: #0066cc; font-weight: 500; }
   </style>
 </head>
 <body>
+<nav class="bnav"><a class="brand" href="../">Keyway</a><nav><a href="../">首页</a><a href="./">博客</a><a href="../guide.html">指南</a><a class="dl" href="https://github.com/anmutu/keyway/releases">下载</a></nav></nav>
+
   <main>
     <h1>三家 CLI 配置对照总表,以及管理工具的原理</h1>
     <p class="meta"><a href="./">博客</a> · 系列 · 第 6 篇(收官)· 2026-11-06 · 约 7 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>

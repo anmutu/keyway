@@ -50,9 +50,18 @@
     .next:hover { border-color:var(--blue); }
     .next .tag { color:var(--blue); font-size:12px; font-weight:600; }
     .next h2 { margin:6px 0 4px; font-size:18px; }
+
+      .bnav { position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; height: 46px; padding: 0 22px; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,.06); }
+      .bnav .brand { font-weight: 600; color: #1d1d1f; text-decoration: none; font-size: 14px; }
+      .bnav nav { display: flex; gap: 20px; align-items: center; }
+      .bnav nav a { color: rgba(0,0,0,.78); text-decoration: none; font-size: 13px; }
+      .bnav nav a:hover { color: #000; }
+      .bnav nav a.dl { color: #0066cc; font-weight: 500; }
   </style>
 </head>
 <body>
+<nav class="bnav"><a class="brand" href="../">Keyway</a><nav><a href="../">Home</a><a href="./">Blog</a><a href="../../guide.html">Guide</a><a class="dl" href="https://github.com/anmutu/keyway/releases">Download</a></nav></nav>
+
   <main>
     <h1>"Changed the config, nothing happened" — how AI CLIs load settings</h1>
     <p class="meta"><a href="./">Blog</a> · Series · Part 5 · 2026-11-06 · ~5 min · <a href="https://github.com/anmutu/keyway">author</a></p>

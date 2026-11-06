@@ -179,6 +179,16 @@
       .install-line button { border: 1px solid var(--hair); background: #fff; color: var(--fg-2); padding: 7px 16px; border-radius: 980px; font-size: 13px; cursor: pointer; transition: all .15s; }
       .install-line button:hover { border-color: var(--blue); color: var(--blue); }
 
+      /* 供应商预设一览 */
+      .prov-wall { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 26px; max-width: 760px; margin-left: auto; margin-right: auto; }
+      .prov { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--hair); border-radius: 999px; padding: 8px 16px; font-size: 14.5px; color: var(--fg-2); background: rgba(255,255,255,.7); }
+      .prov img { width: 18px; height: 18px; object-fit: contain; display: block; }
+      .prov.mine { border-color: rgba(0,102,204,.35); color: var(--fg); }
+      .prov.mine i { font-style: normal; font-size: 10.5px; color: var(--blue); border: 1px solid rgba(0,102,204,.3); border-radius: 999px; padding: 1px 7px; margin-left: 2px; }
+      .prov.more { border-style: dashed; }
+      .pv-note { font-size: 13px; color: var(--fg-3); max-width: 640px; margin: 18px auto 0; }
+      .pv-note a { color: var(--blue); }
+
       /* ============ 开场:One key · one way → keyway.one 变形记 ============ */
       .hero h1 .kw-seq { position: relative; display: inline-block; white-space: nowrap; cursor: pointer; outline: none; }
       .hero h1 .kw { display: inline-block; will-change: transform, opacity, filter; }
@@ -528,6 +538,29 @@
     </section>
 
     <!-- 三步 -->
+    <!-- 供应商预设一览 -->
+    <section id="providers">
+      <div class="container">
+        <h2>Common providers built in — just paste your key.</h2>
+        <p class="sub">Presets for official endpoints, popular model services and third-party gateways; any OpenAI / Anthropic / Gemini compatible endpoint works too.</p>
+        <div class="prov-wall">
+          <span class="prov"><img src="../icons/claude.svg" alt="Claude" />Claude</span>
+          <span class="prov"><img src="../icons/openai.svg" alt="OpenAI" />OpenAI</span>
+          <span class="prov"><img src="../icons/gemini.svg" alt="Gemini" />Gemini</span>
+          <span class="prov"><img src="../icons/deepseek.svg" alt="DeepSeek" />DeepSeek</span>
+          <span class="prov"><img src="../icons/kimi.svg" alt="Kimi" />Kimi</span>
+          <span class="prov"><img src="../icons/zhipu.svg" alt="GLM" />GLM</span>
+          <span class="prov"><img src="../icons/qwen.svg" alt="Qwen" />Qwen</span>
+          <span class="prov"><img src="../icons/siliconflow.svg" alt="SiliconFlow" />SiliconFlow</span>
+          <span class="prov"><img src="../icons/openrouter.svg" alt="OpenRouter" />OpenRouter</span>
+          <span class="prov mine" title="Keyway 维护者同时维护的项目,如实披露"><img src="../icons/coderplan.svg" alt="CoderPlan" />CoderPlan<i>maintainer's</i></span>
+          <span class="prov mine" title="Keyway 维护者同时维护的项目,如实披露"><img src="../icons/teapotrouter.png" alt="TeapotRouter" />TeapotRouter<i>maintainer's</i></span>
+          <span class="prov more">+ custom endpoints</span>
+        </div>
+        <p class="pv-note">标注「维护者项目」的条目与 Keyway 为同一维护者;收录与所有供应商执行相同的连通性与安全检查,关系如实披露。想推荐你的服务?<a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer">Submit a provider</a>。</p>
+      </div>
+    </section>
+
     <section class="alt" id="quickstart">
       <div class="container">
         <h2>Up and running in three steps.</h2>
