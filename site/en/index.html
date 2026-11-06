@@ -174,6 +174,11 @@
       }
       .hero-shot img { display: block; width: 100%; }
 
+      .install-line { margin: 8px 0 0; display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
+      .install-line code { background: var(--bg-alt); border: 1px solid var(--hair); padding: 7px 14px; border-radius: 10px; font-size: 13.5px; }
+      .install-line button { border: 1px solid var(--hair); background: #fff; color: var(--fg-2); padding: 7px 16px; border-radius: 980px; font-size: 13px; cursor: pointer; transition: all .15s; }
+      .install-line button:hover { border-color: var(--blue); color: var(--blue); }
+
       /* ============ 开场:One key · one way → keyway.one 变形记 ============ */
       .hero h1 .kw-seq { position: relative; display: inline-block; white-space: nowrap; cursor: pointer; outline: none; }
       .hero h1 .kw { display: inline-block; will-change: transform, opacity, filter; }
@@ -387,7 +392,8 @@
         <a class="alink" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.17/Keyway_0.2.17_amd64.AppImage">Linux AppImage</a>
         <a class="alink" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">All platforms</a>
       </div>
-      <p class="platform-links" style="margin-top:10px;"><span>macOS: one terminal line installs (or updates) — no Gatekeeper prompts:</span><code style="background:var(--bg-alt);padding:3px 8px;border-radius:6px;font-size:13px;">curl -fsSL https://keyway.one/install.sh | sh</code></p>
+      <p class="platform-links" style="margin-top:10px;"><span>macOS: one terminal line installs (or updates) — no Gatekeeper prompts:</span></p>
+      <p class="install-line"><code id="installCmd">curl -fsSL https://keyway.one/install.sh | sh</code><button id="copyInstallBtn" type="button">Copy</button></p>
       <p class="download-note" data-release-version>最新正式版 v0.2.17 · macOS / Windows / Linux</p>
       <div class="hero-shot">
         <div class="win-bar"><i></i><i></i><i></i><span>Keyway</span></div>
@@ -899,6 +905,14 @@
         }
 
         h1.addEventListener("click", function () { play(false); });
+
+        var copyBtn = document.getElementById("copyInstallBtn");
+        if (copyBtn) copyBtn.addEventListener("click", function () {
+          var cmd = document.getElementById("installCmd");
+          var done = function () { copyBtn.textContent = "✓ Copied"; setTimeout(function () { copyBtn.textContent = "Copy"; }, 1600); };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(cmd.textContent.trim()).then(done, done);
+          else { var r = document.createRange(); r.selectNodeContents(cmd); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); document.execCommand("copy"); sel.removeAllRanges(); done(); }
+        });
         play(true);
       })();
     </script>

@@ -85,6 +85,17 @@
   applyRelease(fallback);
   fetch("https://api.github.com/repos/anmutu/keyway/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
     .then(function (response) { return response.ok ? response.json() : null; })
-    .then(function (release) { if (validRelease(release)) applyRelease(release); })
-    .catch(function () {});
+    .then(function (release) { if (validRelease(release)) { applyRelease(release); return true; } return false; })
+    .catch(function () { return false; })
+    .then(function (applied) {
+      if (applied) return;
+      // GitHub API 不可达(常见于部分网络)时,从同源镜像读最新版本号
+      fetch("https://keyway.one/downloads/latest-version.txt", { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.text() : ""; })
+        .then(function (t) {
+          var tag = (t || "").trim();
+          if (/^v\d+(\.\d+){2}$/.test(tag)) applyRelease({ tag_name: tag, assets: [] });
+        })
+        .catch(function () {});
+    });
 })();
