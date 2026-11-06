@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>"Changed the config, nothing happened" — how AI CLIs load settings — Keyway Blog</title>
+  <meta name="description" content="Process-startup snapshots, shell config timing, the setx new-window rule, IDE terminal inheritance — one timeline and a five-step diagnostic for the biggest trap in manual AI CLI configuration." />
+  <link rel="canonical" href="https://keyway.one/en/blog/why-config-not-applied.html" />
+  <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/blog/why-config-not-applied.html" />
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "Article", "headline": "\"Changed the config, nothing happened\" — how AI CLIs load settings", "url": "https://keyway.one/en/blog/why-config-not-applied.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  </script>
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+    { "@type": "Question", "name": "Why don't config edits apply to a running CLI?", "acceptedAnswer": { "@type": "Answer", "text": "Nearly all CLIs read config and environment exactly once at process startup. It's deliberate: a session whose configuration can change mid-flight would be unpredictable — billing, context and debugging would all break." } },
+    { "@type": "Question", "name": "Why can't the current window see a variable after setx?", "acceptedAnswer": { "@type": "Answer", "text": "setx writes the user variable into the registry and only affects processes started afterwards. The current window's environment is the snapshot from when it started. Use $env:NAME=value for the current window, or open a new one." } },
+    { "@type": "Question", "name": "Why can't IDE terminals see my new variable?", "acceptedAnswer": { "@type": "Answer", "text": "IDE integrated terminals inherit the IDE main process's environment — and the IDE usually started before your change. Reopening the tab isn't enough; restart the whole IDE." } }
+  ] }
+  </script>
+  <style>
+    :root { --fg:#1d1d1f; --fg-2:#62626d; --fg-3:#86868b; --blue:#0066cc; --hair:rgba(0,0,0,.1); --bg-alt:#f5f5f7; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif; color:var(--fg); background:#fff; line-height:1.78; -webkit-font-smoothing:antialiased; }
+    main { max-width:720px; margin:0 auto; padding:56px 22px 90px; }
+    h1 { font-size:30px; font-weight:700; letter-spacing:-.012em; line-height:1.3; margin:0 0 6px; }
+    .meta { color:var(--fg-3); font-size:13px; margin-bottom:26px; }
+    .meta a { color:var(--blue); text-decoration:none; }
+    h2 { font-size:21px; font-weight:650; margin:40px 0 12px; }
+    h3 { font-size:17px; font-weight:600; margin:26px 0 8px; }
+    p { color:var(--fg-2); font-size:16px; margin:10px 0; }
+    p b, li b { color:var(--fg); font-weight:600; }
+    ul, ol { color:var(--fg-2); font-size:15.5px; padding-left:22px; }
+    li { margin:6px 0; }
+    a { color:var(--blue); }
+    code { background:var(--bg-alt); padding:2px 7px; border-radius:6px; font-size:14px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+    pre { background:var(--bg-alt); border:1px solid var(--hair); border-radius:12px; padding:16px 18px; overflow-x:auto; font-size:13.5px; line-height:1.65; }
+    pre code { background:none; padding:0; font-size:13.5px; }
+    .answer { background:rgba(0,102,204,.06); border:1px solid rgba(0,102,204,.25); border-radius:12px; padding:16px 18px; margin:18px 0; }
+    .answer b { color:var(--blue); }
+    table { width:100%; border-collapse:collapse; font-size:14.5px; margin:14px 0; }
+    th { text-align:left; padding:8px 10px; border-bottom:2px solid var(--hair); font-weight:600; }
+    td { padding:8px 10px; border-bottom:1px solid var(--hair); color:var(--fg-2); vertical-align:top; }
+    td:first-child { color:var(--fg); }
+    details { border:1px solid var(--hair); border-radius:12px; padding:12px 16px; margin:10px 0; }
+    summary { font-weight:600; cursor:pointer; font-size:15px; }
+    details p { margin:8px 0 2px; }
+    footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
+    footer a { color:var(--blue); text-decoration:none; }
+    .next { display:block; text-decoration:none; color:inherit; border:1px solid var(--hair); border-radius:14px; padding:18px 20px; margin-top:36px; }
+    .next:hover { border-color:var(--blue); }
+    .next .tag { color:var(--blue); font-size:12px; font-weight:600; }
+    .next h2 { margin:6px 0 4px; font-size:18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>"Changed the config, nothing happened" — how AI CLIs load settings</h1>
+    <p class="meta"><a href="./">Blog</a> · Series · Part 5 · 2026-11-06 · ~5 min · <a href="https://github.com/anmutu/keyway">author</a></p>
+
+    <div class="answer"><b>The 30-second answer:</b>because everything was read <b>in the past</b> — shell config runs <b>when the window opens</b>, environment variables are snapshotted <b>when the CLI process starts</b>, config files are read <b>once at startup</b>. You edit the present; the program sees the world as it was at birth. <b>New window + new process</b> is the universal fix.</div>
+
+    <h2>1. One timeline says it all</h2>
+    <pre><code>Yesterday                       Today
+  │                              │
+  ▼                              ▼
+terminal window opened           you edit .zshrc / setx / config.toml
+  │                              │
+  ▼                              ▼
+shell ran .zshrc ──► env ready   (these changes affect nothing that exists)
+  │
+  ▼
+CLI process started: env snapshot + config read ──► never read again
+  │
+  ▼
+you edit files today, same window ──► the running CLI knows nothing</code></pre>
+    <p>Three snapshot layers stack: the window layer (shell config), the process layer (env vars), the application layer (config files). A change in any layer must re-run everything downstream of it.</p>
+
+    <h2>2. Refresh rules per OS</h2>
+    <table>
+      <tr><th>What you changed</th><th>macOS / Linux</th><th>Windows</th></tr>
+      <tr><td>var in shell config</td><td><code>source ~/.zshrc</code> or new window</td><td>—(see next row)</td></tr>
+      <tr><td>user env var (setx)</td><td>—</td><td><b>must open a new</b> PowerShell/CMD window; <code>$env:NAME=value</code> for the current one</td></tr>
+      <tr><td>CLI config file</td><td colspan="2" style="color:var(--fg)">new CLI session (same for all three CLIs)</td></tr>
+      <tr><td>IDE integrated terminal</td><td colspan="2" style="color:var(--fg)">inherits the IDE's environment — <b>restart the whole IDE</b>; a new tab doesn't help</td></tr>
+    </table>
+
+    <h2>3. The five-step diagnostic (in order, stop when one hits)</h2>
+    <ol>
+      <li><b>In the same window</b>, print the variable: <code>echo $MY_KEY</code> (macOS/Linux) / <code>echo $env:MY_KEY</code> (Windows).<br />Doesn't print → window layer: wrong place, or an old window.</li>
+      <li><b>Single definition?</b> Grep your shell config + check the CLI's own file; the same name in both → delete one (single-source-of-truth).</li>
+      <li><b>Is the process new?</b> Was the current session started before your edit? Restart it.</li>
+      <li><b>Is the file valid?</b> A JSON/TOML syntax error can void the whole file — run it through a validator; check .env for stray quotes/spaces.</li>
+      <li><b>Bypass the CLI:</b> curl the upstream directly with the address and key (commands in earlier parts). curl works but CLI doesn't → CLI config; curl fails too → provider or network.</li>
+    </ol>
+
+    <h2>4. Why do these tools read "only once"?</h2>
+    <p>Not laziness — stability. If configuration could change mid-session, two requests from one conversation might land on different providers, and billing, context and debugging would all unravel. "Decided at startup" is a deliberate engineering choice shared by all these CLIs. <b>The conflict is human:</b>people want to switch on a whim; configuration is inherently frozen. That conflict is the protagonist of the final article.</p>
+
+    <h2>FAQ</h2>
+    <details><summary>Still broken after source?</summary><p>Confirm the file your shell actually loads: macOS defaults to zsh and ~/.zshrc, but oh-my-zsh or a changed shell alters this. <code>echo $SHELL</code> first.</p></details>
+    <details><summary>Is there a way to make changes instant?</summary><p>Not for a running session (see section 4). Getting close requires a local-proxy style setup — the next article explains how it works.</p></details>
+    <details><summary>What about CI and servers?</summary><p>CI starts fresh processes every run, so no stale snapshots — the real trap there is keys leaking into logs or repos. Long-running services on servers: same rule, restart after .env changes.</p></details>
+
+    <a class="next" href="./ai-cli-provider-cheatsheet.html">
+      <span class="tag">Series · Part 6 · Finale</span>
+      <h2>The three-CLI cheat sheet, and how manager tools work →</h2>
+      <p>Every detail in one table; then how a local proxy turns a six-step switch into one click.</p>
+    </a>
+  </main>
+  <footer>© 2026 Keyway · <a href="./">Blog</a> · <a href="../">Home</a> · <a href="../../guide.html">Guide</a></footer>
+</body>
+</html>

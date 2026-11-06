@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog — Keyway</title>
+  <meta name="description" content="The AI CLI provider config series: switch Codex, Claude Code and Gemini CLI to any provider by hand — no tools — and understand the full path of a request." />
+  <link rel="canonical" href="https://keyway.one/en/blog/" />
+  <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/blog/" />
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "Blog", "name": "Keyway Blog", "url": "https://keyway.one/en/blog/", "inLanguage": "en", "description": "AI CLI provider configuration, illustrated: hands-on guides and how the request path works.", "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  </script>
+  <style>
+    :root { --fg:#1d1d1f; --fg-2:#62626d; --fg-3:#86868b; --blue:#0066cc; --hair:rgba(0,0,0,.1); --bg-alt:#f5f5f7; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif; color:var(--fg); background:#fff; line-height:1.75; -webkit-font-smoothing:antialiased; }
+    main { max-width:720px; margin:0 auto; padding:56px 22px 80px; }
+    h1 { font-size:32px; font-weight:700; letter-spacing:-.01em; margin:0 0 8px; }
+    .sub { color:var(--fg-2); font-size:16px; margin:0 0 34px; }
+    a.post { display:block; text-decoration:none; color:inherit; padding:22px 20px; border:1px solid var(--hair); border-radius:14px; margin-bottom:16px; transition: border-color .15s, transform .15s; }
+    a.post:hover { border-color:var(--blue); transform: translateY(-1px); }
+    .post .tag { font-size:12px; color:var(--blue); font-weight:600; letter-spacing:.04em; }
+    .post h2 { font-size:19px; margin:6px 0 6px; font-weight:600; }
+    .post p { margin:0; color:var(--fg-2); font-size:14.5px; }
+    .post .meta { font-size:12.5px; color:var(--fg-3); margin-top:10px; }
+    footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
+    footer a { color:var(--blue); text-decoration:none; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Blog</h1>
+    <p class="sub">"AI CLI provider configuration, illustrated" — a 6-part series. Switch Codex, Claude Code and Gemini CLI to any provider <b>by hand, no tools</b>, and see the full path of every request.</p>
+
+    <a class="post" href="./switch-provider-by-hand.html">
+      <span class="tag">Series · Part 1 · Foundations</span>
+      <h2>Switching AI providers: the three things you must change</h2>
+      <p>Base URL, API key and protocol — three concepts made clear; where to edit them on macOS, Windows and Linux; and how to verify the switch worked. The map for the whole series.</p>
+      <div class="meta">2026-11-06 · ~5 min</div>
+    </a>
+
+    <a class="post" href="./codex-provider-by-hand.html">
+      <span class="tag">Series · Part 2 · Codex hands-on</span>
+      <h2>Codex, by hand: your provider lives in config.toml</h2>
+      <p>From scratch, with no tools: find config.toml, write a model_providers block, set the environment variable, open a new session, and verify with three commands — plus an error lookup table.</p>
+      <div class="meta">2026-11-06 · ~7 min</div>
+    </a>
+
+    <a class="post" href="./claude-code-provider-by-hand.html">
+      <span class="tag">Series · Part 3 · Claude Code hands-on</span>
+      <h2>Claude Code, by hand: settings.json vs environment variables</h2>
+      <p>How the env block works, AUTH_TOKEN vs API_KEY, the single-source-of-truth rule, and how to verify.</p>
+      <div class="meta">2026-11-06 · ~6 min</div>
+    </a>
+
+    <a class="post" href="./gemini-cli-provider-by-hand.html">
+      <span class="tag">Series · Part 4 · Gemini CLI hands-on</span>
+      <h2>Gemini CLI, by hand: .env, the base URL and two auth modes</h2>
+      <p>The correct .env format, API key vs OAuth login, and the classic "new process only" trap.</p>
+      <div class="meta">2026-11-06 · ~5 min</div>
+    </a>
+
+    <a class="post" href="./why-config-not-applied.html">
+      <span class="tag">Series · Part 5 · Mechanics</span>
+      <h2>"I changed the config and nothing happened" — how CLIs load settings</h2>
+      <p>Three layers of snapshots, one timeline, and a five-step diagnostic for the biggest trap in the series.</p>
+      <div class="meta">2026-11-06 · ~5 min</div>
+    </a>
+
+    <a class="post" href="./ai-cli-provider-cheatsheet.html">
+      <span class="tag">Series · Part 6 · Wrap-up</span>
+      <h2>The three-CLI cheat sheet, and how manager tools actually work</h2>
+      <p>Every detail in one table; then how a local proxy turns a six-step switch into one click.</p>
+      <div class="meta">2026-11-06 · ~6 min</div>
+    </a>
+  </main>
+  <footer>© 2026 Keyway · <a href="../">Home</a> · <a href="../../guide.html">Guide</a></footer>
+</body>
+</html>

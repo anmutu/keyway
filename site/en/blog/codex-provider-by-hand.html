@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Codex, by hand: your provider lives in config.toml — Keyway Blog</title>
+  <meta name="description" content="Point the Codex CLI at any provider by hand: find ~/.codex/config.toml, write a model_providers block, set the key as an environment variable, open a new session and verify — with an error lookup table." />
+  <link rel="canonical" href="https://keyway.one/en/blog/codex-provider-by-hand.html" />
+  <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/blog/codex-provider-by-hand.html" />
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "Article", "headline": "Codex, by hand: your provider lives in config.toml", "url": "https://keyway.one/en/blog/codex-provider-by-hand.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  </script>
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+    { "@type": "Question", "name": "Which file holds Codex provider config?", "acceptedAnswer": { "@type": "Answer", "text": "~/.codex/config.toml (on Windows: %USERPROFILE%\\.codex\\config.toml). Each custom provider is a [model_providers.name] block; the top-level model_provider key selects which one is active." } },
+    { "@type": "Question", "name": "Where does the Codex API key go?", "acceptedAnswer": { "@type": "Answer", "text": "In the environment variable named by the block's env_key field — e.g. env_key = \"MYRELAY_API_KEY\" means exporting a variable with that exact name. OpenAI official login credentials live separately in ~/.codex/auth.json and are unrelated." } },
+    { "@type": "Question", "name": "Why must I open a new session after editing config.toml?", "acceptedAnswer": { "@type": "Answer", "text": "The codex process reads config.toml and its environment exactly once, at startup. After editing: open a new terminal window (so env vars load) and start a new codex session." } },
+    { "@type": "Question", "name": "wire_api: responses or chat?", "acceptedAnswer": { "@type": "Answer", "text": "Two OpenAI interface styles: responses (the newer Responses API) and chat (classic Chat Completions). Which one works depends on the provider — follow their docs. A wrong choice typically shows up as 404 or parameter errors." } }
+  ] }
+  </script>
+  <style>
+    :root { --fg:#1d1d1f; --fg-2:#62626d; --fg-3:#86868b; --blue:#0066cc; --hair:rgba(0,0,0,.1); --bg-alt:#f5f5f7; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif; color:var(--fg); background:#fff; line-height:1.78; -webkit-font-smoothing:antialiased; }
+    main { max-width:720px; margin:0 auto; padding:56px 22px 90px; }
+    h1 { font-size:30px; font-weight:700; letter-spacing:-.012em; line-height:1.3; margin:0 0 6px; }
+    .meta { color:var(--fg-3); font-size:13px; margin-bottom:26px; }
+    .meta a { color:var(--blue); text-decoration:none; }
+    h2 { font-size:21px; font-weight:650; margin:40px 0 12px; }
+    h3 { font-size:17px; font-weight:600; margin:26px 0 8px; }
+    p { color:var(--fg-2); font-size:16px; margin:10px 0; }
+    p b, li b { color:var(--fg); font-weight:600; }
+    ul, ol { color:var(--fg-2); font-size:15.5px; padding-left:22px; }
+    li { margin:6px 0; }
+    a { color:var(--blue); }
+    code { background:var(--bg-alt); padding:2px 7px; border-radius:6px; font-size:14px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+    pre { background:var(--bg-alt); border:1px solid var(--hair); border-radius:12px; padding:16px 18px; overflow-x:auto; font-size:13.5px; line-height:1.65; }
+    pre code { background:none; padding:0; font-size:13.5px; }
+    .answer { background:rgba(0,102,204,.06); border:1px solid rgba(0,102,204,.25); border-radius:12px; padding:16px 18px; margin:18px 0; }
+    .answer b { color:var(--blue); }
+    table { width:100%; border-collapse:collapse; font-size:14.5px; margin:14px 0; }
+    th { text-align:left; padding:8px 10px; border-bottom:2px solid var(--hair); font-weight:600; }
+    td { padding:8px 10px; border-bottom:1px solid var(--hair); color:var(--fg-2); vertical-align:top; }
+    td:first-child { color:var(--fg); }
+    details { border:1px solid var(--hair); border-radius:12px; padding:12px 16px; margin:10px 0; }
+    summary { font-weight:600; cursor:pointer; font-size:15px; }
+    details p { margin:8px 0 2px; }
+    .os { display:inline-block; font-size:12px; font-weight:700; color:#fff; border-radius:6px; padding:1px 8px; margin-right:6px; letter-spacing:.03em; }
+    .os.mac { background:#555; } .os.win { background:#0078d4; } .os.linux { background:#e8a33d; color:#3a2c00; }
+    footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
+    footer a { color:var(--blue); text-decoration:none; }
+    .next { display:block; text-decoration:none; color:inherit; border:1px solid var(--hair); border-radius:14px; padding:18px 20px; margin-top:36px; }
+    .next:hover { border-color:var(--blue); }
+    .next .tag { color:var(--blue); font-size:12px; font-weight:600; }
+    .next h2 { margin:6px 0 4px; font-size:18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Codex, by hand: your provider lives in config.toml</h1>
+    <p class="meta"><a href="./">Blog</a> · Series · Part 2 · 2026-11-06 · ~7 min · <a href="https://github.com/anmutu/keyway">author</a></p>
+
+    <div class="answer"><b>The 30-second answer:</b>all of Codex's provider config lives in <code>~/.codex/config.toml</code>: write a <code>[model_providers.name]</code> block with the base URL, put the key in the environment variable named by <code>env_key</code>, point the top-level <code>model_provider</code> at the block, then <b>open a new terminal and a new codex session</b>. Editing the file without restarting the session changes nothing.</div>
+
+    <h2>1. Codex's path: decided at startup</h2>
+    <pre><code>codex session starts
+   │
+   │ reads ~/.codex/config.toml (exactly once!)
+   │    model_provider = "myrelay"        ← which provider is active
+   │    [model_providers.myrelay]
+   │       base_url = "https://…"          ← where requests go
+   │       env_key  = "MYRELAY_API_KEY"    ← the env var holding the key
+   │
+   │ reads MYRELAY_API_KEY from the environment
+   ▼
+HTTPS request ──► the provider at base_url ──► streaming reply</code></pre>
+    <p>Once this diagram clicks, the rest stops being "copy these commands" and becomes "I know which link of the chain I'm editing".</p>
+
+    <h2>2. Know the doors: where Codex keeps its config</h2>
+    <p>Before touching anything, look at the whole map. There are exactly three roles, and today we only touch one:</p>
+    <table>
+      <tr><th>File / place</th><th>What it owns</th><th>Touched today?</th></tr>
+      <tr><td><code>~/.codex/config.toml</code></td><td><b>Main config</b>: provider list, active provider, model, approval policy. The battlefield.</td><td>✅ only this</td></tr>
+      <tr><td><code>~/.codex/auth.json</code></td><td>OpenAI <b>official login credentials</b> (subscription mode). Not needed for custom providers.</td><td>❌ leave it alone</td></tr>
+      <tr><td>Environment variables</td><td><b>Where API keys live</b>, referenced by name via the <code>env_key</code> field.</td><td>✅ step 3</td></tr>
+    </table>
+    <p>Two preemptive notes:</p>
+    <ul>
+      <li>config.toml usually holds <b>more than providers</b> — model choice, safety policy, etc. This guide only adds/edits provider lines and leaves everything else untouched; <b>back up first</b> (step 1 does).</li>
+      <li>If the file doesn't exist, you simply haven't customized anything yet — step 1 creates it and Codex reads it as usual.</li>
+    </ul>
+    <p>On Windows, replace <code>~</code> with <code>%USERPROFILE%</code> (<code>C:\Users\you</code>); everything else is identical.</p>
+
+    <h2>3. Hands on: five steps (macOS as the base, OS deltas marked)</h2>
+
+    <h3>Step 1 · Find (or create) the config file</h3>
+    <p><span class="os mac">macOS</span>open Terminal and run:</p>
+    <pre><code>mkdir -p ~/.codex
+nano ~/.codex/config.toml     # or: open -e for TextEdit</code></pre>
+    <p><span class="os win">Windows</span>open PowerShell:</p>
+    <pre><code>mkdir $env:USERPROFILE\.codex -Force
+notepad $env:USERPROFILE\.codex\config.toml</code></pre>
+    <p><span class="os linux">Linux</span>is identical to macOS (<code>nano ~/.codex/config.toml</code>).</p>
+    <p>If the file already exists, edit it — and <b>copy a backup first</b> (the manual approach's life insurance):</p>
+    <pre><code>cp ~/.codex/config.toml ~/.codex/config.toml.bak</code></pre>
+
+    <h3>Step 2 · Write the provider block (copy-ready, change two lines)</h3>
+    <pre><code># Top level: which provider is active (points at the block below)
+model_provider = "myrelay"
+
+[model_providers.myrelay]
+name = "My Provider"                      # display name, anything you like
+base_url = "https://api.myrelay.com/v1"   # ← the URL your provider gave you
+env_key = "MYRELAY_API_KEY"               # which env var holds the key
+wire_api = "responses"                    # protocol: responses (new) or chat (classic)</code></pre>
+    <p>Line by line:</p>
+    <ul>
+      <li><b>model_provider</b>: the top-level switch. When you add a second provider later, this is the line you flip — remember it for the switching-cost section.</li>
+      <li><b>base_url</b>: the endpoint from the provider's docs. <b>Whether /v1 is included follows their docs</b>; Codex appends the API path after it.</li>
+      <li><b>env_key</b>: a variable <i>name</i>, never the key itself. By design — keys stay out of config files and out of git.</li>
+      <li><b>wire_api</b>: whichever the provider supports (their docs say). A wrong pick typically means 404 or parameter errors.</li>
+    </ul>
+
+    <h3>Step 3 · Put the key into an environment variable</h3>
+    <p><span class="os mac">macOS</span>(zsh, the default):</p>
+    <pre><code>echo 'export MYRELAY_API_KEY="sk-your-key"' >> ~/.zshrc
+source ~/.zshrc</code></pre>
+    <p><span class="os linux">Linux</span>(bash):</p>
+    <pre><code>echo 'export MYRELAY_API_KEY="sk-your-key"' >> ~/.bashrc
+source ~/.bashrc</code></pre>
+    <p><span class="os win">Windows</span>(PowerShell — <code>setx</code> writes the user variable permanently):</p>
+    <pre><code>setx MYRELAY_API_KEY "sk-your-key"
+# note: setx never affects the current window — close it and open a new one</code></pre>
+
+    <h3>Step 4 · New terminal, new session</h3>
+    <p>This is where 90% of "nothing changed" failures happen: codex <b>reads its config and environment exactly once at process startup</b>. The correct move: close the current terminal window → open a new one (loads the new variable) → start a new <code>codex</code> session.</p>
+
+    <h3>Step 5 · Verify</h3>
+    <ol>
+      <li><b>Variable present?</b><code>echo $MYRELAY_API_KEY</code> (Windows: <code>echo $env:MYRELAY_API_KEY</code>) — it only counts if it prints.</li>
+      <li><b>Upstream reachable?</b>(optional)
+        <pre><code>curl https://api.myrelay.com/v1/models \
+  -H "Authorization: Bearer $MYRELAY_API_KEY"</code></pre>
+        A JSON model list means address and key are both right. <b>401</b> = key problem; <b>404</b> = path problem (suspect /v1 first). Some providers don't expose a models endpoint — a 404 here with step 3 passing still counts as success.</li>
+      <li><b>The real thing:</b>ask anything in the new codex session — a normal streaming reply means the whole path works.</li>
+    </ol>
+
+    <h2>4. Error lookup table</h2>
+    <table>
+      <tr><th>Symptom</th><th>Most likely cause</th><th>Fix</th></tr>
+      <tr><td>Nothing changed</td><td>old session still running / variable not loaded</td><td>new terminal window + new codex session</td></tr>
+      <tr><td>401 Unauthorized</td><td>wrong key, not exported, or name ≠ env_key</td><td>echo the variable; check env_key spelling</td></tr>
+      <tr><td>404 Not Found</td><td>wrong base_url path / wrong wire_api</td><td>toggle /v1; match wire_api to the provider's docs</td></tr>
+      <tr><td>Connection timeout</td><td>network down or provider outage</td><td>curl the upstream directly; try another network</td></tr>
+      <tr><td>Model not found</td><td>model name this provider doesn't carry</td><td>use a name from their model list</td></tr>
+    </table>
+
+    <h2>5. A second provider? Back and forth? The real cost</h2>
+    <p>Adding one more provider: repeat step 2 with a new block and one more env var — that part is one-time. <b>Expensive is every switch:</b></p>
+    <pre><code>switch = open config.toml
+        → edit the top-level model_provider line
+        → save
+        → close the terminal window
+        → open a new window
+        → start a new codex session
+        → (maybe retry the question you were in the middle of)</code></pre>
+    <p>Once a day it's a ritual; several times an hour it's torture — and "this provider is rate-limited, use that one" or "route this model officially, that one via a third party" is precisely the daily reality of heavy users. Config files can't solve this, because they <b>have no memory and no concept of "switching"</b>. That's why manager tools exist — but first, Claude Code and Gemini CLI deserve the same manual walkthrough, so you get the complete picture of the pain. Next article.</p>
+
+    <h2>FAQ</h2>
+    <details><summary>What is auth.json? Does it conflict?</summary><p><code>~/.codex/auth.json</code> stores OpenAI official login credentials (subscription mode); custom providers go through config.toml + env vars. The two mechanisms don't interfere.</p></details>
+    <details><summary>Is a plaintext key in .zshrc / .bashrc safe?</summary><p>Same local exposure as config.toml. The risks are syncing dotfiles into public repos and screenshots. Never commit keys to git.</p></details>
+    <details><summary>Can two providers be "online" at once?</summary><p>Blocks can coexist, but the top-level model_provider has a single current value; switching means editing the file and restarting the session.</p></details>
+    <details><summary>Is there a way to avoid editing files every time?</summary><p>Yes — later in this series we'll cover how manager tools work (local-proxy takeover). If you're in a hurry, the <a href="../../guide.html">Keyway guide</a> is here.</p></details>
+
+    <a class="next" href="./switch-provider-by-hand.html">
+      <span class="tag">Series · Part 1</span>
+      <h2>← Switching AI providers: the three things you must change</h2>
+      <p>The overview: Base URL, API key and protocol, plus per-OS differences.</p>
+    </a>
+  </main>
+  <footer>© 2026 Keyway · <a href="./">Blog</a> · <a href="../">Home</a> · <a href="../../guide.html">Guide</a></footer>
+</body>
+</html>

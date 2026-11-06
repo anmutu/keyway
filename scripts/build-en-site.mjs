@@ -10,7 +10,7 @@ const EN_DICT = {
   readGuide: "Read the guide", navG2: "Guide",
   tagline: "Know where your requests go.",
   motto: "One key, one way.",
-  fPrivacy: "Privacy", fTerms: "Terms",
+  fPrivacy: "Privacy", fTerms: "Terms", fBlog: "Blog",
   heroSub: "The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.",
   heroProof1: "Local proxy first", heroProof2: "9 AI CLIs", heroProof3: "Encrypted local storage · MIT",
   learnMore: "Learn more", freeDl: "Download for Apple silicon", freeDl2: "Download free", submitProvider: "Suggest a provider",
@@ -99,6 +99,7 @@ html = html.replace(/(src|href)="\.\//g, '$1="../');
 // EN 页脚新增页面留在同目录(/en/)
 html = html.replace('href="../privacy.html"', 'href="./privacy.html"');
 html = html.replace('href="../terms.html"', 'href="./terms.html"');
+html = html.replace('href="../blog/"', 'href="./blog/"');
 
 // 英文页使用英文界面截图(正文相对路径;og/twitter/schema 在下方模板插入后统一替换)
 html = html.replace(/app-light\.png/g, "app-light-en.png");
@@ -209,7 +210,7 @@ writeFileSync(resolve(outDir, "index.html"), html);
 const checks = {
   "data-i18n": /data-i18n=/.test(html),
   "zh-CN html lang": /<html lang="zh-CN">/.test(html),
-  "./ asset paths": new RegExp('(?:src|href)="\\.\\/(?!privacy\\.html|terms\\.html)').test(html),
+  "./ asset paths": new RegExp('(?:src|href)="\\.\\/(?!privacy\\.html|terms\\.html|blog\\/)').test(html),
 };
 const canonicalCount = (html.match(/<link rel="canonical"/g) || []).length;
 const zhLdCount = (html.match(/的开源本地网关|无需重启会话切换供应商/g) || []).length;

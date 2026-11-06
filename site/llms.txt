@@ -11,6 +11,26 @@ Keyway（AI CLI 的本地网关）通过本机代理（127.0.0.1:9527）接管 A
 - [How to Switch Claude Code Providers (English)](https://keyway.one/en/switch-claude-code-provider.html): Step-by-step guide to switching Claude Code providers (third-party endpoints, proxies) without restarting sessions
 - [English site](https://keyway.one/en/): Keyway — Local gateway for Claude Code, Codex & Gemini CLI
 
+## Blog — AI CLI provider configuration series (中文)
+
+- [博客首页](https://keyway.one/blog/): 「AI CLI 供应商配置图解」系列(6 篇)
+- [换一家 AI 供应商,要动哪三个地方?](https://keyway.one/blog/switch-provider-by-hand.html): Base URL / API Key / 协议与三系统差异,系列总起
+- [Codex 手动换供应商:config.toml 逐行讲解](https://keyway.one/blog/codex-provider-by-hand.html): ~/.codex/config.toml、model_providers、env_key、验证与报错对照
+- [Claude Code 手动换供应商](https://keyway.one/blog/claude-code-provider-by-hand.html): settings.json env 块、ANTHROPIC_BASE_URL / AUTH_TOKEN / API_KEY、单一定义源
+- [Gemini CLI 手动换供应商](https://keyway.one/blog/gemini-cli-provider-by-hand.html): ~/.gemini/.env、GOOGLE_GEMINI_BASE_URL、API Key 与 OAuth
+- [为什么改了配置没生效?](https://keyway.one/blog/why-config-not-applied.html): 三层快照与五步排查法
+- [三家配置对照总表与管理工具原理](https://keyway.one/blog/ai-cli-provider-cheatsheet.html): 收官篇:对照表 + 本地代理原理
+
+## Blog — AI CLI provider configuration series (English)
+
+- [Blog home](https://keyway.one/en/blog/): the 6-part series
+- [Switching AI providers: the three things you must change](https://keyway.one/en/blog/switch-provider-by-hand.html): Base URL, API key, protocol — and per-OS locations
+- [Codex, by hand: config.toml](https://keyway.one/en/blog/codex-provider-by-hand.html): model_providers, env_key, verification, error table
+- [Claude Code, by hand: settings.json vs env vars](https://keyway.one/en/blog/claude-code-provider-by-hand.html): env block, AUTH_TOKEN vs API_KEY, single source of truth
+- [Gemini CLI, by hand: .env and two auth modes](https://keyway.one/en/blog/gemini-cli-provider-by-hand.html): GOOGLE_GEMINI_BASE_URL, API key vs OAuth
+- [Why config changes don't apply](https://keyway.one/en/blog/why-config-not-applied.html): three snapshot layers, five-step diagnostic
+- [The cheat sheet and how manager tools work](https://keyway.one/en/blog/ai-cli-provider-cheatsheet.html): wrap-up + local proxy explained
+
 ## Downloads
 
 - [Latest release](https://github.com/anmutu/keyway/releases/latest): macOS / Windows / Linux 安装包，免费下载

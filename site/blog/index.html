@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>博客 — Keyway</title>
+  <meta name="description" content="AI CLI 供应商配置图解系列:不用任何工具,手动配置 Codex、Claude Code、Gemini CLI 的接口地址与 API Key,看清一次请求的完整链路。" />
+  <link rel="canonical" href="https://keyway.one/blog/" />
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "Blog", "name": "Keyway 博客", "url": "https://keyway.one/blog/", "inLanguage": "zh-CN", "description": "AI CLI 供应商配置图解:手动配置教程与链路科普。", "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  </script>
+  <style>
+    :root { --fg:#1d1d1f; --fg-2:#62626d; --fg-3:#86868b; --blue:#0066cc; --hair:rgba(0,0,0,.1); --bg-alt:#f5f5f7; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; color:var(--fg); background:#fff; line-height:1.75; -webkit-font-smoothing:antialiased; }
+    main { max-width:720px; margin:0 auto; padding:56px 22px 80px; }
+    h1 { font-size:32px; font-weight:700; letter-spacing:-.01em; margin:0 0 8px; }
+    .sub { color:var(--fg-2); font-size:16px; margin:0 0 34px; }
+    a.post { display:block; text-decoration:none; color:inherit; padding:22px 20px; border:1px solid var(--hair); border-radius:14px; margin-bottom:16px; transition: border-color .15s, transform .15s; }
+    a.post:hover { border-color:var(--blue); transform: translateY(-1px); }
+    .post .tag { font-size:12px; color:var(--blue); font-weight:600; letter-spacing:.04em; }
+    .post h2 { font-size:19px; margin:6px 0 6px; font-weight:600; }
+    .post p { margin:0; color:var(--fg-2); font-size:14.5px; }
+    .post .meta { font-size:12.5px; color:var(--fg-3); margin-top:10px; }
+    footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
+    footer a { color:var(--blue); text-decoration:none; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>博客</h1>
+    <p class="sub">「AI CLI 供应商配置图解」系列(共 6 篇)——不用任何工具,手动把 Codex、Claude Code、Gemini CLI 配到任意供应商,看清一次请求的完整链路;最后一张总表收藏全部细节。</p>
+
+    <a class="post" href="./switch-provider-by-hand.html">
+      <span class="tag">系列 · 第 1 篇 · 链路基础</span>
+      <h2>换一家 AI 供应商,你的电脑上要动哪三个地方?</h2>
+      <p>接口地址、API Key、协议——三个概念讲清楚;macOS / Windows / Linux 分别去哪里改;配完怎么确认成功。整个系列的地图篇。</p>
+      <div class="meta">2026-11-06 · 约 6 分钟</div>
+    </a>
+
+    <a class="post" href="./codex-provider-by-hand.html">
+      <span class="tag">系列 · 第 2 篇 · Codex 实操</span>
+      <h2>Codex 手动换供应商:config.toml 逐行讲解</h2>
+      <p>从零开始,不改任何工具:找到 config.toml、写一个 model_providers 块、配好环境变量、新开会话、三条命令验证生效;附常见报错对照表。</p>
+      <div class="meta">2026-11-06 · 约 8 分钟</div>
+    </a>
+    <a class="post" href="./claude-code-provider-by-hand.html">
+      <span class="tag">系列 · 第 3 篇 · Claude Code 实操</span>
+      <h2>Claude Code 手动换供应商:settings.json 与环境变量,谁说了算?</h2>
+      <p>env 块怎么写、AUTH_TOKEN 与 API_KEY 的区别、"单一定义源"铁律与验证命令。</p>
+      <div class="meta">2026-11-06 · 约 7 分钟</div>
+    </a>
+
+    <a class="post" href="./gemini-cli-provider-by-hand.html">
+      <span class="tag">系列 · 第 4 篇 · Gemini CLI 实操</span>
+      <h2>Gemini CLI 手动换供应商:.env、BASE_URL 与两种认证</h2>
+      <p>~/.gemini/.env 的正确写法、API Key 与 OAuth 怎么选、"新进程才读 .env"的经典坑。</p>
+      <div class="meta">2026-11-06 · 约 6 分钟</div>
+    </a>
+
+    <a class="post" href="./why-config-not-applied.html">
+      <span class="tag">系列 · 第 5 篇 · 机制原理</span>
+      <h2>为什么"改了配置没生效"?配置加载顺序详解</h2>
+      <p>窗口层/进程层/应用层三层快照,一张时间轴 + 五步排查法,治好全系列最大的坑。</p>
+      <div class="meta">2026-11-06 · 约 6 分钟</div>
+    </a>
+
+    <a class="post" href="./ai-cli-provider-cheatsheet.html">
+      <span class="tag">系列 · 第 6 篇 · 收官对照</span>
+      <h2>三家 CLI 配置对照总表,以及管理工具的原理</h2>
+      <p>一张表收藏全部细节;再看"本地代理"如何把六步切换变成一次点击——产品原理篇。</p>
+      <div class="meta">2026-11-06 · 约 7 分钟</div>
+    </a>
+  </main>
+  <footer>© 2026 Keyway · <a href="../">首页</a> · <a href="../guide.html">使用指南</a></footer>
+</body>
+</html>
