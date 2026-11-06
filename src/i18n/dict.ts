@@ -157,7 +157,7 @@ export const zh = {
   // 添加/编辑对话框
   "dialog.addTitle": "添加供应商",
   "dialog.addDesc": "API Key 存入本机 SQLCipher 加密数据库,数据库主密钥由系统钥匙串保管。",
-  "relay.defaultName": "中转网关",
+  "relay.defaultName": "TeapotRouter",
   "relay.connectTitle": "将 {name} 加入 Keyway",
   "relay.connectDesc": "以下地址来自外部链接。请核对 CLI 与接口地址，再亲自粘贴 API Key。链接中不包含 Key。",
   "relay.cli": "目标 CLI",
@@ -775,7 +775,7 @@ export const en: Dict = {
   "ccSwitch.importSelected": "Import {n} selected",
   "dialog.addTitle": "Add Provider",
   "dialog.addDesc": "API keys are stored in a local SQLCipher-encrypted database. Its master key is held in the system keychain.",
-  "relay.defaultName": "Relay Gateway",
+  "relay.defaultName": "TeapotRouter",
   "relay.connectTitle": "Add {name} to Keyway",
   "relay.connectDesc": "This address came from an external link. Check the CLI and endpoint, then paste your API key yourself. The link contains no key.",
   "relay.cli": "Target CLI",

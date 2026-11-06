@@ -17,7 +17,7 @@ const EN_DICT = {
   intelDl: "macOS · Intel",
   appleDl: "macOS · Apple silicon",
   windowsDl: "Windows", linuxDl: "Linux AppImage", allDl: "All platforms",
-  versionNote: "Latest stable release v0.2.14 · macOS / Windows / Linux",
+  versionNote: "Latest stable release v0.2.16 · macOS / Windows / Linux",
   fTitle: "More clarity. Not just switching.", fSub: "Default providers, connection status and actual requests — clearly distinguished.",
   f1t: "Switch with clarity.", f1d: "Sessions already using the proxy need no restart when changing the default provider. New requests follow the updated configuration; in-flight requests do not migrate.",
   f2t: "Encrypted key storage.", f2d: "API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.",
@@ -93,8 +93,10 @@ html = html.replace(/ data-i18n="[^"]*"/g, "");
 // 语言切换链接 → 中文站
 html = html.replace('<a href="./en/" id="langLink">EN</a>', '<a href="../" id="langLink">中文</a>');
 
-// 相对资源路径 ./ → ../(logo、截图、guide、release-sync)
+// 相对资源路径 ./ → ../(logo、截图、guide、release-sync);博客仍位于英文站根目录下。
 html = html.replace(/(src|href)="\.\//g, '$1="../');
+html = html.replace(/href="\.\.\/blog\//g, 'href="./blog/');
+html = html.replace(/(<a class="nav-blog" href="\.\/blog\/">)博客(<\/a>)/, "$1Blog$2");
 
 // EN 页脚新增页面留在同目录(/en/)
 html = html.replace('href="../privacy.html"', 'href="./privacy.html"');
@@ -107,8 +109,8 @@ html = html.replace(/app-dark\.png/g, "app-dark-en.png");
 
 // 下载备注初始文案(网络失败时的兜底文本)
 html = html.replace(
-  ">最新正式版 v0.2.14 · macOS / Windows / Linux<",
-  ">Latest stable release v0.2.14 · macOS / Windows / Linux<"
+  ">最新正式版 v0.2.16 · macOS / Windows / Linux<",
+  ">Latest stable release v0.2.16 · macOS / Windows / Linux<"
 );
 
 // 重写 <head> SEO 区块。先移除中文页的 canonical/hreflang(icon 链接之后)与全部
@@ -170,7 +172,7 @@ const enLd = `    <script type="application/ld+json">
       "name": "Keyway",
       "operatingSystem": "macOS, Windows, Linux",
       "applicationCategory": "DeveloperApplication",
-      "softwareVersion": "0.2.14",
+      "softwareVersion": "0.2.16",
       "downloadUrl": "https://github.com/anmutu/keyway/releases",
       "screenshot": "https://keyway.one/app-light.png",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
