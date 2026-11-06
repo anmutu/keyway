@@ -42,7 +42,7 @@ Windows 版
 Linux AppImage
 全部平台
 
-最新正式版 v0.2.14 · macOS / Windows / Linux
+最新正式版 v0.2.16 · macOS / Windows / Linux
 
 Keyway
 
@@ -634,7 +634,7 @@ Windows
 Linux AppImage
 All platforms
 
-Latest stable release v0.2.14 · macOS / Windows / Linux
+Latest stable release v0.2.16 · macOS / Windows / Linux
 
 Keyway
 
