@@ -130,6 +130,7 @@
       }
       .nav-inner a.nav-dl:hover { background: #0074dd; color: #fff; }
       .nav-links { display: flex; gap: 26px; align-items: center; }
+      .nav-inner a.nav-away::after { content: "↗"; font-size: 10px; vertical-align: 2px; opacity: .5; margin-left: 2px; }
       .nav-links a#langLink { margin-right: 6px; }
       @media (max-width: 640px) {
         .nav-links { gap: 16px; }
@@ -368,13 +369,13 @@
         </a>
         <div class="nav-links">
           <a class="nav-main" href="#features">Features</a>
+          <a class="nav-main" href="#quickstart">Start</a>
           <a class="nav-main" href="#local-first">Local-first</a>
           <a class="nav-main" href="#capabilities">Capabilities</a>
           <a class="nav-main" href="#faq">FAQ</a>
-          <a class="nav-main" href="../guide.html">Guide</a>
+          <a class="nav-main nav-away" href="../guide.html">Guide</a>
           <a class="nav-blog" href="./blog/">Blog</a>
           <a class="nav-main" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
-          <a class="nav-main" href="#quickstart">Start</a>
           <a href="../" id="langLink">中文</a>
           <a class="nav-dl" id="navDownload" href="https://github.com/anmutu/keyway/releases">Download</a>
         </div>
@@ -438,6 +439,34 @@
     </section>
 
     <!-- 本地边界 -->
+    <section id="quickstart">
+      <div class="container">
+        <h2>Up and running in three steps.</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="n">1</div>
+            <h3>Add a provider.</h3>
+            <p>Or import from existing CLI configs. GLM, Kimi, official, any relay.</p>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <h3>One-click takeover.</h3>
+            <p>Originals backed up, restorable anytime.</p>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <h3>Switch in a tap.</h3>
+            <p>Send a new request, then check its actual provider and response status in the logs.</p>
+          </div>
+        </div>
+        <div class="links" style="margin-top:36px;">
+          <a class="alink" href="../guide.html">Step-by-step guide</a>
+          <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 截图 -->
     <section class="local-first" id="local-first">
       <div class="container">
         <p class="eyebrow">Local-first · not a hosted relay</p>
@@ -562,34 +591,7 @@
       </div>
     </section>
 
-    <section class="alt" id="quickstart">
-      <div class="container">
-        <h2>Up and running in three steps.</h2>
-        <div class="steps">
-          <div class="step">
-            <div class="n">1</div>
-            <h3>Add a provider.</h3>
-            <p>Or import from existing CLI configs. GLM, Kimi, official, any relay.</p>
-          </div>
-          <div class="step">
-            <div class="n">2</div>
-            <h3>One-click takeover.</h3>
-            <p>Originals backed up, restorable anytime.</p>
-          </div>
-          <div class="step">
-            <div class="n">3</div>
-            <h3>Switch in a tap.</h3>
-            <p>Send a new request, then check its actual provider and response status in the logs.</p>
-          </div>
-        </div>
-        <div class="links" style="margin-top:36px;">
-          <a class="alink" href="../guide.html">Step-by-step guide</a>
-          <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
-        </div>
-      </div>
-    </section>
 
-    <!-- 截图 -->
     <section>
       <div class="container">
         <h2>Two looks. Same excellence.</h2>

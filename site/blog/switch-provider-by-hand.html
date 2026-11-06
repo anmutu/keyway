@@ -74,6 +74,7 @@
       }
       .nav-inner a.nav-dl:hover { background: #0074dd; color: #fff; }
       .nav-links { display: flex; gap: 26px; align-items: center; }
+      .nav-inner a.nav-away::after { content: "↗"; font-size: 10px; vertical-align: 2px; opacity: .5; margin-left: 2px; }
       .nav-links a#langLink { margin-right: 6px; }
       @media (max-width: 640px) {
         .nav-links { gap: 16px; }
@@ -89,11 +90,12 @@
           <span class="brand">Keyway</span>
         </a>
         <div class="nav-links">
-          <a class="nav-main" href="../#features">功能</a>
-          <a class="nav-main" href="../#local-first">本地优先</a>
-          <a class="nav-main" href="../#capabilities">能力</a>
-          <a class="nav-main" href="../#faq">FAQ</a>
-          <a class="nav-main" href="../guide.html">使用指南</a>
+ <a class="nav-main nav-away" href="../#features">功能</a>
+                    <a class="nav-main nav-away" href="../#quickstart">快速开始</a>
+          <a class="nav-main nav-away" href="../#local-first">本地优先</a>
+          <a class="nav-main nav-away" href="../#capabilities">能力</a>
+          <a class="nav-main nav-away" href="../#faq">FAQ</a>
+          <a class="nav-main nav-away" href="../guide.html">使用指南</a>
           <a href="../en/blog/switch-provider-by-hand.html" id="langLink">EN</a>
           <a class="nav-dl" href="https://github.com/anmutu/keyway/releases">下载</a>
         </div>

@@ -131,6 +131,7 @@
       }
       .nav-inner a.nav-dl:hover { background: #0074dd; color: #fff; }
       .nav-links { display: flex; gap: 26px; align-items: center; }
+      .nav-inner a.nav-away::after { content: "↗"; font-size: 10px; vertical-align: 2px; opacity: .5; margin-left: 2px; }
       .nav-links a#langLink { margin-right: 6px; }
       @media (max-width: 640px) {
         .nav-links { gap: 16px; }
@@ -369,13 +370,13 @@
         </a>
         <div class="nav-links">
           <a class="nav-main" href="#features" data-i18n="navF">功能</a>
+          <a class="nav-main" href="#quickstart" data-i18n="navQ">快速开始</a>
           <a class="nav-main" href="#local-first" data-i18n="navL">本地优先</a>
           <a class="nav-main" href="#capabilities" data-i18n="navCap">能力</a>
           <a class="nav-main" href="#faq" data-i18n="navFAQ">FAQ</a>
-          <a class="nav-main" href="./guide.html" data-i18n="navG">使用指南</a>
+          <a class="nav-main nav-away" href="./guide.html" data-i18n="navG">使用指南</a>
           <a class="nav-blog" href="./blog/">博客</a>
           <a class="nav-main" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="navSubmit">提交供应商</a>
-          <a class="nav-main" href="#quickstart" data-i18n="navQ">上手</a>
           <a href="./en/" id="langLink">EN</a>
           <a class="nav-dl" id="navDownload" href="https://github.com/anmutu/keyway/releases" data-i18n="navD">下载</a>
         </div>
@@ -439,6 +440,34 @@
     </section>
 
     <!-- 本地边界 -->
+    <section id="quickstart">
+      <div class="container">
+        <h2 data-i18n="qsTitle">上手,只需三步。</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="n">1</div>
+            <h3 data-i18n="s1t">添加供应商。</h3>
+            <p data-i18n="s1d">或从现有 CLI 配置一键导入。GLM、Kimi、官方、任意中转,皆可。</p>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <h3 data-i18n="s2t">一键接管。</h3>
+            <p data-i18n="s2d">原配置自动备份,随时还原,进退自如。</p>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <h3 data-i18n="s3t">秒切。</h3>
+            <p data-i18n="s3d">发一条新请求,打开日志确认实际供应商与响应状态。</p>
+          </div>
+        </div>
+        <div class="links" style="margin-top:36px;">
+          <a class="alink" href="./guide.html" data-i18n="qsGuide">查看图文指南</a>
+          <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="qsSubmit">提交供应商</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 截图 -->
     <section class="local-first" id="local-first">
       <div class="container">
         <p class="eyebrow" data-i18n="localEyebrow">Local-first · 不是托管中转站</p>
@@ -563,34 +592,7 @@
       </div>
     </section>
 
-    <section class="alt" id="quickstart">
-      <div class="container">
-        <h2 data-i18n="qsTitle">上手,只需三步。</h2>
-        <div class="steps">
-          <div class="step">
-            <div class="n">1</div>
-            <h3 data-i18n="s1t">添加供应商。</h3>
-            <p data-i18n="s1d">或从现有 CLI 配置一键导入。GLM、Kimi、官方、任意中转,皆可。</p>
-          </div>
-          <div class="step">
-            <div class="n">2</div>
-            <h3 data-i18n="s2t">一键接管。</h3>
-            <p data-i18n="s2d">原配置自动备份,随时还原,进退自如。</p>
-          </div>
-          <div class="step">
-            <div class="n">3</div>
-            <h3 data-i18n="s3t">秒切。</h3>
-            <p data-i18n="s3d">发一条新请求,打开日志确认实际供应商与响应状态。</p>
-          </div>
-        </div>
-        <div class="links" style="margin-top:36px;">
-          <a class="alink" href="./guide.html" data-i18n="qsGuide">查看图文指南</a>
-          <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="qsSubmit">提交供应商</a>
-        </div>
-      </div>
-    </section>
 
-    <!-- 截图 -->
     <section>
       <div class="container">
         <h2 data-i18n="pvTitle">两种面貌,同一种出色。</h2>
