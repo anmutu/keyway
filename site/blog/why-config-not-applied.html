@@ -51,17 +51,51 @@
     .next .tag { color:var(--blue); font-size:12px; font-weight:600; }
     .next h2 { margin:6px 0 4px; font-size:18px; }
 
-      .bnav { position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; height: 46px; padding: 0 22px; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,.06); }
-      .bnav .brand { font-weight: 600; color: #1d1d1f; text-decoration: none; font-size: 14px; }
-      .bnav nav { display: flex; gap: 20px; align-items: center; }
-      .bnav nav a { color: rgba(0,0,0,.78); text-decoration: none; font-size: 13px; }
-      .bnav nav a:hover { color: #000; }
-      .bnav nav a.dl { color: #0066cc; font-weight: 500; }
+      /* 导航:浅色磨砂细条(Apple global nav) */
+      nav {
+        position: sticky; top: 0; z-index: 50;
+        background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px);
+        height: 48px; box-shadow: 0 1px 0 rgba(0,0,0,.06);
+      }
+      .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 100%;
+        display: flex; align-items: center; justify-content: space-between; }
+      .nav-inner a {
+        color: rgba(0,0,0,.78); text-decoration: none;
+        font-size: 12.5px; transition: color .15s;
+      }
+      .nav-inner a:hover { color: #000; }
+      .nav-inner .brand { color: var(--fg); font-weight: 600; }
+      .nav-inner a.nav-dl {
+        background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
+        font-weight: 500; transition: background .15s;
+      }
+      .nav-inner a.nav-dl:hover { background: #0074dd; color: #fff; }
+      .nav-links { display: flex; gap: 26px; align-items: center; }
+      .nav-links a#langLink { margin-right: 6px; }
+      @media (max-width: 640px) {
+        .nav-links { gap: 16px; }
+        .nav-main { display: none; }
+      }
   </style>
 </head>
 <body>
-<nav class="bnav"><a class="brand" href="../">Keyway</a><nav><a href="../">首页</a><a href="./">博客</a><a href="../guide.html">指南</a><a class="dl" href="https://github.com/anmutu/keyway/releases">下载</a></nav></nav>
-
+<nav>
+      <div class="nav-inner">
+        <a href="../" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
+          <img src="../logo.svg" width="18" height="18" alt="Keyway logo" style="border-radius:4px;" />
+          <span class="brand">Keyway</span>
+        </a>
+        <div class="nav-links">
+          <a class="nav-main" href="../#features">功能</a>
+          <a class="nav-main" href="../#local-first">本地优先</a>
+          <a class="nav-main" href="../#capabilities">能力</a>
+          <a class="nav-main" href="../#faq">FAQ</a>
+          <a class="nav-main" href="../guide.html">使用指南</a>
+          <a href="../en/blog/why-config-not-applied.html" id="langLink">EN</a>
+          <a class="nav-dl" href="https://github.com/anmutu/keyway/releases">下载</a>
+        </div>
+      </div>
+    </nav>
   <main>
     <h1>为什么"改了配置没生效"?配置加载顺序详解</h1>
     <p class="meta"><a href="./">博客</a> · 系列 · 第 5 篇 · 2026-11-06 · 约 6 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
@@ -116,6 +150,6 @@ shell 执行 .zshrc ──► 环境就绪    (这些变化不影响任何已存
       <p>一张表装下全部细节;再看"本地代理"如何把六步切换变成一次点击。</p>
     </a>
   </main>
-  <footer>© 2026 Keyway · <a href="./">博客</a> · <a href="../">首页</a> · <a href="../guide.html">使用指南</a></footer>
+  <footer>© 2026 Keyway · <a href="./">博客</a> · <a href="../">首页</a> · <a href="../guide.html">使用指南</a> · <a href="../privacy.html">隐私</a> · <a href="../terms.html">条款</a></footer>
 </body>
 </html>

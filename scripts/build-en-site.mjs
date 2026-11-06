@@ -16,7 +16,7 @@ const EN_DICT = {
   pvPSub: "Presets for official endpoints, popular model services and third-party gateways; any OpenAI / Anthropic / Gemini compatible endpoint works too.",
   pvMine: "affiliated",
   pvMore: "+ custom endpoints",
-  pvNote: "Entries marked \"affiliated\" are maintained by the same person behind Keyway; every listed provider passes the same connectivity and safety checks, and relationships are disclosed. Want yours listed?",
+  pvNote: "Want your service listed?",
   pvSubmitLink: "Submit a provider",
   heroSub: "The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.",
   heroProof1: "Local proxy first", heroProof2: "9 AI CLIs", heroProof3: "Encrypted local storage · MIT",
