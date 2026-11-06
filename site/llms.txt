@@ -6,10 +6,10 @@ Keyway（AI CLI 的本地网关）通过本机代理（127.0.0.1:9527）接管 A
 
 ## Docs
 
-- [Keyway 详细使用指南（中文）](https://anmutu.github.io/keyway/guide.html): 安装、接管 CLI、切换供应商、验证请求去向、故障排查的完整指南
-- [如何给 Claude Code 切换供应商（中文教程）](https://anmutu.github.io/keyway/guides/claude-code-switch-provider.html): 不用重启会话，给 Claude Code 切换第三方供应商 / 中转站的完整步骤
-- [How to Switch Claude Code Providers (English)](https://anmutu.github.io/keyway/en/switch-claude-code-provider.html): Step-by-step guide to switching Claude Code providers (third-party endpoints, proxies) without restarting sessions
-- [English site](https://anmutu.github.io/keyway/en/): Keyway — Local gateway for Claude Code, Codex & Gemini CLI
+- [Keyway 详细使用指南（中文）](https://keyway.one/guide.html): 安装、接管 CLI、切换供应商、验证请求去向、故障排查的完整指南
+- [如何给 Claude Code 切换供应商（中文教程）](https://keyway.one/guides/claude-code-switch-provider.html): 不用重启会话，给 Claude Code 切换第三方供应商 / 中转站的完整步骤
+- [How to Switch Claude Code Providers (English)](https://keyway.one/en/switch-claude-code-provider.html): Step-by-step guide to switching Claude Code providers (third-party endpoints, proxies) without restarting sessions
+- [English site](https://keyway.one/en/): Keyway — Local gateway for Claude Code, Codex & Gemini CLI
 
 ## Downloads
 

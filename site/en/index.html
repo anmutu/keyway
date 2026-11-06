@@ -13,10 +13,20 @@
     <meta property="og:site_name" content="Keyway" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="zh_CN" />
-    <meta property="og:url" content="https://anmutu.github.io/keyway/en/" />
+    <meta property="og:url" content="https://keyway.one/en/" />
     <meta property="og:title" content="Keyway — Local gateway for Claude Code, Codex & Gemini CLI" />
     <meta property="og:description" content="Switch AI CLI providers instantly: routing, failover, request logs, encrypted local key storage. Know where every request goes." />
-    <meta property="og:image" content="https://anmutu.github.io/keyway/app-light.    <script type="application/ld+json">
+    <meta property="og:image" content="https://keyway.one/app-light.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Keyway — Local gateway for Claude Code, Codex & Gemini CLI" />
+    <meta name="twitter:description" content="Switch AI CLI providers instantly: routing, failover, request logs, encrypted local key storage. Know where every request goes." />
+    <meta name="twitter:image" content="https://keyway.one/app-light.png" />
+    <link rel="canonical" href="https://keyway.one/en/" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/" />
+    <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/" />
+    <link rel="alternate" hreflang="x-default" href="https://keyway.one/" />
+    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -36,24 +46,28 @@
       "name": "Keyway",
       "operatingSystem": "macOS, Windows, Linux",
       "applicationCategory": "DeveloperApplication",
-      "softwareVersion": "0.2.15",
+      "softwareVersion": "0.2.14",
       "downloadUrl": "https://github.com/anmutu/keyway/releases",
-      "screenshot": "https://anmutu.github.io/keyway/app-light.png",
+      "screenshot": "https://keyway.one/app-light.png",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "description": "Open-source local gateway for AI coding CLIs: switch Claude Code, Codex and Gemini CLI providers instantly, with model routing, failover, request logs and encrypted local key storage.",
-      "featureList": "Provider switching without session restart, model routing rules, automatic failover, request logs, token usage statistics, encrypted local key storage, multiple profiles, backup and migration"
+      "featureList": "Provider switching without session restart, model routing rules, automatic failover, request logs, token usage statistics, encrypted local key storage, multiple profiles, backup and migration",
+      "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" },
+      "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "logo": "https://keyway.one/logo.svg", "sameAs": ["https://github.com/anmutu/keyway"] },
+      "datePublished": "2026-10-22",
+      "dateModified": "2026-11-06"
     }
     </script>
-png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Keyway — Local gateway for Claude Code, Codex & Gemini CLI" />
-    <meta name="twitter:description" content="Switch AI CLI providers instantly: routing, failover, request logs, encrypted local key storage. Know where every request goes." />
-    <meta name="twitter:image" content="https://anmutu.github.io/keyway/app-light.png" />
-    <link rel="canonical" href="https://anmutu.github.io/keyway/en/" />
-    <link rel="alternate" hreflang="en" href="https://anmutu.github.io/keyway/en/" />
-    <link rel="alternate" hreflang="zh-CN" href="https://anmutu.github.io/keyway/" />
-    <link rel="alternate" hreflang="x-default" href="https://anmutu.github.io/keyway/" />
-    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Keyway",
+      "url": "https://keyway.one/",
+      "inLanguage": "en",
+      "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "logo": "https://keyway.one/logo.svg", "sameAs": ["https://github.com/anmutu/keyway"] }
+    }
+    </script>
     <style>
       /* ============ Apple.cn 风格:极简、留白、超大标题、亮色 ============ */
       :root {
@@ -88,7 +102,8 @@ png" />
       .reveal { opacity: 1; transform: none; }
       .reveal.in { opacity: 1; transform: none; }
       @media (prefers-reduced-motion: reduce) {
-        .hero h1, .hero .tagline, .hero .sub, .hero .links, .hero .platform-links, .hero .download-note, .hero-shot { animation: none; }
+        .hero h1, .hero .kw-motto, .hero .tagline, .hero .sub, .hero .links, .hero .platform-links, .hero .download-note, .hero-shot { animation: none; }
+        .hero h1 .kw-seq { cursor: default; }
         .reveal { opacity: 1; transform: none; }
         html { scroll-behavior: auto; }
       }
@@ -137,7 +152,7 @@ png" />
       /* Hero:居中大标题 + 大图 */
       .hero { padding: 88px 22px 64px; }
       .hero h1 { font-size: 62px; font-weight: 600; letter-spacing: -.02em; line-height: 1.05; }
-      .hero h1 .dot { color: var(--fg-3); }
+      .hero h1 .kw-dot { color: var(--fg-3); }
       .hero .tagline { font-size: 29px; font-weight: 600; margin-top: 12px; letter-spacing: -.01em; }
       .hero .sub { font-size: 19px; max-width: 600px; margin: 18px auto 0; }
       .hero .links { justify-content: center; align-items: center; gap: 26px; margin-top: 26px; }
@@ -157,9 +172,26 @@ png" />
         box-shadow: 0 36px 90px rgba(0,0,0,.2); border: 1px solid var(--hair);
       }
       .hero-shot img { display: block; width: 100%; }
+
+      /* ============ 开场动画:one key way → 钥匙登场 → keyway.one ============ */
+      .hero h1 .kw-seq { position: relative; display: inline-block; white-space: nowrap; cursor: pointer; outline: none; }
+      .hero h1 .kw { display: inline-block; will-change: transform, opacity; }
+      .hero h1 .kw-one { transition: color .5s ease .05s; }
+      .hero h1 .kw-one.kw-landed { color: var(--blue); }
+      .kw-keysvg { position: absolute; opacity: 0; color: var(--blue); pointer-events: none; }
+      .hero .kw-motto { margin-top: 16px; font-size: 17px; color: var(--fg-2); letter-spacing: .015em; animation: fadeUp .9s cubic-bezier(.28,.11,.32,1) .3s both; }
+      .kw-ghost { position: absolute; color: var(--fg-3); opacity: 0; pointer-events: none; }
+      .kw-spark { position: absolute; color: var(--blue); font-size: .42em; opacity: 0; pointer-events: none; }
+      .kw-dust { position: absolute; width: .16em; height: .16em; border-radius: 50%; background: var(--fg-3); opacity: 0; pointer-events: none; }
+      .kw-underline { position: absolute; bottom: -.16em; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--blue), rgba(0,102,204,.3)); transform-origin: left center; transform: scaleX(0); pointer-events: none; }
+      /* 开场演绎时压住其余 hero 元素,词序落定后再放行(移除类会重启它们的 fadeUp) */
+      .hero.intro-hold .kw-motto, .hero.intro-hold .tagline, .hero.intro-hold .hero-proof, .hero.intro-hold .sub,
+      .hero.intro-hold .links, .hero.intro-hold .platform-links, .hero.intro-hold .download-note,
+      .hero.intro-hold .hero-shot { animation: none !important; opacity: 0; }
       @media (max-width: 640px) {
         .hero { padding-top: 66px; }
         .hero h1 { font-size: 46px; }
+        .hero .kw-motto { font-size: 14px; }
         .hero .tagline { font-size: 24px; }
         .hero .sub { font-size: 17px; }
         .hero .links { gap: 14px 18px; }
@@ -331,7 +363,8 @@ png" />
 
     <!-- Hero -->
     <section class="hero container">
-      <h1>Keyway<span class="dot">.</span></h1>
+      <h1 id="brandHero" aria-label="Keyway"><span class="kw-seq" aria-hidden="true"><span class="kw" data-kw="key">key</span><span class="kw" data-kw="way">way</span><span class="kw kw-dot" data-kw="dot">.</span><span class="kw kw-one" data-kw="one">one</span></span></h1>
+      <div class="kw-motto">One key, one way.</div>
       <div class="tagline">Know where your requests go.</div>
       <p class="sub">The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.</p>
       <div class="hero-proof" aria-label="Keyway highlights">
@@ -344,13 +377,13 @@ png" />
         <a class="alink" href="#features">Learn more</a>
       </div>
       <div class="platform-links" id="platform-downloads" style="scroll-margin-top: 72px;">
-        <a class="alink" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_aarch64.dmg">macOS · Apple silicon</a>
-        <a class="alink" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_x64.dmg">macOS · Intel</a>
-        <a class="alink" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_x64-setup.exe">Windows</a>
-        <a class="alink" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_amd64.AppImage">Linux AppImage</a>
+        <a class="alink" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_aarch64.dmg">macOS · Apple silicon</a>
+        <a class="alink" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_x64.dmg">macOS · Intel</a>
+        <a class="alink" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_x64-setup.exe">Windows</a>
+        <a class="alink" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_amd64.AppImage">Linux AppImage</a>
         <a class="alink" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">All platforms</a>
       </div>
-      <p class="download-note" data-release-version>Latest stable release v0.2.15 · macOS / Windows / Linux</p>
+      <p class="download-note" data-release-version>Latest stable release v0.2.14 · macOS / Windows / Linux</p>
       <div class="hero-shot">
         <div class="win-bar"><i></i><i></i><i></i><span>Keyway</span></div>
         <img src="../app-light.png" alt="Keyway" />
@@ -588,7 +621,7 @@ png" />
     <footer>
       <div class="container">
         <span>Copyright © 2026 Keyway. MIT License.</span>
-        <span><a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../guide.html">Guide</a></span>
+        <span><a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../guide.html">Guide</a> · <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Terms</a></span>
       </div>
     </footer>
 
@@ -617,5 +650,308 @@ png" />
       })();
     </script>
     <script src="../release-sync.js"></script>
+    <script>
+      // 开场小剧场(每次访问都上演):one key way 落位 → 钥匙从天而降 → 蓄力一脚把 one
+      // 踢向句尾(星火迸溅、残影拖尾、空翻 360°)→ key/way 击掌合拢 → one 落地扬尘、
+      // 染上品牌蓝 → 钥匙旋转缩小化作句点、拧锁"咔哒" → 蓝色下划线扫过 keyway.one。
+      // 无 JS / 减少动态时直接呈现终态;点击标题可重播。
+      (function () {
+        var h1 = document.getElementById("brandHero");
+        if (!h1) return;
+        var seq = h1.querySelector(".kw-seq");
+        var W = {
+          key: seq.querySelector('[data-kw="key"]'),
+          way: seq.querySelector('[data-kw="way"]'),
+          dot: seq.querySelector('[data-kw="dot"]'),
+          one: seq.querySelector('[data-kw="one"]')
+        };
+        if (!W.key || !W.way || !W.dot || !W.one || !W.one.animate) return;
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduce) return;
+
+        var hero = h1.closest(".hero");
+        var playing = false;
+
+        function play(holdSiblings) {
+          if (playing) return;
+          playing = true;
+          // 清理上次(重播)状态
+          [W.key, W.way, W.dot, W.one].forEach(function (el) {
+            el.getAnimations().forEach(function (a) { a.cancel(); });
+            el.style.opacity = "";
+            el.style.transform = "";
+          });
+          W.one.classList.remove("kw-landed");
+          seq.querySelectorAll(".kw-underline, .kw-spark, .kw-dust, .kw-ghost").forEach(function (el) { el.remove(); });
+
+          var c = seq.getBoundingClientRect();
+          function rect(el) { var b = el.getBoundingClientRect(); return { x: b.left - c.left, y: b.top - c.top, w: b.width, h: b.height }; }
+          var fKey = rect(W.key), fWay = rect(W.way), fDot = rect(W.dot), fOne = rect(W.one);
+
+          var gap = fKey.w * 0.3;
+          var center = (fKey.x + fOne.x + fOne.w) / 2;
+          var startW = fOne.w + fKey.w + fWay.w + gap * 2;
+          var xOne = center - startW / 2;
+          var xKey = xOne + fOne.w + gap;
+          var xWay = xKey + fKey.w + gap;
+          var dOne = xOne - fOne.x, dKey = xKey - fKey.x, dWay = xWay - fWay.x;
+          var em = parseFloat(getComputedStyle(h1).fontSize);
+          var jump = em * 0.95;
+          var anims = [];
+
+          // 钥匙精灵:仅由 JS 注入,终态与无 JS 时不存在
+          var oldKey = seq.querySelector(".kw-keysvg");
+          if (oldKey) oldKey.remove();
+          var keyEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          keyEl.setAttribute("class", "kw-keysvg");
+          keyEl.setAttribute("viewBox", "0 0 24 24");
+          keyEl.setAttribute("fill", "none");
+          keyEl.setAttribute("stroke", "currentColor");
+          keyEl.setAttribute("stroke-width", "2.1");
+          keyEl.setAttribute("stroke-linecap", "round");
+          keyEl.setAttribute("stroke-linejoin", "round");
+          keyEl.innerHTML = '<circle cx="7.5" cy="12" r="3.4"/><path d="M10.9 12h9.6"/><path d="M17 12v3.4"/><path d="M20.4 12v2.6"/>';
+          seq.appendChild(keyEl);
+          var keySize = Math.round(em * 1.05);
+          keyEl.style.width = keyEl.style.height = keySize + "px";
+          var lineCy = fKey.y + fKey.h / 2;
+          var keyHomeX = xOne - keySize * 1.12, keyHomeY = lineCy - keySize / 2;
+          keyEl.style.left = Math.round(keyHomeX) + "px";
+          keyEl.style.top = Math.round(keyHomeY) + "px";
+          // 钥匙最终落点:句点位置(way 之后、one 之前)
+          var dotCx = fDot.x + fDot.w / 2, dotCy = fDot.y + fDot.h / 2;
+          var dotScale = 0.46;
+          var hopDx = dotCx - (keyHomeX + keySize / 2);
+          var hopDy = dotCy - (keyHomeY + keySize / 2);
+
+          // 小剧场特效:星火 / 残影 / 尘土 / 下划线
+          function sparkBurst() {
+            var cx = xOne - em * 0.1, cy = lineCy + fKey.h * 0.1;
+            [[-1, -1], [0.2, -1.4], [1.1, -0.9], [1.3, -0.1]].forEach(function (d, i) {
+              var s = document.createElement("span");
+              s.className = "kw-spark";
+              s.textContent = "✦";
+              seq.appendChild(s);
+              s.style.left = cx + "px";
+              s.style.top = (cy - em * 0.35) + "px";
+              s.animate(
+                [
+                  { opacity: 1, transform: "translate(0,0) scale(.4) rotate(0deg)" },
+                  { opacity: 0, transform: "translate(" + d[0] * em * 0.9 + "px," + d[1] * em * 0.9 + "px) scale(1.2) rotate(" + (i % 2 ? 100 : -70) + "deg)" }
+                ],
+                { duration: 340 + i * 40, easing: "cubic-bezier(.2,.7,.4,1)" }
+              ).onfinish = function () { s.remove(); };
+            });
+          }
+          function ghostTrail(delay, op) {
+            var g = document.createElement("span");
+            g.className = "kw-ghost";
+            g.textContent = "one";
+            seq.appendChild(g);
+            g.style.left = fOne.x + "px";
+            g.style.top = fOne.y + "px";
+            g.style.opacity = "0";
+            g.animate(
+              [
+                { opacity: 0, transform: "translate(" + dOne + "px,0) rotate(0deg)" },
+                { opacity: op, transform: "translate(" + dOne * 0.7 + "px," + -jump * 0.6 + "px) rotate(120deg)", offset: .45 },
+                { opacity: 0, transform: "translate(" + dOne * 0.3 + "px," + -jump * 0.35 + "px) rotate(250deg)", offset: .8 },
+                { opacity: 0, transform: "translate(0,0) rotate(360deg)" }
+              ],
+              { duration: 700, delay: delay }
+            ).onfinish = function () { g.remove(); };
+          }
+          function dustPuff() {
+            [-1, 1].forEach(function (side, i) {
+              var d = document.createElement("span");
+              d.className = "kw-dust";
+              seq.appendChild(d);
+              d.style.left = (fOne.x + fOne.w / 2 + side * em * 0.4) + "px";
+              d.style.top = (fKey.y + fKey.h * 0.86) + "px";
+              d.animate(
+                [
+                  { opacity: 0.55, transform: "translate(0,0) scale(.4)" },
+                  { opacity: 0, transform: "translate(" + side * em * 0.5 + "px," + -em * 0.12 + "px) scale(1.5)" }
+                ],
+                { duration: 380, delay: i * 60, easing: "ease-out" }
+              ).onfinish = function () { d.remove(); };
+            });
+          }
+          function underlineSweep() {
+            var u = seq.querySelector(".kw-underline");
+            if (u) u.remove();
+            u = document.createElement("span");
+            u.className = "kw-underline";
+            seq.appendChild(u);
+            u.style.left = fKey.x + "px";
+            u.style.width = (fOne.x + fOne.w - fKey.x) + "px";
+            u.animate(
+              [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }],
+              { duration: 420, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" }
+            );
+          }
+
+          // 登场:one 自上而下砸落,key 从左滑入,way 从右滑入 —— 各有性格
+          W.one.style.opacity = "0";
+          anims.push(W.one.animate(
+            [
+              { opacity: 0, transform: "translate(" + dOne + "px," + -em * 1.3 + "px) scale(.7)", easing: "cubic-bezier(.45,0,.8,.5)" },
+              { opacity: 1, transform: "translate(" + dOne + "px,3px) scale(1.06,.9)", easing: "cubic-bezier(.3,.7,.4,1.4)" },
+              { opacity: 1, transform: "translate(" + dOne + "px,0) scale(1)" }
+            ],
+            { duration: 380, delay: 140, fill: "both" }
+          ));
+          [[W.key, dKey, -1, 500], [W.way, dWay, 1, 860]].forEach(function (cfg) {
+            cfg[0].style.opacity = "0";
+            anims.push(cfg[0].animate(
+              [
+                { opacity: 0, transform: "translate(" + (cfg[1] + cfg[2] * em * 1.5) + "px,0) rotate(" + cfg[2] * 8 + "deg)" },
+                { opacity: 1, transform: "translate(" + cfg[1] + "px,0) rotate(0deg)" }
+              ],
+              { duration: 340, delay: cfg[3], easing: "cubic-bezier(.25,.9,.35,1.1)", fill: "both" }
+            ));
+          });
+
+          if (holdSiblings && hero) hero.classList.add("intro-hold");
+
+          // 第二幕:钥匙从天而降,砸在 one 旁边(标题震一下)
+          anims.push(keyEl.animate(
+            [
+              { opacity: 0, transform: "translateY(" + (-jump * 1.9) + "px) rotate(-24deg)" },
+              { opacity: 1, transform: "translateY(0) rotate(0deg) scaleY(1)", offset: .82, easing: "cubic-bezier(.55,0,.75,.5)" },
+              { transform: "translateY(0) rotate(0deg) scaleY(.78)" },
+              { transform: "translateY(0) rotate(0deg) scaleY(1)" }
+            ],
+            { duration: 340, delay: 1330, easing: "cubic-bezier(.5,0,.85,.45)", fill: "both" }
+          ));
+          anims.push(h1.animate(
+            [
+              { transform: "translateX(0)" }, { transform: "translateX(-3px)" },
+              { transform: "translateX(3px)" }, { transform: "translateX(-2px)" },
+              { transform: "translateX(0)" }
+            ],
+            { duration: 150, delay: 1640, fill: "both" }
+          ));
+
+          // 钥匙落地后左右张望,再进入蓄力(角色感)
+          anims.push(keyEl.animate(
+            [
+              { transform: "rotate(0deg)" },
+              { transform: "rotate(-8deg)", offset: .4, easing: "ease-in-out" },
+              { transform: "rotate(6deg)", offset: .78, easing: "ease-in-out" },
+              { transform: "rotate(0deg)" }
+            ],
+            { duration: 110, delay: 1690, fill: "both" }
+          ));
+
+          // 第三幕:钥匙出脚,one 带着空翻飞向句尾;key/way 击掌合拢
+          setTimeout(function () {
+            if (holdSiblings && hero) hero.classList.remove("intro-hold");
+            anims.push(keyEl.animate(
+              [
+                { transform: "translateX(0) rotate(0deg)", easing: "cubic-bezier(.3,.2,.6,1)" },
+                { transform: "translateX(" + -em * 0.14 + "px) rotate(-20deg)", offset: .38, easing: "cubic-bezier(.2,.9,.4,1)" },
+                { transform: "translateX(" + em * 0.34 + "px) rotate(15deg)", offset: .68 },
+                { transform: "translateX(0) rotate(0deg)" }
+              ],
+              { duration: 300, fill: "both" }
+            ));
+            setTimeout(sparkBurst, 190);
+            ghostTrail(80, 0.32);
+            ghostTrail(160, 0.18);
+            anims.push(W.one.animate(
+              [
+                { transform: "translate(" + dOne + "px,0) rotate(0deg)", easing: "cubic-bezier(.3,.5,.5,1)" },
+                { transform: "translate(" + dOne * 0.5 + "px," + -jump + "px) rotate(180deg)", easing: "cubic-bezier(.5,0,.7,.5)" },
+                { transform: "translate(0,0) rotate(360deg)" }
+              ],
+              { duration: 700, fill: "both" }
+            ));
+            [W.key, W.way].forEach(function (el, i) {
+              var d = i === 0 ? dKey : dWay;
+              anims.push(el.animate(
+                [
+                  { transform: "translate(" + d + "px,0)" },
+                  { transform: "translate(" + d * 0.42 + "px," + (-em * 0.14) + "px)", offset: .5, easing: "cubic-bezier(.4,.1,.6,.9)" },
+                  { transform: "translate(0,0) scale(1.08,.9)", offset: .82, easing: "cubic-bezier(.3,.7,.4,1.3)" },
+                  { transform: "translate(0,0) scale(1)" }
+                ],
+                { duration: 560, delay: 120, easing: "cubic-bezier(.45,.05,.25,1)", fill: "both" }
+              ));
+            });
+          }, 1800);
+
+          // 第四幕:钥匙蹦到中间,旋转缩小化作句点;句点拧锁"咔哒"
+          setTimeout(function () {
+            anims.push(keyEl.animate(
+              [
+                { transform: "translate(0,0) rotate(0deg) scale(1)", opacity: 1, easing: "cubic-bezier(.35,.5,.55,1)" },
+                { transform: "translate(" + hopDx * 0.5 + "px," + (hopDy - em * 0.7) + "px) rotate(45deg) scale(" + (1 + dotScale) / 2 + ")", easing: "cubic-bezier(.5,0,.7,.5)" },
+                { transform: "translate(" + hopDx + "px," + hopDy + "px) rotate(90deg) scale(" + dotScale + ")", opacity: 1, offset: .85 },
+                { opacity: 0 }
+              ],
+              { duration: 430, fill: "both" }
+            ));
+            anims.push(W.dot.animate(
+              [
+                { opacity: 0, transform: "scale(.2) rotate(-80deg)" },
+                { opacity: 1, transform: "scale(1.2) rotate(0deg)", offset: .65, easing: "cubic-bezier(.3,.7,.4,1.3)" },
+                { opacity: 1, transform: "scale(1) rotate(0deg)" }
+              ],
+              { duration: 340, delay: 400, fill: "both" }
+            ));
+          }, 2340);
+
+          // 落幕:one 落地回弹扬尘,.one 染上品牌蓝 —— 域名揭晓
+          setTimeout(function () {
+            W.one.classList.add("kw-landed");
+            dustPuff();
+            anims.push(W.one.animate(
+              [
+                { transform: "translateY(0) scale(1,1)" },
+                { transform: "translateY(3px) scale(1.14,.78)", offset: .45, easing: "cubic-bezier(.3,.7,.4,1.4)" },
+                { transform: "translateY(0) scale(1,1)" }
+              ],
+              { duration: 340 }
+            ));
+          }, 2480);
+
+          // 尾声:品牌蓝下划线扫过 keyway.one,末端跳出一颗星收尾
+          setTimeout(underlineSweep, 2920);
+          setTimeout(function () {
+            var st = document.createElement("span");
+            st.className = "kw-spark";
+            st.textContent = "✦";
+            seq.appendChild(st);
+            st.style.left = (fOne.x + fOne.w - em * 0.1) + "px";
+            st.style.top = (fOne.y + fOne.h * 0.72) + "px";
+            st.animate(
+              [
+                { opacity: 0, transform: "scale(.2) rotate(0deg)" },
+                { opacity: 1, transform: "scale(1.1) rotate(40deg)", offset: .4, easing: "cubic-bezier(.3,1.4,.5,1)" },
+                { opacity: 0, transform: "scale(.5) rotate(90deg)" }
+              ],
+              { duration: 460 }
+            ).onfinish = function () { st.remove(); };
+          }, 3330);
+
+          // 收尾:清掉动画保持态与钥匙,回到自然终态(DOM 顺序即 keyway.one)
+          setTimeout(function () {
+            anims.forEach(function (a) { a.cancel(); });
+            [W.key, W.way, W.dot, W.one].forEach(function (el) {
+              el.style.opacity = "";
+              el.style.transform = "";
+            });
+            if (keyEl.parentNode) keyEl.remove();
+            W.one.classList.add("kw-landed"); // 类在收尾后保留,维持蓝色 .one
+            playing = false;
+          }, 3220);
+        }
+
+        h1.addEventListener("click", function () { play(false); });
+
+        play(true);
+      })();
+    </script>
   </body>
 </html>

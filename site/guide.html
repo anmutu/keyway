@@ -8,22 +8,26 @@
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Keyway" />
     <meta property="og:locale" content="zh_CN" />
-    <meta property="og:url" content="https://anmutu.github.io/keyway/guide.html" />
+    <meta property="og:url" content="https://keyway.one/guide.html" />
     <meta property="og:title" content="Keyway 使用指南" />
     <meta property="og:description" content="从安装到进阶:接入本地代理、管理供应商与路由、查看实际请求去向、排查失败并恢复直连。" />
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
-    <link rel="canonical" href="https://anmutu.github.io/keyway/guide.html" />
-    <meta property="og:image" content="https://anmutu.github.io/keyway/app-light.png" />
+    <link rel="canonical" href="https://keyway.one/guide.html" />
+    <meta property="og:image" content="https://keyway.one/app-light.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Keyway 使用指南" />
     <meta name="twitter:description" content="从安装到进阶:接入本地代理、管理供应商与路由、查看实际请求去向、排查失败并恢复直连。" />
-    <meta name="twitter:image" content="https://anmutu.github.io/keyway/app-light.png" />
+    <meta name="twitter:image" content="https://keyway.one/app-light.png" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "HowTo",
       "name": "Keyway 使用指南",
       "description": "从安装到进阶:接入 AI CLI 本地代理、管理默认供应商与路由、查看请求日志、排查失败并恢复直连。",
+      "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" },
+      "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] },
+      "datePublished": "2026-10-22",
+      "dateModified": "2026-11-06",
       "step": [
         { "@type": "HowToStep", "name": "下载与安装", "text": "从 GitHub Releases 下载对应平台的安装包。macOS 拖入应用程序,Windows 运行安装程序,Linux 使用 AppImage 或 deb/rpm 包。" },
         { "@type": "HowToStep", "name": "添加供应商", "text": "预设直选、从现有 CLI 配置导入或自定义 Base URL 与 API Key。" },
@@ -165,12 +169,23 @@
 
     <main class="container">
 
-      <div class="tip" data-i18n="gVersionNote"><b>先核对版本:</b>本页下载按钮会跟随 GitHub 最新正式版;官网内容可能先于安装包更新,请以安装包对应的 <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">发布说明</a> 为准。浏览官网不会安装或接管本机 CLI,示意画面也不代表真实请求。</div>
+      <div class="tip" data-i18n="gVersionNote"><b>先核对版本:</b>本页下载按钮会跟随 GitHub 最新正式版;官网内容可能先于安装包更新,请以安装包对应的 <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">发布说明</a> 为准。浏览官网不会安装或接管本机 CLI,示意画面也不代表真实请求。<b>最后更新:2026-11-06</b> · 维护者:<a href="https://github.com/anmutu" target="_blank" rel="noreferrer">anmutu</a></div>
+
+      <div class="tip blue" id="tldr">
+        <b>30 秒速览:</b>
+        <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:15px;">
+          <tr style="text-align:left;"><th style="padding:6px 10px; border-bottom:1px solid var(--hair);">问题</th><th style="padding:6px 10px; border-bottom:1px solid var(--hair);">一句话答案</th></tr>
+          <tr><td style="padding:6px 10px;">怎么装?</td><td style="padding:6px 10px;">从 GitHub Releases 下载安装包,先装好 CLI 本身,Keyway 只管它的请求。</td></tr>
+          <tr><td style="padding:6px 10px;">怎么接?</td><td style="padding:6px 10px;">添加供应商 → 一键接管,原配置自动备份,代理跑在 127.0.0.1:9527。</td></tr>
+          <tr><td style="padding:6px 10px;">怎么切换?</td><td style="padding:6px 10px;">菜单栏 ⌘⇧K 选供应商,已过代理的会话不重启;新请求走新供应商。</td></tr>
+          <tr><td style="padding:6px 10px;">怎么验证?</td><td style="padding:6px 10px;">请求日志看实际供应商、模型、状态码——默认选择 ≠ 实际去向。</td></tr>
+        </table>
+      </div>
 
       <section class="step" id="install">
         <span class="stepnum">1</span>
         <div class="kicker" data-i18n="gS1k">准备</div>
-        <h2 data-i18n="gS1h2">下载与安装</h2>
+        <h2 data-i18n="gS1h2">怎么安装 Keyway?</h2>
         <p data-i18n="gS1p">Keyway 是桌面端本地网关,不是在线聊天工具,也不会替你安装 AI CLI。macOS 用户按芯片选择 <code>.dmg</code>,Windows 选择安装程序,Linux 选择对应架构的 AppImage、deb 或 rpm 包。</p>
         <ul>
           <li data-i18n="gPrereqCli"><b>准备 CLI:</b>先安装你要使用的 Claude Code、Codex 或 Gemini CLI 等工具,确认它能在终端中启动。Keyway 管理的是这些工具的请求去向。</li>
@@ -178,12 +193,12 @@
           <li data-i18n="gPrereqSafe"><b>保护已有配置:</b>首次接管前另存一份 CLI 配置。不要同时让多个切换工具改写同一份配置;不确定时先只接入一个 CLI。</li>
         </ul>
         <p style="margin-top:14px;">
-          <a class="dl-btn dl-direct" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_aarch64.dmg" data-i18n="gS1dl">下载 for Apple 芯片(M1/M2/M3/M4)</a>
-          <a class="dl-alt dl-direct-x64" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_x64.dmg" data-i18n="gS1dlAlt">Intel 芯片版</a>
-          <a class="dl-alt" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_x64-setup.exe" data-i18n="gS1dlWin">Windows 版</a>
-          <a class="dl-alt" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_amd64.AppImage" data-i18n="gS1dlLinux">Linux AppImage</a>
-          <a class="dl-alt" data-release-asset="deb" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway_0.2.15_amd64.deb" data-i18n="gS1dlDeb">Linux .deb</a>
-          <a class="dl-alt" data-release-asset="rpm" href="https://github.com/anmutu/keyway/releases/download/v0.2.15/Keyway-0.2.15-1.x86_64.rpm" data-i18n="gS1dlRpm">Linux .rpm</a>
+          <a class="dl-btn dl-direct" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_aarch64.dmg" data-i18n="gS1dl">下载 for Apple 芯片(M1/M2/M3/M4)</a>
+          <a class="dl-alt dl-direct-x64" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_x64.dmg" data-i18n="gS1dlAlt">Intel 芯片版</a>
+          <a class="dl-alt" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_x64-setup.exe" data-i18n="gS1dlWin">Windows 版</a>
+          <a class="dl-alt" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_amd64.AppImage" data-i18n="gS1dlLinux">Linux AppImage</a>
+          <a class="dl-alt" data-release-asset="deb" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway_0.2.14_amd64.deb" data-i18n="gS1dlDeb">Linux .deb</a>
+          <a class="dl-alt" data-release-asset="rpm" href="https://github.com/anmutu/keyway/releases/download/v0.2.14/Keyway-0.2.14-1.x86_64.rpm" data-i18n="gS1dlRpm">Linux .rpm</a>
           <a class="dl-alt" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="gS1dlAll">全部平台安装包 ›</a>
         </p>
         <ul>
@@ -198,7 +213,7 @@
       <section class="step" id="add">
         <span class="stepnum">2</span>
         <div class="kicker" data-i18n="gS2k">配置</div>
-        <h2 data-i18n="gS2h2">添加供应商</h2>
+        <h2 data-i18n="gS2h2">怎样添加供应商?</h2>
         <p data-i18n="gS2p">打开主界面,按 CLI 分组(Claude Code、Codex、Gemini CLI 等)添加你要用的模型供应商:</p>
         <ul>
           <li data-i18n="gS2l1"><b>预设直选</b>:内置常见供应商与中转站,填入 API Key 即可用。</li>
@@ -221,7 +236,7 @@
       <section class="step" id="takeover">
         <span class="stepnum">3</span>
         <div class="kicker" data-i18n="gS3k">接管</div>
-        <h2 data-i18n="gS3h2">一键接管 CLI</h2>
+        <h2 data-i18n="gS3h2">什么是「一键接管」?会改我哪些配置?</h2>
         <p data-i18n="gS3p">点击导航中的网关状态或分组页的 <b>「网关详情」</b>,在接管管理中选择目标 CLI。接管后,Keyway 会把该 CLI 的配置指向本地代理:</p>
         <ul>
           <li data-i18n="gS3l1">接管前<b>自动备份原配置</b>,可在接管管理中还原。还原前请确认是否有需要保留的手动修改。</li>
@@ -244,7 +259,7 @@
       <section class="step" id="switch">
         <span class="stepnum">4</span>
         <div class="kicker" data-i18n="gS4k">日常</div>
-        <h2 data-i18n="gS4h2">切换并确认请求去向</h2>
+        <h2 data-i18n="gS4h2">切换供应商后,怎样确认请求真的过去了?</h2>
         <p data-i18n="gS4p">卡片上的默认供应商是选择,不是实际请求证明。切换后发送新请求,再从日志确认实际去向:</p>
         <div class="tip blue" data-i18n="gNavigationTip"><b>高级功能在哪?</b>用量、MCP、Skills、设置和使用指南统一放在导航的「更多」中。选择页面后菜单自动收起;Esc 只关闭菜单,不会把你带离当前页面。</div>
         <ul>
@@ -292,7 +307,7 @@
       <section class="step" id="advanced">
         <span class="stepnum">5</span>
         <div class="kicker" data-i18n="gS5k">进阶</div>
-        <h2 data-i18n="gS5h2">路由 · 故障转移 · 日志 · 档案</h2>
+        <h2 data-i18n="gS5h2">路由、故障转移、日志这些进阶功能怎么用?</h2>
         <p data-i18n="gS5p"><b>模型路由规则</b> —— 在「设置 → 模型路由」里,让特定模型永远走特定供应商:</p>
         <ul>
           <li data-i18n="gS5l1">例:规则 <code>claude</code> → 中转站 A;规则 <code>deepseek</code> → 官方。CLI 里指定模型名,Keyway 自动分发。</li>
@@ -339,7 +354,7 @@
 
     <section class="cta">
       <div class="container">
-        <h2 data-i18n="gCtaH2">准备好了吗?</h2>
+        <h2 data-i18n="gCtaH2">准备好开始了吗?</h2>
         <p class="sub" data-i18n="gCtaSub">免费、开源,五分钟接管你的每一个 AI CLI。</p>
         <div class="links">
           <a class="alink" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="gCtaDl">免费下载</a>

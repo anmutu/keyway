@@ -9,13 +9,15 @@ const EN_DICT = {
   navF: "Features", navL: "Local-first", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navSubmit: "Suggest a provider", navQ: "Start", navD: "Download",
   readGuide: "Read the guide", navG2: "Guide",
   tagline: "Know where your requests go.",
+  motto: "One key, one way.",
+  fPrivacy: "Privacy", fTerms: "Terms",
   heroSub: "The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.",
   heroProof1: "Local proxy first", heroProof2: "9 AI CLIs", heroProof3: "Encrypted local storage · MIT",
   learnMore: "Learn more", freeDl: "Download for Apple silicon", freeDl2: "Download free", submitProvider: "Suggest a provider",
   intelDl: "macOS · Intel",
   appleDl: "macOS · Apple silicon",
   windowsDl: "Windows", linuxDl: "Linux AppImage", allDl: "All platforms",
-  versionNote: "Latest stable release v0.2.15 · macOS / Windows / Linux",
+  versionNote: "Latest stable release v0.2.14 · macOS / Windows / Linux",
   fTitle: "More clarity. Not just switching.", fSub: "Default providers, connection status and actual requests — clearly distinguished.",
   f1t: "Switch with clarity.", f1d: "Sessions already using the proxy need no restart when changing the default provider. New requests follow the updated configuration; in-flight requests do not migrate.",
   f2t: "Encrypted key storage.", f2d: "API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.",
@@ -70,9 +72,8 @@ if (/var I18N|langToggle/.test(src)) {
 
 let html = src;
 
-// <html lang> 与 hero 句号
+// <html lang>(h1 为语言无关的 keyway.one 开场动画结构,无需句号替换)
 html = html.replace('<html lang="zh-CN">', '<html lang="en">');
-html = html.replace('<h1>Keyway<span class="dot">。</span></h1>', '<h1>Keyway<span class="dot">.</span></h1>');
 
 // c2d 含嵌套 <code>,整段替换后再走通用替换
 html = html.replace(
@@ -95,10 +96,14 @@ html = html.replace('<a href="./en/" id="langLink">EN</a>', '<a href="../" id="l
 // 相对资源路径 ./ → ../(logo、截图、guide、release-sync)
 html = html.replace(/(src|href)="\.\//g, '$1="../');
 
+// EN 页脚新增页面留在同目录(/en/)
+html = html.replace('href="../privacy.html"', 'href="./privacy.html"');
+html = html.replace('href="../terms.html"', 'href="./terms.html"');
+
 // 下载备注初始文案(网络失败时的兜底文本)
 html = html.replace(
-  ">最新正式版 v0.2.15 · macOS / Windows / Linux<",
-  ">Latest stable release v0.2.15 · macOS / Windows / Linux<"
+  ">最新正式版 v0.2.14 · macOS / Windows / Linux<",
+  ">Latest stable release v0.2.14 · macOS / Windows / Linux<"
 );
 
 // 重写 <head> SEO 区块。先移除中文页的 canonical/hreflang(icon 链接之后)与全部
@@ -109,7 +114,6 @@ html = html.replace(canonicalBlock, "");
 
 const ldBlocks = [...html.matchAll(/    <script type="application\/ld\+json">[\s\S]*?\n    <\/script>\n/g)];
 if (ldBlocks.length === 0) throw new Error("no JSON-LD blocks found");
-const ldInsertAt = ldBlocks[0].index;
 html = html.replace(/    <script type="application\/ld\+json">[\s\S]*?\n    <\/script>\n/g, "");
 
 const headStart = html.indexOf("    <title>");
@@ -125,18 +129,18 @@ const enHead = `    <title>Keyway — Local gateway for Claude Code, Codex & Gem
     <meta property="og:site_name" content="Keyway" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="zh_CN" />
-    <meta property="og:url" content="https://anmutu.github.io/keyway/en/" />
+    <meta property="og:url" content="https://keyway.one/en/" />
     <meta property="og:title" content="Keyway — Local gateway for Claude Code, Codex & Gemini CLI" />
     <meta property="og:description" content="Switch AI CLI providers instantly: routing, failover, request logs, encrypted local key storage. Know where every request goes." />
-    <meta property="og:image" content="https://anmutu.github.io/keyway/app-light.png" />
+    <meta property="og:image" content="https://keyway.one/app-light.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Keyway — Local gateway for Claude Code, Codex & Gemini CLI" />
     <meta name="twitter:description" content="Switch AI CLI providers instantly: routing, failover, request logs, encrypted local key storage. Know where every request goes." />
-    <meta name="twitter:image" content="https://anmutu.github.io/keyway/app-light.png" />
-    <link rel="canonical" href="https://anmutu.github.io/keyway/en/" />
-    <link rel="alternate" hreflang="en" href="https://anmutu.github.io/keyway/en/" />
-    <link rel="alternate" hreflang="zh-CN" href="https://anmutu.github.io/keyway/" />
-    <link rel="alternate" hreflang="x-default" href="https://anmutu.github.io/keyway/" />
+    <meta name="twitter:image" content="https://keyway.one/app-light.png" />
+    <link rel="canonical" href="https://keyway.one/en/" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/" />
+    <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/" />
+    <link rel="alternate" hreflang="x-default" href="https://keyway.one/" />
 `;
 html = html.slice(0, headStart) + enHead + html.slice(headEnd);
 
@@ -161,16 +165,33 @@ const enLd = `    <script type="application/ld+json">
       "name": "Keyway",
       "operatingSystem": "macOS, Windows, Linux",
       "applicationCategory": "DeveloperApplication",
-      "softwareVersion": "0.2.15",
+      "softwareVersion": "0.2.14",
       "downloadUrl": "https://github.com/anmutu/keyway/releases",
-      "screenshot": "https://anmutu.github.io/keyway/app-light.png",
+      "screenshot": "https://keyway.one/app-light.png",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "description": "Open-source local gateway for AI coding CLIs: switch Claude Code, Codex and Gemini CLI providers instantly, with model routing, failover, request logs and encrypted local key storage.",
-      "featureList": "Provider switching without session restart, model routing rules, automatic failover, request logs, token usage statistics, encrypted local key storage, multiple profiles, backup and migration"
+      "featureList": "Provider switching without session restart, model routing rules, automatic failover, request logs, token usage statistics, encrypted local key storage, multiple profiles, backup and migration",
+      "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" },
+      "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "logo": "https://keyway.one/logo.svg", "sameAs": ["https://github.com/anmutu/keyway"] },
+      "datePublished": "2026-10-22",
+      "dateModified": "2026-11-06"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Keyway",
+      "url": "https://keyway.one/",
+      "inLanguage": "en",
+      "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "logo": "https://keyway.one/logo.svg", "sameAs": ["https://github.com/anmutu/keyway"] }
     }
     </script>
 `;
-html = html.slice(0, ldInsertAt) + enLd + html.slice(ldInsertAt);
+// 锚点必须在头部拼接之后重新计算,否则会把 meta 标签拦腰截断、JSON-LD 泄漏为可见文本
+const styleAt = html.indexOf("    <style>");
+if (styleAt < 0) throw new Error("style anchor not found");
+html = html.slice(0, styleAt) + enLd + html.slice(styleAt);
 
 const outDir = resolve(siteDir, "en");
 mkdirSync(outDir, { recursive: true });
@@ -180,7 +201,7 @@ writeFileSync(resolve(outDir, "index.html"), html);
 const checks = {
   "data-i18n": /data-i18n=/.test(html),
   "zh-CN html lang": /<html lang="zh-CN">/.test(html),
-  "./ asset paths": /(?:src|href)="\.\//.test(html),
+  "./ asset paths": new RegExp('(?:src|href)="\\.\\/(?!privacy\\.html|terms\\.html)').test(html),
 };
 const canonicalCount = (html.match(/<link rel="canonical"/g) || []).length;
 const zhLdCount = (html.match(/的开源本地网关|无需重启会话切换供应商/g) || []).length;

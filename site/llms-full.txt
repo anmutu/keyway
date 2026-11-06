@@ -1,13 +1,13 @@
 # Keyway — Full Content
 
-> Concatenated full text of keyway site pages. Main index: https://anmutu.github.io/keyway/llms.txt
+> Concatenated full text of keyway site pages. Main index: https://keyway.one/llms.txt
 
 
 ---
 
 # Keyway — AI CLI 的本地网关
 
-Source: https://anmutu.github.io/keyway/
+Source: https://keyway.one/
 
 Keyway — AI CLI 的本地网关
 
@@ -42,7 +42,7 @@ Windows 版
 Linux AppImage
 全部平台
 
-最新正式版 v0.2.15 · macOS / Windows / Linux
+最新正式版 v0.2.14 · macOS / Windows / Linux
 
 Keyway
 
@@ -232,7 +232,7 @@ GitHub · 使用指南
 
 # Keyway 详细使用指南
 
-Source: https://anmutu.github.io/keyway/guide.html
+Source: https://keyway.one/guide.html
 
 Keyway 详细使用指南 — 安装、接管、验证请求与故障排查
 
@@ -491,7 +491,7 @@ Copyright © 2026 Keyway. MIT License. · 返回首页
 
 # 如何给 Claude Code 切换供应商
 
-Source: https://anmutu.github.io/keyway/guides/claude-code-switch-provider.html
+Source: https://keyway.one/guides/claude-code-switch-provider.html
 
 如何给 Claude Code 切换供应商(不用重启会话)— Keyway 教程
 
@@ -585,7 +585,7 @@ Keyway 是 MIT 开源项目,与 Anthropic、OpenAI、Google 无关联。Claude C
 
 # Keyway — Local gateway for AI coding CLIs
 
-Source: https://anmutu.github.io/keyway/en/
+Source: https://keyway.one/en/
 
 Keyway — Local gateway for Claude Code, Codex & Gemini CLI
 
@@ -634,7 +634,7 @@ Windows
 Linux AppImage
 All platforms
 
-Latest stable release v0.2.15 · macOS / Windows / Linux
+Latest stable release v0.2.14 · macOS / Windows / Linux
 
 Keyway
 
@@ -824,7 +824,7 @@ GitHub · Guide
 
 # How to Switch Claude Code Providers
 
-Source: https://anmutu.github.io/keyway/en/switch-claude-code-provider.html
+Source: https://keyway.one/en/switch-claude-code-provider.html
 
 How to Switch Claude Code Providers (Without Restarting) — Keyway Guide
 
