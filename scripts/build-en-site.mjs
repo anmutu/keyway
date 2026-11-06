@@ -11,6 +11,7 @@ const EN_DICT = {
   tagline: "Know where your requests go.",
   motto: "One key, one way.",
   fPrivacy: "Privacy", fTerms: "Terms", fBlog: "Blog",
+  installOneLiner: "macOS: one terminal line installs (or updates) — no Gatekeeper prompts:",
   heroSub: "The local gateway for AI CLIs. Manage providers, routing and failover in one place. Trace actual destinations in request logs.",
   heroProof1: "Local proxy first", heroProof2: "9 AI CLIs", heroProof3: "Encrypted local storage · MIT",
   learnMore: "Learn more", freeDl: "Download for Apple silicon", freeDl2: "Download free", submitProvider: "Suggest a provider",
