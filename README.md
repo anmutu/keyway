@@ -41,7 +41,19 @@
 
 ## 📦 安装
 
-从 [Releases](https://github.com/anmutu/keyway/releases/latest) 下载对应平台安装包。
+从 [Releases](https://github.com/anmutu/keyway/releases/latest) 下载对应平台安装包;安装包也镜像在 [keyway.one/downloads](https://keyway.one/downloads/)(国内更稳)。
+
+**macOS 推荐一键安装**(curl 下载不经浏览器,不触发 Gatekeeper「已损坏」提示):
+
+```bash
+curl -fsSL https://keyway.one/install.sh | sh
+```
+
+Homebrew 用户:
+
+```bash
+brew install --cask --no-quarantine anmutu/tap/keyway
+```
 
 > **macOS 首次打开**:安装包未做 Apple 公证(个人开源项目)。若提示「无法验证开发者」——在 Finder 里**右键点 Keyway.app → 打开 → 再点「打开」**;若提示**「已损坏」**(浏览器下载常见),在终端执行 `xattr -dr com.apple.quarantine /Applications/Keyway.app` 后再启动——应用本身完好,只是被 Gatekeeper 误标。
 > **Windows**:SmartScreen 提示时选「仍要运行」。
