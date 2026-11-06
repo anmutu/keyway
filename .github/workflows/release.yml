@@ -63,3 +63,44 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+  sync-tap:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout tap
+        env:
+          TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$TAP_DEPLOY_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+          git clone git@github.com:anmutu/homebrew-tap.git tap
+
+      - name: Update cask to ${{ github.ref_name }}
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          cd tap
+          curl -fsSL -o a.dmg "https://github.com/anmutu/keyway/releases/download/${GITHUB_REF_NAME}/Keyway_${VER}_aarch64.dmg"
+          curl -fsSL -o x.dmg "https://github.com/anmutu/keyway/releases/download/${GITHUB_REF_NAME}/Keyway_${VER}_x64.dmg"
+          ARM=$(sha256sum a.dmg | cut -d" " -f1)
+          X64=$(sha256sum x.dmg | cut -d" " -f1)
+          python3 - "$VER" "$ARM" "$X64" <<'PY'
+          import re, sys
+          ver, arm, x64 = sys.argv[1:4]
+          p = "Casks/keyway.rb"
+          s = open(p).read()
+          s = re.sub(r'version "[^"]+"', f'version "{ver}"', s)
+          parts = s.split('sha256 "')
+          assert len(parts) == 3, "cask 应恰好有两处 sha256"
+          head, mid, tail = parts
+          mid = mid.split('"', 1)
+          tail = tail.split('"', 1)
+          s = head + f'sha256 "{arm}"' + mid[1] + f'sha256 "{x64}"' + tail[1]
+          open(p, "w").write(s)
+          PY
+          git config user.name "release-bot"
+          git config user.email "noreply@keyway.one"
+          git commit -am "cask: keyway ${VER}"
+          git push
