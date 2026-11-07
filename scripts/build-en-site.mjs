@@ -151,6 +151,14 @@ const NAV_FOOTER = [
   // 页脚链接
   ['>快速开始</a>', '>Quick Start</a>'],
   ['>隐私</a>', '>Privacy</a>'],
+
+  // 分区眉:中文页保留中英双语,英文页只留英文
+  ['data-sec="01 · 特性 FEATURES"', 'data-sec="01 · FEATURES"'],
+  ['data-sec="02 · 快速开始 QUICKSTART"', 'data-sec="02 · QUICKSTART"'],
+  ['data-sec="03 · 请求路径 REQUEST PATH"', 'data-sec="03 · REQUEST PATH"'],
+  ['data-sec="04 · 能力 CAPABILITIES"', 'data-sec="04 · CAPABILITIES"'],
+  ['data-sec="05 · 供应商 PROVIDERS"', 'data-sec="05 · PROVIDERS"'],
+  ['data-sec="06 · 常见问题 FAQ"', 'data-sec="06 · FAQ"'],
   ['>提交供应商</a>', '>Submit a provider</a>'],
   ['>条款</a>', '>Terms</a>'],
 ];
