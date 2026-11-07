@@ -160,7 +160,8 @@
         </a>
         <div class="nav-links">
           <a href="./">首页</a>
-          <a href="./docs/">文档</a>
+          <a href="./guide.html">使用指南</a>
+          <a href="./blog/">博客</a>
           <a href="./download.html">下载</a>
           <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
           <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="./en/guide.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a><a href="./guide.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a></div></details>
@@ -245,7 +246,7 @@
         <h3 data-i18n="gFieldsTitle">这些字段怎么填?</h3>
         <ul>
           <li data-i18n="gFieldName"><b>名称:</b>使用易辨认的名称,如「主力渠道」或「备用渠道」。编辑已有供应商前确认它是否也被其他 CLI 分组复用。</li>
-          <li data-i18n="gFieldUrl"><b>接口地址:</b>填供应商文档中的 API Base URL,不是官网或控制台网址,也不是完整的 <code>/chat/completions</code> 请求地址。按实际协议选择端点;示例 <code>https://api.example.com/v1</code> 仅用于说明,不能直接请求。</li>
+          <li data-i18n="gFieldUrl"><b>接口地址:</b>填供应商博客中的 API Base URL,不是官网或控制台网址,也不是完整的 <code>/chat/completions</code> 请求地址。按实际协议选择端点;示例 <code>https://api.example.com/v1</code> 仅用于说明,不能直接请求。</li>
           <li data-i18n="gFieldKey"><b>API Key:</b>粘贴该供应商的密钥,不要上传到工单或截图中。编辑时留空表示保留原密钥;换机导入配置后需要重新填写。</li>
           <li data-i18n="gFieldModel"><b>模型:</b>使用上游支持的准确模型名。卡片中的模型列表用于展示,不会自动为 CLI 改名或开通模型权限;实际请求模型仍需在 CLI 中配置。</li>
         </ul>

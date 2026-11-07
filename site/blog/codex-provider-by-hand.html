@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Codex 手动换供应商:config.toml 逐行讲解 — Keyway 文档</title>
+  <title>Codex 手动换供应商:config.toml 逐行讲解 — Keyway 博客</title>
   <meta name="description" content="不用任何工具,手动把 OpenAI Codex CLI 指到自定义供应商:找到 ~/.codex/config.toml、写 model_providers 配置块、配环境变量 Key、新开会话并用命令验证;附 macOS/Windows/Linux 差异与常见报错表。" />
-  <link rel="canonical" href="https://keyway.one/docs/codex-provider-by-hand.html" />
-    <link rel="alternate" hreflang="en" href="https://keyway.one/en/docs/codex-provider-by-hand.html" />
+  <link rel="canonical" href="https://keyway.one/blog/codex-provider-by-hand.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/blog/codex-provider-by-hand.html" />
   <script type="application/ld+json">
-  { "@context": "https://schema.org", "@type": "Article", "headline": "Codex 手动换供应商:config.toml 逐行讲解", "url": "https://keyway.one/docs/codex-provider-by-hand.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  { "@context": "https://schema.org", "@type": "Article", "headline": "Codex 手动换供应商:config.toml 逐行讲解", "url": "https://keyway.one/blog/codex-provider-by-hand.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
     { "@type": "Question", "name": "Codex 的供应商配置在哪个文件?", "acceptedAnswer": { "@type": "Answer", "text": "在 ~/.codex/config.toml(macOS/Linux 为 /home 或 /Users 下的 .codex 目录;Windows 为 %USERPROFILE%\\.codex\\config.toml)。自定义供应商写一个 [model_providers.名字] 块,顶层用 model_provider 指向它。" } },
     { "@type": "Question", "name": "Codex 的 API Key 配在哪里?", "acceptedAnswer": { "@type": "Answer", "text": "自定义供应商的 Key 放在配置块 env_key 字段指定的环境变量里,例如 env_key = \"MYRELAY_API_KEY\" 则导出同名环境变量。OpenAI 官方登录凭据另存于 ~/.codex/auth.json,两者互不影响。" } },
     { "@type": "Question", "name": "改完 config.toml 为什么必须新开会话?", "acceptedAnswer": { "@type": "Answer", "text": "codex 进程启动时一次性读取 config.toml 与环境变量,运行中不会重读。修改后需要新开终端窗口(保证环境变量已加载)并新开 codex 会话。" } },
-    { "@type": "Question", "name": "wire_api 的 responses 和 chat 有什么区别?", "acceptedAnswer": { "@type": "Answer", "text": "这是 OpenAI 的两种接口形态:responses 是新版 Responses API,chat 是传统 Chat Completions。用哪种取决于供应商支持哪一种,按供应商文档填写,填错通常表现为 404 或参数错误。" } },
+    { "@type": "Question", "name": "wire_api 的 responses 和 chat 有什么区别?", "acceptedAnswer": { "@type": "Answer", "text": "这是 OpenAI 的两种接口形态:responses 是新版 Responses API,chat 是传统 Chat Completions。用哪种取决于供应商支持哪一种,按供应商博客填写,填错通常表现为 404 或参数错误。" } },
     { "@type": "Question", "name": "能同时配好几家随时切换吗?", "acceptedAnswer": { "@type": "Answer", "text": "可以配多个 [model_providers.x] 块,但顶层 model_provider 只有一个当前值;切换就要改文件并新开会话——这正是手动管理最费劲的地方。" } }
   ] }
   </script>
@@ -129,16 +129,17 @@
         </a>
         <div class="nav-links">
           <a href="../">首页</a>
-          <a href="./codex-provider-by-hand.html">文档</a>
+          <a href="../guide.html">使用指南</a>
+          <a href="./codex-provider-by-hand.html">博客</a>
           <a href="../download.html">下载</a>
           <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/docs/codex-provider-by-hand.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a><a href="./codex-provider-by-hand.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a></div></details>
+          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/blog/codex-provider-by-hand.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a><a href="./codex-provider-by-hand.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a></div></details>
         </div>
       </div>
     </nav>
   <main>
     <h1>Codex 手动换供应商:config.toml 逐行讲解</h1>
-    <p class="meta"><a href="./">文档</a> · 系列 · 第 2 篇 · 2026-11-06 · 约 8 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
+    <p class="meta"><a href="./">博客</a> · 系列 · 第 2 篇 · 2026-11-06 · 约 8 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
 
     <div class="answer"><b>30 秒答案:</b>Codex 的供应商配置全部在 <code>~/.codex/config.toml</code>:写一个 <code>[model_providers.名字]</code> 块填接口地址,Key 放进块里 <code>env_key</code> 指定的环境变量,顶层 <code>model_provider</code> 指向这个块,然后<b>新开终端 + 新开 codex 会话</b>。改文件不重启会话,等于什么都没改。</div>
 
@@ -196,9 +197,9 @@ wire_api = "responses"                    # 协议:responses(新版)或 chat(传
     <p>逐行说明:</p>
     <ul>
       <li><b>model_provider</b>:顶层开关。想换第二家时,改的就是这一行——记住它,后面讲切换痛点时会再见到。</li>
-      <li><b>base_url</b>:供应商文档里给的接口地址。<b>/v1 带不带以文档为准</b>;Codex 会在它后面拼接具体接口路径。</li>
+      <li><b>base_url</b>:供应商博客里给的接口地址。<b>/v1 带不带以博客为准</b>;Codex 会在它后面拼接具体接口路径。</li>
       <li><b>env_key</b>:只写变量名,不写 Key 本身。这是安全设计——Key 永远不进配置文件、不进 git。</li>
-      <li><b>wire_api</b>:供应商支持哪种填哪种(文档会说明)。填错的典型症状是 404 或参数报错。</li>
+      <li><b>wire_api</b>:供应商支持哪种填哪种(博客会说明)。填错的典型症状是 404 或参数报错。</li>
     </ul>
 
     <h3>第 3 步 · 把 Key 放进环境变量</h3>
@@ -230,7 +231,7 @@ source ~/.bashrc</code></pre>
       <tr><th>症状</th><th>最可能的原因</th><th>解法</th></tr>
       <tr><td>改完毫无变化</td><td>旧会话未重启 / 环境变量未加载</td><td>新开终端窗口 + 新开 codex 会话</td></tr>
       <tr><td>401 Unauthorized</td><td>Key 错、Key 未导出、变量名与 env_key 不一致</td><td>echo 检查变量;核对 env_key 拼写</td></tr>
-      <tr><td>404 Not Found</td><td>base_url 路径不对 / wire_api 填错</td><td>/v1 加减试一次;对照供应商文档改 wire_api</td></tr>
+      <tr><td>404 Not Found</td><td>base_url 路径不对 / wire_api 填错</td><td>/v1 加减试一次;对照供应商博客改 wire_api</td></tr>
       <tr><td>连接超时</td><td>网络不通或供应商故障</td><td>curl 直接测上游;换网络验证</td></tr>
       <tr><td>模型不存在</td><td>模型名该供应商不提供</td><td>用它的模型列表里的名字</td></tr>
     </table>

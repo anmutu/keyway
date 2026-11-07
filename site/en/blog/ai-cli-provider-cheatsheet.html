@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The three-CLI config cheat sheet, and how manager tools work — Keyway Docs</title>
+  <title>The three-CLI config cheat sheet, and how manager tools work — Keyway Blog</title>
   <meta name="description" content="Codex, Claude Code and Gemini CLI manual config in one table — then how local-proxy manager tools work: takeover, backup, hot switching and request logs, and why switching no longer needs a restart." />
-  <link rel="canonical" href="https://keyway.one/en/docs/ai-cli-provider-cheatsheet.html" />
-  <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/docs/ai-cli-provider-cheatsheet.html" />
+  <link rel="canonical" href="https://keyway.one/en/blog/ai-cli-provider-cheatsheet.html" />
+  <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/blog/ai-cli-provider-cheatsheet.html" />
   <script type="application/ld+json">
-  { "@context": "https://schema.org", "@type": "Article", "headline": "The three-CLI config cheat sheet, and how manager tools work", "url": "https://keyway.one/en/docs/ai-cli-provider-cheatsheet.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  { "@context": "https://schema.org", "@type": "Article", "headline": "The three-CLI config cheat sheet, and how manager tools work", "url": "https://keyway.one/en/blog/ai-cli-provider-cheatsheet.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -127,16 +127,17 @@
         </a>
         <div class="nav-links">
           <a href="../../">Home</a>
-          <a href="./ai-cli-provider-cheatsheet.html">Docs</a>
+          <a href="../../guide.html">Guide</a>
+          <a href="./ai-cli-provider-cheatsheet.html">Blog</a>
           <a href="../../download.html">Download</a>
           <button id="themeToggle" type="button" aria-label="Toggle theme" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="Switch language"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>中文</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../../docs/ai-cli-provider-cheatsheet.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a><a href="./ai-cli-provider-cheatsheet.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a></div></details>
+          <details class="locale-menu" id="langMenu"><summary aria-label="Switch language"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>中文</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../../blog/ai-cli-provider-cheatsheet.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a><a href="./ai-cli-provider-cheatsheet.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a></div></details>
         </div>
       </div>
     </nav>
   <main>
     <h1>The three-CLI config cheat sheet, and how manager tools work</h1>
-    <p class="meta"><a href="./">Docs</a> · Series · Part 6 (finale)· 2026-11-06 · ~6 min · <a href="https://github.com/anmutu/keyway">author</a></p>
+    <p class="meta"><a href="./">Blog</a> · Series · Part 6 (finale)· 2026-11-06 · ~6 min · <a href="https://github.com/anmutu/keyway">author</a></p>
 
     <div class="answer"><b>The 30-second answer:</b>everything manual fits in one table; and the core idea of local-proxy tools is a single sentence — <b>lock the CLI to a proxy on 127.0.0.1, so "switching providers" goes from editing config files to changing one setting of the proxy</b>. That's why switching stops needing restarts.</div>
 

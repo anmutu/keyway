@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>三家 CLI 配置对照总表,以及管理工具的原理 — Keyway 文档</title>
-  <meta name="description" content="Codex、Claude Code、Gemini CLI 手动配置一张表对照;再讲清"本地代理"类管理工具的原理:接管、备份、热切换、请求日志——为什么切换不再需要重启会话。" />
-  <link rel="canonical" href="https://keyway.one/docs/ai-cli-provider-cheatsheet.html" />
-    <link rel="alternate" hreflang="en" href="https://keyway.one/en/docs/ai-cli-provider-cheatsheet.html" />
+  <title>为什么改了配置没生效?AI CLI 配置加载顺序详解 — Keyway 博客</title>
+  <meta name="description" content="贯穿 AI CLI 手动配置的最大疑问:进程启动快照、shell 配置文件加载时机、Windows setx 的新窗口规则、IDE 内嵌终端的环境继承——一张图讲透,附五步排查法。" />
+  <link rel="canonical" href="https://keyway.one/blog/why-config-not-applied.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/blog/why-config-not-applied.html" />
   <script type="application/ld+json">
-  { "@context": "https://schema.org", "@type": "Article", "headline": "三家 CLI 配置对照总表,以及管理工具的原理", "url": "https://keyway.one/docs/ai-cli-provider-cheatsheet.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  { "@context": "https://schema.org", "@type": "Article", "headline": "为什么改了配置没生效?AI CLI 配置加载顺序详解", "url": "https://keyway.one/blog/why-config-not-applied.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-    { "@type": "Question", "name": "本地代理类工具是怎么做到切换不用重启的?", "acceptedAnswer": { "@type": "Answer", "text": "接管时把 CLI 的接口地址改写为本地代理(如 127.0.0.1:9527)。此后 CLI 永远只认代理这一个地址;换供应商时工具只改代理内部转发到哪一家——配置文件不再变动,正在通过代理的会话自然无需重启。" } },
-    { "@type": "Question", "name": "接管会动我的配置文件吗?能还原吗?", "acceptedAnswer": { "@type": "Answer", "text": "会改写供应商地址所在的那一行(改动前自动备份)。以 Keyway 为例:Claude Code 改 settings.json 的 env.ANTHROPIC_BASE_URL,Codex 改 config.toml 的 base_url,Gemini 改 .env 的 GOOGLE_GEMINI_BASE_URL;一键还原时从备份恢复,若文件被外部改动会中止而非覆盖。" } },
-    { "@type": "Question", "name": "API Key 会上传到工具的服务器吗?", "acceptedAnswer": { "@type": "Answer", "text": "以 Keyway 为例:不会。Keyway 是本地优先的桌面应用,Key 存在本机 SQLCipher 加密数据库、主密钥由系统钥匙串保管;代理转发时把认证信息发给你选择的上游供应商——与手动配置时的数据流向一致。" } }
+    { "@type": "Question", "name": "为什么 CLI 运行中改配置文件不生效?", "acceptedAnswer": { "@type": "Answer", "text": "几乎所有 CLI 都在进程启动那一刻读取配置与环境变量,之后不再重读。这是刻意的稳定性行为:运行中的会话如果配置随时变化,行为将不可预测。" } },
+    { "@type": "Question", "name": "Windows setx 之后为什么当前窗口看不到变量?", "acceptedAnswer": { "@type": "Answer", "text": "setx 写入的是注册表里的用户变量,只影响之后新启动的进程;当前窗口的环境是它启动时的快照,不会刷新。当前窗口可用 $env:NAME=value 临时设置,或直接新开窗口。" } },
+    { "@type": "Question", "name": "IDE 里的终端为什么读不到新变量?", "acceptedAnswer": { "@type": "Answer", "text": "IDE 内嵌终端继承的是 IDE 主进程的环境,而 IDE 往往在你修改变量之前就启动了。重开终端标签不够,要重启整个 IDE(或用 IDE 的环境变量注入功能)。" } }
   ] }
   </script>
   <style>
     :root { --fg: #1f1e1d; --fg-2: #5d5952; --fg-3: #8f887c; --blue: #c96442; --hair: #ddd6c6; --bg-alt: #f0eee6; }
     * { box-sizing:border-box; }
     body { margin:0; background:#faf9f5; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; color:var(--fg); background:#fff; line-height:1.78; -webkit-font-smoothing:antialiased; }
-    main { max-width:760px; margin:0 auto; padding:56px 22px 90px; }
+    main { max-width:720px; margin:0 auto; padding:56px 22px 90px; }
     h1 { font-size:30px; font-weight:700; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
     .meta { color:var(--fg-3); font-size:13px; margin-bottom:26px; }
     .meta a { color:var(--blue); text-decoration:none; }
@@ -37,15 +37,13 @@
     pre code { background:none; padding:0; font-size:13.5px; }
     .answer { background:rgba(201,100,66,.07); border:1px solid rgba(201,100,66,.3); border-radius:12px; padding:16px 18px; margin:18px 0; }
     .answer b { color:var(--blue); }
-    table { width:100%; border-collapse:collapse; font-size:14px; margin:14px 0; }
+    table { width:100%; border-collapse:collapse; font-size:14.5px; margin:14px 0; }
     th { text-align:left; padding:8px 10px; border-bottom:2px solid var(--hair); font-weight:600; }
     td { padding:8px 10px; border-bottom:1px solid var(--hair); color:var(--fg-2); vertical-align:top; }
-    td:first-child { color:var(--fg); white-space:nowrap; }
+    td:first-child { color:var(--fg); }
     details { border:1px solid var(--hair); border-radius:12px; padding:12px 16px; margin:10px 0; }
     summary { font-weight:600; cursor:pointer; font-size:15px; }
     details p { margin:8px 0 2px; }
-    .btn { display:inline-block; background:var(--blue); color:#fff !important; text-decoration:none; padding:11px 26px; border-radius:980px; font-weight:500; margin:6px 8px 0 0; }
-    .btn:hover { background:#0074dd; }
     footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
     footer a { color:var(--blue); text-decoration:none; }
     .next { display:block; text-decoration:none; color:inherit; border:1px solid var(--hair); border-radius:14px; padding:18px 20px; margin-top:36px; }
@@ -127,75 +125,66 @@
         </a>
         <div class="nav-links">
           <a href="../">首页</a>
-          <a href="./ai-cli-provider-cheatsheet.html">文档</a>
+          <a href="../guide.html">使用指南</a>
+          <a href="./why-config-not-applied.html">博客</a>
           <a href="../download.html">下载</a>
           <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/docs/ai-cli-provider-cheatsheet.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a><a href="./ai-cli-provider-cheatsheet.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a></div></details>
+          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/blog/why-config-not-applied.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a><a href="./why-config-not-applied.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a></div></details>
         </div>
       </div>
     </nav>
   <main>
-    <h1>三家 CLI 配置对照总表,以及管理工具的原理</h1>
-    <p class="meta"><a href="./">文档</a> · 系列 · 第 6 篇(收官)· 2026-11-06 · 约 7 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
+    <h1>为什么"改了配置没生效"?配置加载顺序详解</h1>
+    <p class="meta"><a href="./">博客</a> · 系列 · 第 5 篇 · 2026-11-06 · 约 6 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
 
-    <div class="answer"><b>30 秒答案:</b>手动方案的全部细节一张表装下;而"本地代理"类工具的核心思路只有一句话——<b>把 CLI 锁定到 127.0.0.1 上的一个代理,让"换供应商"从改配置文件变成改代理的一格选择</b>,于是切换不再需要重启会话。</div>
+    <div class="answer"><b>30 秒答案:</b>因为配置和变量的读取都发生在<b>过去</b>——shell 配置文件在<b>窗口打开时</b>执行,环境变量在<b>CLI 进程启动时</b>被快照,配置文件同样<b>只在启动时读一次</b>。你改的是现在,程序看的是它出生那刻的世界。<b>新窗口 + 新进程</b>是万能解。</div>
 
-    <h2>一、手动配置对照总表(收藏向)</h2>
+    <h2>一、一张时间轴看懂</h2>
+    <pre><code>你昨天                     你今天
+  │                          │
+  ▼                          ▼
+打开终端窗口                修改 .zshrc / setx / config.toml
+  │                          │
+  ▼                          ▼
+shell 执行 .zshrc ──► 环境就绪    (这些变化不影响任何已存在的东西)
+  │
+  ▼
+启动 CLI 进程:读环境快照 + 读配置文件 ──► 之后不再重读
+  │
+  ▼
+你今天在同一个窗口里改文件 ──► 运行中的 CLI 一无所知</code></pre>
+    <p>三层"快照"叠在一起:窗口层(shell 配置)、进程层(环境变量)、应用层(配置文件)。任何一层的修改,都要从那一层往下重新走一遍。</p>
+
+    <h2>二、三个系统的刷新规则</h2>
     <table>
-      <tr><th></th><th>Codex</th><th>Claude Code</th><th>Gemini CLI</th></tr>
-      <tr><td>配置文件</td><td><code>~/.codex/config.toml</code></td><td><code>~/.claude/settings.json</code></td><td><code>~/.gemini/.env</code></td></tr>
-      <tr><td>地址写在哪</td><td><code>[model_providers.x] base_url</code></td><td><code>env.ANTHROPIC_BASE_URL</code></td><td><code>GOOGLE_GEMINI_BASE_URL</code></td></tr>
-      <tr><td>Key 放哪</td><td><code>env_key</code> 指定的环境变量</td><td><code>ANTHROPIC_AUTH_TOKEN</code> 或 <code>ANTHROPIC_API_KEY</code></td><td><code>GEMINI_API_KEY</code>(配合 /auth 切认证)</td></tr>
-      <tr><td>启用哪家</td><td>顶层 <code>model_provider</code></td><td>—(地址即指向)</td><td>—(地址即指向)</td></tr>
-      <tr><td>读取时机</td><td>进程启动</td><td>会话启动</td><td>进程启动(只读一次 .env)</td></tr>
-      <tr><td>Windows 路径</td><td><code>%USERPROFILE%\.codex\</code></td><td><code>%USERPROFILE%\.claude\</code></td><td><code>%USERPROFILE%\.gemini\</code></td></tr>
-      <tr><td>格式雷区</td><td>TOML 语法、wire_api 选错</td><td>JSON 逗号、两处定义打架</td><td>引号/export 多余、OAuth 未切</td></tr>
+      <tr><th>改了什么</th><th>macOS / Linux</th><th>Windows</th></tr>
+      <tr><td>shell 配置里的变量</td><td><code>source ~/.zshrc</code> 或新开窗口</td><td>—(见下行)</td></tr>
+      <tr><td>用户环境变量(setx)</td><td>—</td><td><b>必须新开</b> PowerShell/CMD 窗口;当前窗口可 <code>$env:名=值</code> 临时补</td></tr>
+      <tr><td>CLI 配置文件</td><td colspan="2" style="color:var(--fg)">新开 CLI 会话(三家 CLI 通用)</td></tr>
+      <tr><td>IDE 内嵌终端</td><td colspan="2" style="color:var(--fg)">继承 IDE 主进程环境——<b>重启整个 IDE</b>,重开标签页没用</td></tr>
     </table>
-    <p>三家三种格式、三套键名、三种读取时机——这就是手动管理的全部复杂度,也是它容易出错的全部原因。</p>
 
-    <h2>二、切换的账:手动六步 vs 心里的预期一步</h2>
-    <pre><code>手动:打开文件 → 改地址/Key 行 → 保存 → 关终端 → 开新终端 → 新开会话
-预期:我想用另一家,点一下就完</code></pre>
-    <p>第 5 篇解释了为什么 CLI 必须"启动时定案"——这不是 bug,是工程上的稳定选择。矛盾无解了吗?有一种结构恰好化解它:<b>让 CLI 的世界里只有一个永远不变的地址。</b></p>
-
-    <h2>三、"本地代理"的原理:一图看懂</h2>
-    <pre><code>【手动模式】                          【代理模式】
-                                      CLI ──► 127.0.0.1:9527(本地代理)
-CLI ──► 供应商 A  ← 换家 = 改文件重启            │  代理查一眼"当前选择"
-                                           ├──► 供应商 A(官方)
-CLI ──► 供应商 B  ← 再换 = 再改再重启            ├──► 供应商 B(第三方)
-                                           └──► 供应商 C(备用,故障转移)</code></pre>
-    <p>分四步拆开:</p>
+    <h2>三、五步排查法(按顺序执行,命中即停)</h2>
     <ol>
-      <li><b>接管:</b>工具把 CLI 配置里的接口地址<b>改写</b>为本地代理(改前自动备份原文件)。对 CLI 来说,代理就是"我的供应商"。</li>
-      <li><b>Key 托管:</b>各家的 Key 存进工具的本机加密库;CLI 手里不再有真实 Key,代理转发时按当前选择注入认证。</li>
-      <li><b>切换:</b>你点选另一家 → 只有代理内部的转发目标变了,<b>配置文件一动不动</b> → 正在通过代理的会话,下一个请求就走新家,<b>不用重启</b>。</li>
-      <li><b>还原:</b>不想用了,一键把配置从备份恢复,CLI 回到直连,仿佛一切没发生过。</li>
+      <li><b>同一个窗口里</b>打印变量:<code>echo $MY_KEY</code>(macOS/Linux)/ <code>echo $env:MY_KEY</code>(Windows)。<br />打印不出来 → 窗口层问题:变量没写对地方、窗口是旧的。</li>
+      <li><b>确认只有一处定义</b>:grep 一下 shell 配置 + 检查 CLI 自己的配置文件,同名变量两处都在 → 先删一处(单一定义源原则)。</li>
+      <li><b>看进程是否新起</b>:当前 CLI 会话是改配置之前启动的吗?退出重开。</li>
+      <li><b>看文件本身</b>:JSON/TOML 语法错误会让整个配置被忽略或报错——贴进校验器过一遍;<code>.env</code> 检查有没有多余的引号和空格。</li>
+      <li><b>直连上游</b>:用 curl 绕过 CLI 单独测地址和 Key(前几篇都给过命令)——curl 通而 CLI 不通,问题在 CLI 配置;curl 也不通,问题在供应商或网络。</li>
     </ol>
-    <p>顺带的收益:代理能看到每个请求的<b>实际去向</b>(默认选了 A,但路由规则/故障转移把你送去 B,日志里一目了然),还能顺手统计 token 用量——这些是手动配置永远给不了的观测能力。</p>
 
-    <h2>四、诚实的边界(以 Keyway 为例)</h2>
-    <ul>
-      <li>代理运行期间工具需保持开启(托盘驻留即可),完全退出会停止转发;</li>
-      <li>首次接管 Codex 后需要新开一次会话(此后切换不再需要);</li>
-      <li>"本地"指控制面在本机:<b>请求内容与认证仍会发给你选择的上游供应商</b>,与手动配置时的数据流向完全一致;Key 不上传任何第三方服务器(SQLCipher 加密存本机,主密钥在系统钥匙串);</li>
-      <li>已发出/进行中的请求不会被迁移,切换影响的是后续请求。</li>
-    </ul>
-    <p>系列至此收官。你现在已经掌握了三家的手动配置全貌,也知道了"一键切换"背后的机制并非魔法,只是一个聪明而克制的中间人。</p>
-    <p>
-      <a class="btn" href="https://github.com/anmutu/keyway/releases">免费下载 Keyway</a>
-      <a class="btn" href="../guide.html" style="background:none;color:var(--blue);border:1px solid var(--hair);">看使用指南</a>
-    </p>
+    <h2>四、为什么这些工具都"只读一次"?</h2>
+    <p>不是偷懒,是稳定:会话进行到一半时配置若能随时变化,同一个会话前后两条请求可能走向不同供应商,计费、上下文、排错全部失控。"启动时定案"是这些 CLI 共同的工程选择。<b>矛盾在于人:</b>人希望"随手一切换",配置却天生静止——这个矛盾,就是下一篇文章(也是本系列收官)的主角。</p>
 
     <h2>常见问题</h2>
-    <details><summary>代理会不会拖慢请求?</summary><p>转发路径是"本机 → 上游",多出的只有本机进程内的一跳,通常在毫秒级;真正的延迟大头永远在供应商侧。</p></details>
-    <details><summary>工具崩了我的 CLI 会怎样?</summary><p>CLI 会连不上"供应商"(代理不在了),报连接错误;配置文件仍在,一键还原(或手动把地址改回备份值)即恢复直连——这也是接管必须做备份的原因。</p></details>
-    <details><summary>和直接改 hosts / 用系统代理是一回事吗?</summary><p>不是。系统代理影响整机流量;这类工具只接管单个 CLI 的 API 地址,粒度更细、互不干扰。</p></details>
+    <details><summary>source 之后还是不行?</summary><p>先确认你改的是当前 shell 实际加载的那个文件:macOS 默认 zsh 读 ~/.zshrc,但如果装过 oh-my-zsh 或改过 shell,情况会变;<code>echo $SHELL</code> 先看看自己用的是谁。</p></details>
+    <details><summary>有没有"改了立刻生效"的办法?</summary><p>对正在运行的会话,没有(原因见第四节)。想接近这种体验,需要"本地代理"类的方案——下一篇讲它的原理。</p></details>
+    <details><summary>CI/服务器上为什么更要小心?</summary><p>CI 每次都是全新进程,反而没有旧快照问题;真正的坑是把 Key 写进仓库或日志。服务器上的长驻进程同理:改完 .env 必须重启服务。</p></details>
 
-    <a class="next" href="./switch-provider-by-hand.html">
-      <span class="tag">系列 · 第 1 篇</span>
-      <h2>← 从头再看:换一家 AI 供应商,要动哪三个地方?</h2>
-      <p>把六篇串起来再走一遍,你会发现自己已经完全看懂这条链路。</p>
+    <a class="next" href="./ai-cli-provider-cheatsheet.html">
+      <span class="tag">系列 · 第 6 篇 · 收官</span>
+      <h2>三家配置对照总表,以及管理工具的原理 →</h2>
+      <p>一张表装下全部细节;再看"本地代理"如何把六步切换变成一次点击。</p>
     </a>
   </main>
 
