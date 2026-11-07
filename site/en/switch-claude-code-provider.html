@@ -57,6 +57,10 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; color: var(--fg); background: var(--bg); font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
       .wrap { max-width: 720px; margin: 0 auto; padding: 0 22px; }
+      nav { position: sticky; top: 0; z-index: 50; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+      .nav-inner { max-width: 720px; margin: 0 auto; padding: 10px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+      .nav-inner a { color: var(--fg-2); text-decoration: none; }
+      .nav-inner a:hover { color: #000; }
       .brand { color: var(--fg); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
       .brand img { border-radius: 4px; }
       header { padding: 56px 0 8px; }
@@ -77,7 +81,7 @@
       .cta { background: var(--bg-alt); border-radius: 16px; padding: 28px; text-align: center; margin: 48px 0 8px; }
       .cta h2 { margin-top: 0; }
       .btn { display: inline-block; background: var(--blue); color: #fff; text-decoration: none; padding: 11px 24px; border-radius: 980px; font-weight: 500; margin: 8px 6px 0; }
-      .btn:hover { background: #0074dd; }
+      .btn:hover { background: #c25f3f; }
       .btn.ghost { background: none; color: var(--blue); border: 1px solid var(--hair); }
       details { border-bottom: 1px solid var(--hair); padding: 14px 0; }
       summary { font-weight: 600; cursor: pointer; font-size: 17px; }
@@ -160,6 +164,6 @@
         <p><a href="./index.html">Home</a> · <a href="../guides/claude-code-switch-provider.html">中文版</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
       </footer>
     </div>
-  <script src="/shared-header.js?v=2"></script>
+  <script src="/shared-header.js?v=6"></script>
 </body>
 </html>

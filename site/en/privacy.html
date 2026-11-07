@@ -11,7 +11,7 @@
   { "@context": "https://schema.org", "@type": "WebPage", "name": "Keyway Privacy", "url": "https://keyway.one/en/privacy.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <style>
-    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --blue: #d97757; --hair: #e5e5e5;  --bg: #faf9f5; --nav-bg: rgba(250,249,245,0.88); }
+    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --blue: #d97757; --hair: #e5e5e5;  --bg: #fafaf8; --nav-bg: rgba(250,250,248,.9); }
     * { box-sizing: border-box; }
     body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif; color:var(--fg); background:#faf9f5; line-height:1.75; -webkit-font-smoothing:antialiased; }
     main { max-width:680px; margin:0 auto; padding:64px 22px 80px; }
@@ -25,11 +25,27 @@
     a { color:var(--blue); }
     footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
   
-      
-      
-      
-      
-      
+
+      /* 站级导航(与其他页面完全一致) */
+      nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
+      .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
+      .nav-inner a { color:rgba(31,30,29,.78); text-decoration:none; font-size:13px; }
+      .nav-inner a:hover { color:var(--fg); }
+      .nav-inner .brand { color:var(--fg); font-weight:600; }
+      .nav-links { display:flex; gap:18px; align-items:center; }
+      @media (max-width:640px) { .nav-links { gap:12px; } }
+
+      .locale-menu { position:relative; }
+      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
+      .locale-menu summary::-webkit-details-marker { display:none; }
+      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
+      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
+      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
+      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
+      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
+      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
+  
+      .site-footer { background:var(--bg-alt); border-top:1px solid var(--hair); padding:56px 22px 28px; }
       .footer-grid { max-width:980px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:36px; text-align:left; }
       .footer-brand .brand { display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:17px; }
       .footer-brand p { color:var(--fg-2); font-size:13.5px; line-height:1.7; margin:12px 0 0; }
@@ -86,6 +102,20 @@
         <span class="mono">One key · one way</span>
       </div>
     </footer>
-<script src="/shared-header.js?v=2"></script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>
+(function() {
+  var theme = null;
+  document.addEventListener("DOMContentLoaded", function() {
+    if (!btn) return;
+    btn.addEventListener("click", function() {
+    });
+  });
+})();
+</script>
+<script>
+(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();
+</script>
+<script src="/shared-header.js?v=6"></script>
 </body>
 </html>

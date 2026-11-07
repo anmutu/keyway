@@ -1,125 +1,84 @@
 /**
- * Keyway 共享 Header — 全站唯一 header 源码。
- * 每个页面只需 <script src="/shared-header.js"></script>,
- * 修改此文件即全站生效,不再逐页手写。
+ * Keyway 共享 Header — 全站唯一 header。
+ * 只生成 nav + logo 变色 + 语言下拉。无主题切换。
+ * 链接用固定宽度盒子，保证每个页面像素级一致。
  */
 (function () {
   "use strict";
 
-  var isEN = window.location.pathname.startsWith("/en/");
-  var L = function (zh, en) { return isEN ? en : zh; };
-
-  // 路径:根据当前页面位置计算绝对路径
-  var path = window.location.pathname;
+  var isEN = window.location.pathname.indexOf("/en/") === 0;
+  var T = function (zh, en) { return isEN ? en : zh; };
   var home = isEN ? "/en/" : "/";
   var guide = isEN ? "/en/guide.html" : "/guide.html";
   var blog = isEN ? "/en/blog/" : "/blog/";
-  var download = isEN ? "/en/download.html" : "/download.html";
+  var dl = isEN ? "/en/download.html" : "/download.html";
 
-  // 语言互跳:找当前页面的对应语言版本
-  var langCounterpart;
-  if (isEN) {
-    langCounterpart = path.replace(/^\/en/, "") || "/";
-  } else {
-    langCounterpart = "/en" + (path === "/" ? "/" : path);
+  var GB = '<img src="/flags/gb.svg" alt="" width="16" height="12" style="border-radius:2px;display:block;object-fit:cover;">';
+  var CN = '<img src="/flags/cn.svg" alt="" width="16" height="12" style="border-radius:2px;display:block;object-fit:cover;">';
+  var CHEV = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>';
+
+  var counter = isEN
+    ? (window.location.pathname.replace(/^\/en/, "") || "/")
+    : ("/en" + (window.location.pathname === "/" ? "/" : window.location.pathname));
+
+  // 固定宽度链接盒：文本子像素渲染差异不再影响布局位置
+  function L(href, label, w) {
+    return '<a href="' + href + '" style="display:inline-block!important;width:' + w + 'px!important;text-align:center!important;white-space:nowrap!important;color:rgba(31,30,29,.78)!important;text-decoration:none;font-size:13px!important;">' + label + '</a>';
   }
+  var widths = isEN ? [42, 40, 32, 66] : [28, 56, 28, 28];
 
-  // SVG 图标(Lucide 官方路径)
-  var SUN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
-  var MOON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
-  var GLOBE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>';
-  var CHEV = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
-  var GB = '<img class="flag" src="/flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" />';
-  var CN = '<img class="flag" src="/flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" />';
+  var nav =
+    '<nav id="kw-nav" style="position:sticky;top:0;z-index:50;background:rgba(250,249,245,.88);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);height:48px!important;box-shadow:0 1px 0 rgba(0,0,0,.08);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif!important;">' +
+    '<div style="max-width:980px!important;margin:0 auto;padding:0 22px;height:100%!important;display:flex;align-items:center;justify-content:space-between;">' +
+    '<a href="' + home + '" style="display:flex;align-items:center;gap:7px!important;text-decoration:none;">' +
+    '<img src="/logo.svg" width="18" height="18" alt="Keyway" style="border-radius:4px;">' +
+    '<span style="color:#1a1a1a!important;font-weight:600!important;font-size:14px!important;">Keyway</span></a>' +
+    '<div style="display:flex;gap:18px!important;align-items:center;">' +
+    L(home, T("首页", "Home"), widths[0]) +
+    L(guide, T("使用指南", "Guide"), widths[1]) +
+    L(blog, T("博客", "Blog"), widths[2]) +
+    L(dl, T("下载", "Download"), widths[3]) +
+    '<details id="langMenu" style="position:relative!important;display:inline-block!important;width:70px!important;overflow:visible!important;">' +
+    '<summary style="list-style:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px!important;color:#8e8e8e!important;padding:5px 8px;border-radius:6px;">' +
+    (isEN ? GB : CN) + '<span>' + (isEN ? "EN" : "ZH") + '</span>' + CHEV + '</summary>' +
+    '<div style="position:absolute!important;right:0!important;top:calc(100% + 4px)!important;background:#faf9f5!important;border:1px solid #e5e5e5!important;border-radius:10px!important;padding:4px!important;display:flex!important;flex-direction:column!important;min-width:130px!important;box-shadow:0 12px 32px rgba(40,30,20,.14)!important;z-index:90!important;">' +
+    '<a href="' + counter + '" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;font-size:13.5px;color:#5e5e5e;text-decoration:none;">' + (isEN ? CN : GB) + ' ' + (isEN ? "中文" : "English") + '</a>' +
+    '<a style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;font-size:13.5px;color:#d97757;text-decoration:none;font-weight:600;">' + (isEN ? GB : CN) + ' ' + (isEN ? "English" : "中文") + '</a>' +
+    '</div></details></div></div></nav>';
 
-  // 构建 header HTML
-  var summaryFlag = isEN ? GB : CN;
-  var summaryLabel = isEN ? "EN" : "ZH";
-  var zhOpt = '<a href="' + langCounterpart + '" lang="zh">' + CN + '中文</a>';
-  var enOpt = '<a href="' + langCounterpart + '" lang="en"' + (isEN ? ' aria-current="page"' : '') + '>' + GB + 'English</a>';
-  // 当前语言排第二(高亮)
-  var opts = isEN ? zhOpt + enOpt : enOpt + zhOpt.replace('>', ' aria-current="page">');
+  // 替换或注入
+  var old = document.querySelector('nav');
+  if (old) { old.outerHTML = nav; }
+  else { document.body.insertAdjacentHTML('afterbegin', nav); }
 
-  var html =
-    '<nav>' +
-      '<div class="nav-inner">' +
-        '<a href="' + home + '" style="display:flex!important;align-items:center!important;gap:7px!important;text-decoration:none;">' +
-          '<img src="/logo.svg" width="18" height="18" alt="Keyway" style="border-radius:4px;" />' +
-          '<span class="brand">Keyway</span>' +
-        '</a>' +
-        '<div class="nav-links">' +
-          '<a href="' + home + '">' + L("首页", "Home") + '</a>' +
-          '<a href="' + guide + '">' + L("使用指南", "Guide") + '</a>' +
-          '<a href="' + blog + '">' + L("博客", "Blog") + '</a>' +
-          '<a href="' + download + '">' + L("下载", "Download") + '</a>' +
-          '' +
-          '<details class="locale-menu" id="langMenu">' +
-            '<summary aria-label="' + L("切换语言", "Switch language") + '">' + summaryFlag + '<span>' + summaryLabel + '</span>' + CHEV + '</summary>' +
-            '<div class="locale-options">' + opts + '</div>' +
-          '</details>' +
-        '</div>' +
-      '</div>' +
-    '</nav>';
+  // 图标 CSS(最小化,只影响 nav 内部)
+  var s = document.createElement('style');
+  s.textContent = '#langMenu summary::-webkit-details-marker{display:none}' +
+    '#langMenu summary:hover{color:#1a1a1a;background:#f0efeb}' +
+    '#langMenu div a:hover{background:#f0efeb;color:#1a1a1a}' +
+    '#kw-nav{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif!important;font-size:13px!important;height:48px!important}' +
+    '#kw-nav *{font-family:inherit!important}' +
+    '#kw-nav a{font-size:13px!important;color:rgba(31,30,29,.78)!important;text-decoration:none!important}' +
+    '#kw-nav a:hover{color:#1a1a1a!important}' +
+    '#kw-nav span{font-size:14px!important;font-weight:600!important;color:#1a1a1a!important}' +
+    '#kw-nav summary{font-size:12.5px!important}' +
+    '#kw-nav details{position:relative!important;display:inline-block!important;width:70px!important}' +
+    '#kw-nav details>div{position:absolute!important}' +
+    '#kw-nav details a{font-size:13.5px!important}';
+  document.head.appendChild(s);
 
-  // CSS(一次性注入)
-  var css =
-    ':root{--fg:#1a1a1a;--fg-2:#5e5e5e;--fg-3:#8e8e8e;--blue:#d97757;--bg:#faf9f5;--bg-alt:#f0efeb;--nav-bg:rgba(250,249,245,.88);--hair:#e5e5e5;}' +
-    '--fg-2:#a0a09e;--fg-3:#6e6e6c;--blue:#d97757;--bg:#1a1a1a;--bg-alt:#242424;--nav-bg:rgba(26,26,26,.92);--hair:rgba(255,255,255,.1);}' +
-    'color:var(--fg);}' +
-    'nav{position:sticky!important;top:0!important;z-index:50!important;background:var(--nav-bg);backdrop-filter:saturate(180%) blur(20px);height:48px!important;box-shadow:0 1px 0 var(--hair);}' +
-    '.nav-inner{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif!important;font-size:13px!important;letter-spacing:0!important;word-spacing:0!important;max-width:980px!important;margin:0 auto;padding:0 22px!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:space-between!important;}' +
-    '.nav-inner a{font-family:inherit!important;font-size:13px!important;letter-spacing:0!important;color:rgba(31,30,29,.78);text-decoration:none;font-size:13px;}' +
-    '.nav-inner a:hover{color:var(--fg);}' +
-    '.nav-inner .brand{color:var(--fg);font-weight:600;}' +
-    '.nav-links{display:flex!important;gap:18px!important;align-items:center!important;}' +
-    '@media(max-width:640px!important){.nav-links{gap:12px!important;}.nav-links a:nth-child(n+4){display:none!important;}}' +
-    'font-size:13px!important;letter-spacing:0!important;color:rgba(236,231,219,.75);}' +
-    '}' +
-    '' +
-    '}' +
-    '}' +
-    '.locale-menu{position:relative!important;}' +
-    '.locale-menu summary{list-style:none!important;font-family:inherit!important;font-size:12.5px!important;width:70px!important;min-width:70px!important;max-width:70px!important;overflow:hidden!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;gap:5px!important;cursor:pointer;font-size:12.5px;color:var(--fg-3);padding:5px 8px!important;border-radius:6px;}' +
-    '.locale-menu summary::-webkit-details-marker{display:none!important;}' +
-    '.locale-menu summary:hover{color:var(--fg);background:var(--bg-alt);}' +
-    '.flag{width:16px;height:12px!important;border-radius:2px;display:block!important;object-fit:cover;}' +
-    '.locale-options{position:absolute!important;right:0;top:calc(100% + 4px)!important;background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:4px!important;display:flex!important;flex-direction:column;min-width:132px;box-shadow:0 12px 32px rgba(40,30,20,.14);z-index:90!important;}' +
-    '.locale-options a{display:flex!important;align-items:center!important;gap:8px!important;padding:8px 12px!important;border-radius:7px;font-size:13.5px;color:var(--fg-2);text-decoration:none;}' +
-    '.locale-options a:hover{background:var(--bg-alt);color:var(--fg);}' +
-    '.locale-options a[aria-current]{color:var(--blue);font-weight:600;}' +
-    '}' +
-    '}';
-
-  // 注入 CSS(如果页面还没有)
-  if (!document.getElementById('shared-header-css')) {
-    var style = document.createElement('style');
-    style.id = 'shared-header-css';
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-
-  // 注入 header(替换页面中已有的 nav,或插入到 body 开头)
-  var existingNav = document.querySelector('nav');
-  if (existingNav) {
-    existingNav.outerHTML = html;
-  } else {
-    document.body.insertAdjacentHTML('afterbegin', html);
-  }
-
-  
-
-  // ===== 每日 logo =====
+  // 每日 logo
   var d = new Date().getDay();
-  var days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  var days = ["sun","mon","tue","wed","thu","fri","sat"];
   var daily = "/logos/logo-" + days[d] + ".svg";
-  document.querySelectorAll('nav img[src*="logo.svg"]').forEach(function (img) {
+  document.querySelectorAll('nav img[src*="logo.svg"]').forEach(function(img) {
     var orig = img.src;
     img.src = daily;
-    img.onerror = function () { img.onerror = null; img.src = orig; };
+    img.onerror = function() { img.onerror = null; img.src = orig; };
   });
 
-  // ===== 语言下拉外点收起 =====
-  document.addEventListener("click", function (e) {
+  // 外点收起
+  document.addEventListener("click", function(e) {
     var menu = document.getElementById("langMenu");
     if (menu && menu.open && !menu.contains(e.target)) menu.open = false;
   });

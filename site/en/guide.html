@@ -19,12 +19,12 @@
     <meta name="twitter:description" content="从安装到进阶:接入本地代理、管理供应商与路由、查看实际请求去向、排查失败并恢复直连。" />
     <meta name="twitter:image" content="https://keyway.one/app-light.png" />
     <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "HowTo", "name": "Keyway Guide", "description": "From installation to advanced usage: connect to the local proxy, manage providers and routing, view request logs, troubleshoot and restore.", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] }, "datePublished": "2026-10-22", "dateModified": "2026-11-06", "step": [ { "@type": "HowToStep", "name": "Download & Install", "text": "Download the installer for your platform from GitHub Releases." }, { "@type": "HowToStep", "name": "Add a Provider", "text": "Pick a preset, import from existing CLI config, or enter a custom Base URL and API Key." }, { "@type": "HowToStep", "name": "One-Click CLI Takeover", "text": "Original config backed up automatically; the proxy on 127.0.0.1:9527 starts forwarding." }, { "@type": "HowToStep", "name": "verify", "text": "Switch the default provider, send a new request, verify the actual provider in the request log." }, { "@type": "HowToStep", "name": "", "text": "Model routing rules, automatic failover, request logs, usage stats, profiles and backup." } ] }</script>
-    <style>:root { --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e; --blue: #d97757; --bg: #faf9f5; --bg-alt: #f0efeb; --nav-bg: rgba(250,249,245,0.88); --hair: #e5e5e5; } * { box-sizing: border-box; margin: 0; padding: 0; } html { scroll-behavior: smooth; } body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--fg); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; letter-spacing: .011em; } .container { max-width: 760px; margin: 0 auto; padding: 0 22px; } /* Hero */ header.hero { padding: 88px 0 30px; text-align: center; } .hero h1 { font-size: 44px; font-weight: 600; letter-spacing: -.015em; line-height: 1.1; } .hero .sub { font-size: 19px; color: var(--fg-2); margin-top: 12px; } .alink { color: var(--blue); text-decoration: none; font-size: 17px; } .alink:hover { text-decoration: underline; } .alink::after { content: " ›"; } /* */ .toc { background: var(--bg-alt); border-radius: 14px; padding: 22px 26px; margin: 36px 0 8px; font-size: 15px; } .toc b { font-size: 13px; color: var(--fg-3); font-weight: 500; display: block; margin-bottom: 8px; } .toc ol { margin-left: 20px; } .toc li { margin: 5px 0; } .toc a { color: var(--blue); text-decoration: none; } .toc a:hover { text-decoration: underline; } /* */ section.step { padding: 56px 0 8px; scroll-margin-top: 56px; } section.step .kicker { font-size: 13px; font-weight: 600; color: var(--blue); letter-spacing: .04em; } section.step h2 { font-size: 32px; font-weight: 600; letter-spacing: -.01em; margin-top: 6px; line-height: 1.15; } section.step p { font-size: 16.5px; color: var(--fg-2); margin-top: 14px; } section.step p b, section.step li b { color: var(--fg); font-weight: 600; } section.step ul, section.step ol.plain { margin: 12px 0 0 22px; font-size: 16.5px; color: var(--fg-2); } section.step li { margin: 7px 0; } section.step a { color: var(--blue); text-decoration: none; } section.step a:hover { text-decoration: underline; } .dl-btn { display: inline-block; background: var(--blue); color: #fff !important; text-decoration: none; font-size: 15px; font-weight: 500; padding: 10px 22px; border-radius: 980px; transition: background .2s; } .dl-btn:hover { background: #0074dd; text-decoration: none !important; } .dl-alt { display: inline-block; margin-left: 14px; font-size: 14px; } code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13.5px; background: var(--bg-alt); border-radius: 5px; padding: 2px 6px; } /* */ .stepnum { width: 34px; height: 34px; border-radius: 50%; background: var(--fg); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; margin-bottom: 14px; } /* */ .tip { background: var(--bg-alt); border-radius: 12px; padding: 16px 20px; margin-top: 20px; font-size: 15px; color: var(--fg-2); } .tip b { color: var(--fg); } .tip.blue { background: rgba(0,102,204,.06); } /* */ .terminal { margin-top: 24px; background: #1d1d20; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.22); } .term-bar { display: flex; gap: 7px; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.08); } .term-bar i { width: 11px; height: 11px; border-radius: 50%; } .term-bar span { margin-left: 10px; color: #86868b; font-size: 11.5px; font-family: ui-monospace, "SF Mono", Menlo, monospace; } .term-body { padding: 18px 20px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; line-height: 1.9; color: #d5d5da; } .dim { color: #6e6e73; } .blue { color: #5ac8fa; } .green { color: #30d158; } .violet { color: #bf5af2; } .yellow { color: #ffd60a; } /* CTA + footer */ .cta { text-align: center; padding: 90px 0 80px; background: var(--bg-alt); } .cta h2 { font-size: 36px; font-weight: 600; letter-spacing: -.015em; } .cta .sub { font-size: 18px; color: var(--fg-2); margin-top: 10px; } .cta .links { margin-top: 22px; display: flex; gap: 30px; justify-content: center; } footer { padding: 26px 0 34px; text-align: center; font-size: 12px; color: var(--fg-3); } footer a { color: #424245; text-decoration: none; } footer a:hover { color: var(--blue); text-decoration: underline; } @media (prefers-reduced-motion: no-preference) { @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } } header.hero * { animation: fadeUp .8s cubic-bezier(.28,.11,.32,1) both; } header.hero .sub { animation-delay: .1s; } header.hero .toc { animation-delay: .2s; } }     .footer-grid { max-width:980px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:36px; text-align:left; } .footer-brand .brand { display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:17px; } .footer-brand p { color:var(--fg-2); font-size:13.5px; line-height:1.7; margin:12px 0 0; } .footer-brand .mono, .footer-bar .mono { font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--fg-3); } .footer-col { display:flex; flex-direction:column; gap:10px; } .footer-col b { font-size:12px; color:var(--fg-3); letter-spacing:.1em; text-transform:uppercase; } .footer-col a { color:var(--fg-2); text-decoration:none; font-size:14px; } .footer-col a:hover { color:var(--blue); } .footer-bar { max-width:980px; margin:36px auto 0; padding-top:18px; border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-size:12.5px; color:var(--fg-3); flex-wrap:wrap; gap:8px; } @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }</style>
+    <style>:root { --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e; --blue: #d97757; --bg: #fafaf8; --bg-alt: #f0efeb; --nav-bg: rgba(250,249,245,0.88); --hair: #e5e5e5; } * { box-sizing: border-box; margin: 0; padding: 0; } html { scroll-behavior: smooth; } body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--fg); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; letter-spacing: .011em; } .container { max-width: 760px; margin: 0 auto; padding: 0 22px; } nav { position: sticky; top: 0; z-index: 50; background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px); height: 48px; box-shadow: 0 1px 0 rgba(0,0,0,.06); } .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 100%; display: flex; align-items: center; justify-content: space-between; } .nav-inner a { color: rgba(0,0,0,.78); text-decoration: none; font-size: 12.5px; transition: color .15s; } .nav-inner a:hover { color: #000; } .nav-links { display: flex; gap: 26px; align-items: center; } /* Hero */ header.hero { padding: 88px 0 30px; text-align: center; } .hero h1 { font-size: 44px; font-weight: 600; letter-spacing: -.015em; line-height: 1.1; } .hero .sub { font-size: 19px; color: var(--fg-2); margin-top: 12px; } .alink { color: var(--blue); text-decoration: none; font-size: 17px; } .alink:hover { text-decoration: underline; } .alink::after { content: " ›"; } /* */ .toc { background: var(--bg-alt); border-radius: 14px; padding: 22px 26px; margin: 36px 0 8px; font-size: 15px; } .toc b { font-size: 13px; color: var(--fg-3); font-weight: 500; display: block; margin-bottom: 8px; } .toc ol { margin-left: 20px; } .toc li { margin: 5px 0; } .toc a { color: var(--blue); text-decoration: none; } .toc a:hover { text-decoration: underline; } /* */ section.step { padding: 56px 0 8px; scroll-margin-top: 56px; } section.step .kicker { font-size: 13px; font-weight: 600; color: var(--blue); letter-spacing: .04em; } section.step h2 { font-size: 32px; font-weight: 600; letter-spacing: -.01em; margin-top: 6px; line-height: 1.15; } section.step p { font-size: 16.5px; color: var(--fg-2); margin-top: 14px; } section.step p b, section.step li b { color: var(--fg); font-weight: 600; } section.step ul, section.step ol.plain { margin: 12px 0 0 22px; font-size: 16.5px; color: var(--fg-2); } section.step li { margin: 7px 0; } section.step a { color: var(--blue); text-decoration: none; } section.step a:hover { text-decoration: underline; } .dl-btn { display: inline-block; background: var(--blue); color: #fff !important; text-decoration: none; font-size: 15px; font-weight: 500; padding: 10px 22px; border-radius: 980px; transition: background .2s; } .dl-btn:hover { background: #c25f3f; text-decoration: none !important; } .dl-alt { display: inline-block; margin-left: 14px; font-size: 14px; } code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13.5px; background: var(--bg-alt); border-radius: 5px; padding: 2px 6px; } /* */ .stepnum { width: 34px; height: 34px; border-radius: 50%; background: var(--fg); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; margin-bottom: 14px; } /* */ .tip { background: var(--bg-alt); border-radius: 12px; padding: 16px 20px; margin-top: 20px; font-size: 15px; color: var(--fg-2); } .tip b { color: var(--fg); } .tip.blue { background: rgba(0,102,204,.06); } /* */ .terminal { margin-top: 24px; background: #1d1d20; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.22); } .term-bar { display: flex; gap: 7px; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.08); } .term-bar i { width: 11px; height: 11px; border-radius: 50%; } .term-bar span { margin-left: 10px; color: #86868b; font-size: 11.5px; font-family: ui-monospace, "SF Mono", Menlo, monospace; } .term-body { padding: 18px 20px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; line-height: 1.9; color: #d5d5da; } .dim { color: #6e6e73; } .blue { color: #5ac8fa; } .green { color: #30d158; } .violet { color: #bf5af2; } .yellow { color: #ffd60a; } /* CTA + footer */ .cta { text-align: center; padding: 90px 0 80px; background: var(--bg-alt); } .cta h2 { font-size: 36px; font-weight: 600; letter-spacing: -.015em; } .cta .sub { font-size: 18px; color: var(--fg-2); margin-top: 10px; } .cta .links { margin-top: 22px; display: flex; gap: 30px; justify-content: center; } footer { padding: 26px 0 34px; text-align: center; font-size: 12px; color: var(--fg-3); } footer a { color: #424245; text-decoration: none; } footer a:hover { color: var(--blue); text-decoration: underline; } @media (prefers-reduced-motion: no-preference) { @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } } header.hero * { animation: fadeUp .8s cubic-bezier(.28,.11,.32,1) both; } header.hero .sub { animation-delay: .1s; } header.hero .toc { animation-delay: .2s; } } .locale-menu { position:relative; } .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; } .locale-menu summary::-webkit-details-marker { display:none; } .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); } .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; } .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; } .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; } .locale-options a:hover { background:var(--bg-alt); color:var(--fg); } .locale-options a[aria-current] { color:var(--blue); font-weight:600; } .site-footer { background:var(--bg-alt); border-top:1px solid var(--hair); padding:56px 22px 28px; } .footer-grid { max-width:980px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:36px; text-align:left; } .footer-brand .brand { display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:17px; } .footer-brand p { color:var(--fg-2); font-size:13.5px; line-height:1.7; margin:12px 0 0; } .footer-brand .mono, .footer-bar .mono { font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--fg-3); } .footer-col { display:flex; flex-direction:column; gap:10px; } .footer-col b { font-size:12px; color:var(--fg-3); letter-spacing:.1em; text-transform:uppercase; } .footer-col a { color:var(--fg-2); text-decoration:none; font-size:14px; } .footer-col a:hover { color:var(--blue); } .footer-bar { max-width:980px; margin:36px auto 0; padding-top:18px; border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-size:12.5px; color:var(--fg-3); flex-wrap:wrap; gap:8px; } @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }</style>
   </head>
   <body>
     
     <header class="hero container">
-      <h1 data-i18n="gH1">.</h1>
+      <h1 data-i18n="gH1">。</h1>
       <p class="sub" data-i18n="gSub">Complete your first request step by step, then learn switching, routing, backup and troubleshooting.</p>
       <div class="toc">
         <b data-i18n="gToc">On this page</b>
@@ -33,8 +33,8 @@
           <li><a href="#add" data-i18n="gToc2">Add a Provider</a></li>
           <li><a href="#takeover" data-i18n="gToc3">One-Click CLI Takeover</a></li>
           <li><a href="#switch" data-i18n="gToc4">Switch & Verify Request Destination</a></li>
-          <li><a href="#first-request" data-i18n="gTocVerify">Hands-on:  Verify your first request</a></li>
-          <li><a href="#advanced" data-i18n="gToc5">Advanced: Routing · Failover · Logs · Profiles</a></li>
+          <li><a href="#first-request" data-i18n="gTocVerify">Hands-on: Verify your first request</a></li>
+          <li><a href="#advanced" data-i18n="gToc5">:Routing · Failover · Logs · Profiles</a></li>
           <li><a href="#restore" data-i18n="gTocRestore">Restore, exit and migration</a></li>
           <li><a href="#faq" data-i18n="gToc6">Troubleshooting</a></li>
         </ol>
@@ -43,16 +43,16 @@
 
     <main class="container">
 
-      <div class="tip" data-i18n="gVersionNote"><b>: </b>download buttonsfollow GitHub latest stable; website contentinstaller,installer<a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">release notes</a>.browsingdoes not installtakeover CLI,demo panelsreal requests.<b>: 2026-11-06</b>· : <a href="https://github.com/anmutu" target="_blank" rel="noreferrer">anmutu</a></div>
+      <div class="tip" data-i18n="gVersionNote"><b>:</b>download buttonsfollow GitHub latest stable;website contentinstaller,installer<a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">release notes</a>。browsingdoes not installtakeover CLI,demo panelsreal requests。<b>:2026-11-06</b>· :<a href="https://github.com/anmutu" target="_blank" rel="noreferrer">anmutu</a></div>
 
       <div class="tip blue" id="tldr">
-        <b>30 : </b>
+        <b>30 :</b>
         <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:15px;">
           <tr style="text-align:left;"><th style="padding:6px 10px; border-bottom:1px solid var(--hair);"></th><th style="padding:6px 10px; border-bottom:1px solid var(--hair);">One-line answer</th></tr>
-          <tr><td style="padding:6px 10px;">Install?</td><td style="padding:6px 10px;">GitHub Releases installer, CLI ,Keyway .</td></tr>
-          <tr><td style="padding:6px 10px;">Connect?</td><td style="padding:6px 10px;">Add a Provider → takeover,original configauto-backup, 127.0.0.1: 9527.</td></tr>
-          <tr><td style="padding:6px 10px;">Switch?</td><td style="padding:6px 10px;">⌘⇧K ,; .</td></tr>
-          <tr><td style="padding:6px 10px;">Verify?</td><td style="padding:6px 10px;">request log, Models:  use exact upstream names.</td></tr>
+          <tr><td style="padding:6px 10px;">Install?</td><td style="padding:6px 10px;">GitHub Releases installer, CLI ,Keyway 。</td></tr>
+          <tr><td style="padding:6px 10px;">Connect?</td><td style="padding:6px 10px;">Add a Provider → takeover,original configauto-backup, 127.0.0.1:9527。</td></tr>
+          <tr><td style="padding:6px 10px;">Switch?</td><td style="padding:6px 10px;">⌘⇧K ,;。</td></tr>
+          <tr><td style="padding:6px 10px;">Verify?</td><td style="padding:6px 10px;">request log、Models: use exact upstream names.</td></tr>
         </table>
       </div>
 
@@ -60,11 +60,11 @@
         <span class="stepnum">1</span>
         <div class="kicker" data-i18n="gS1k"></div>
         <h2 data-i18n="gS1h2">Keyway?</h2>
-        <p data-i18n="gS1p">Keyway is a desktop local gateway, not a chat tool, and will not install AI CLIs for you.macOS pick by chip<code>.dmg</code>,Windows installer,Linux matching arch AppImage, deb rpm .</p>
+        <p data-i18n="gS1p">Keyway is a desktop local gateway, not a chat tool, and will not install AI CLIs for you.macOS pick by chip<code>.dmg</code>,Windows installer,Linux matching arch AppImage、deb rpm 。</p>
         <ul>
-          <li data-i18n="gPrereqCli"><b>Prepare CLI: </b>Claude Code, Codex Gemini CLI ,verifyruns in terminal.Keyway request routing.</li>
-          <li data-i18n="gPrereqKey"><b>Prepare provider: </b>get from console API Key, API Endpoint:  API Base URL from provider docs.</li>
-          <li data-i18n="gPrereqSafe"><b>Protect config: </b>first timetakeoverback up CLI .switching tools;  CLI.</li>
+          <li data-i18n="gPrereqCli"><b>Prepare CLI:</b>Claude Code、Codex Gemini CLI ,verifyruns in terminal。Keyway request routing。</li>
+          <li data-i18n="gPrereqKey"><b>Prepare provider:</b>get from console API Key、API Endpoint: API Base URL from provider docs.</li>
+          <li data-i18n="gPrereqSafe"><b>Protect config:</b>first timetakeoverback up CLI 。switching tools; CLI。</li>
         </ul>
         <p style="margin-top:14px;">
           <a class="dl-btn dl-direct" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.17/Keyway_0.2.17_aarch64.dmg" data-i18n="gS1dl">for Apple (M1/M2/M3/M4)</a>
@@ -76,46 +76,46 @@
           <a class="dl-alt" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="gS1dlAll">All downloads ></a>
         </p>
         <ul>
-          <li data-i18n="gS1l1">If prompted "damaged":  run xattr -dr com.apple.quarantine /Applications/Keyway.app in Terminal..</li>
+          <li data-i18n="gS1l1">If prompted "damaged": run xattr -dr com.apple.quarantine /Applications/Keyway.app in Terminal.。</li>
           <li data-i18n="gS1l0">Check the version and filename. If "no app to open", re-download.</li>
-          <li data-i18n="gS1l2">Keyway<b>(tray)</b>,closing windowdoes not affectproxy operation.</li>
-          <li data-i18n="gS1l3">local proxylistens on<code>127.0.0.1: 9527</code>,local requests only.</li>
+          <li data-i18n="gS1l2">Keyway<b>(tray)</b>,closing windowdoes not affectproxy operation。</li>
+          <li data-i18n="gS1l3">local proxylistens on<code>127.0.0.1:9527</code>,local requests only。</li>
         </ul>
-        <div class="tip blue" data-i18n="gTip1"><b>how it works?</b>default provider, routing rulesfailoverforwarding.default selectiondoes not equalactual destination,request logverify.,default providerno restart needed.</div>
+        <div class="tip blue" data-i18n="gTip1"><b>how it works?</b>default provider、routing rulesfailoverforwarding。default selectiondoes not equalactual destination,request logverify。,default providerno restart needed。</div>
       </section>
 
       <section class="step" id="add">
         <span class="stepnum">2</span>
         <div class="kicker" data-i18n="gS2k"></div>
         <h2 data-i18n="gS2h2">Add a Provider?</h2>
-        <p data-i18n="gS2p">Open the main interface and add providers to the CLI group: </p>
+        <p data-i18n="gS2p">Open the main interface and add providers to the CLI group:</p>
         <ul>
-          <li data-i18n="gS2l1"><b>Preset</b>: built-in,paste API Key ready to use.</li>
-          <li data-i18n="gS2l2"><b>Import</b>: already CLI configured?one-click import,no re-entry.</li>
-          <li data-i18n="gS2l3"><b>Custom</b>: name, Base URL, API Key,any relay/self-hosted gatewaysupported.</li>
-          <li data-i18n="gS2l4"><b>CoderPlan</b>: , ; <b>" API Key"</b><a href="https://coderplan.ai/dashboard/keys" target="_blank" rel="noreferrer">coderplan.ai/dashboard/keys</a>, Key,paste.</li>
+          <li data-i18n="gS2l1"><b>Preset</b>:built-in,paste API Key ready to use。</li>
+          <li data-i18n="gS2l2"><b>Import</b>:already CLI configured?one-click import,no re-entry。</li>
+          <li data-i18n="gS2l3"><b>Custom</b>:name、Base URL、API Key,any relay/self-hosted gatewaysupported。</li>
+          <li data-i18n="gS2l4"><b>CoderPlan</b>:、;<b>「 API Key」</b><a href="https://coderplan.ai/dashboard/keys" target="_blank" rel="noreferrer">coderplan.ai/dashboard/keys</a>, Key,paste。</li>
         </ul>
-        <div class="tip" data-i18n="gTip2"><b>key storage</b>: API Key SQLCipher encrypted database,keyOS keychainheld by.exportedexcludes API Key; forwarded requestsstill needupstreamsends credentials.</div>
-        <p style="margin-top:18px;" data-i18n="gS2p2">after adding,clickprovider card<b>speed-test button</b>checkconnectivity and latency,then decide.</p>
-        <h3 data-i18n="gFieldsTitle">How to fill these fields: </h3>
+        <div class="tip" data-i18n="gTip2"><b>key storage</b>:API Key SQLCipher encrypted database,keyOS keychainheld by。exportedexcludes API Key;forwarded requestsstill needupstreamsends credentials。</div>
+        <p style="margin-top:18px;" data-i18n="gS2p2">after adding,clickprovider card<b>speed-test button</b>checkconnectivity and latency,then decide。</p>
+        <h3 data-i18n="gFieldsTitle">How to fill these fields:</h3>
         <ul>
-          <li data-i18n="gFieldName"><b>name: </b>recognizablename,"primary""backup".editverify CLI shared.</li>
-          <li data-i18n="gFieldUrl"><b>endpoint: </b>provider docs API Base URL,websiteconsole URL,full<code>/chat/completions</code>request path.protocolchoose endpoint; example<code>https: //api.example.com/v1</code>illustrative only,not directly requestable.</li>
-          <li data-i18n="gFieldKey"><b>API Key: </b>pastekey,uploadticketscreenshot.editleave blankkey; migrationimport configre-enter.</li>
-          <li data-i18n="gFieldModel"><b>model: </b>upstreamexactmodel.in cardmodelfor display,will not automatically CLI renameenablemodelpermission; actual requestmodelstill need configured in CLI.</li>
+          <li data-i18n="gFieldName"><b>name:</b>recognizablename,「primary」「backup」。editverify CLI shared。</li>
+          <li data-i18n="gFieldUrl"><b>endpoint:</b>provider docs API Base URL,websiteconsole URL,full<code>/chat/completions</code>request path。protocolchoose endpoint;example<code>https://api.example.com/v1</code>illustrative only,not directly requestable。</li>
+          <li data-i18n="gFieldKey"><b>API Key:</b>pastekey,uploadticketscreenshot。editleave blankkey;migrationimport configre-enter。</li>
+          <li data-i18n="gFieldModel"><b>model:</b>upstreamexactmodel。in cardmodelfor display,will not automatically CLI renameenablemodelpermission;actual requestmodelstill need configured in CLI。</li>
         </ul>
-        <div class="tip blue" data-i18n="gTestLimit"><b>Speed test pass does not equal fully working. .</b>still needset as current/,takeover CLI,actually senda request.first verificationcomplexfailover,easier todeterminewhere the issue is.</div>
+        <div class="tip blue" data-i18n="gTestLimit"><b>Speed test pass does not equal fully working. 。</b>still needset as current/,takeover CLI,actually senda request。first verificationcomplexfailover,easier todeterminewhere the issue is。</div>
       </section>
 
       <section class="step" id="takeover">
         <span class="stepnum">3</span>
         <div class="kicker" data-i18n="gS3k">takeover</div>
         <h2 data-i18n="gS3h2">What is one-click takeover?</h2>
-        <p data-i18n="gS3p">Click gateway status in nav, select target CLI. Keyway points the CLI config to the local proxy: </p>
+        <p data-i18n="gS3p">Click gateway status in nav, select target CLI. Keyway points the CLI config to the local proxy:</p>
         <ul>
-          <li data-i18n="gS3l1">takeover<b>auto-backuporiginal config</b>,takeoverrestore.restoreverifymanual changes.</li>
+          <li data-i18n="gS3l1">takeover<b>auto-backuporiginal config</b>,takeoverrestore。restoreverifymanual changes。</li>
           <li data-i18n="gS3l2">New Codex session needed after first takeover. Keep Keyway running while proxied.</li>
-          <li data-i18n="gS3l3">Or skip takeover:  manually set CLI env vars to 127.0.0.1: 9527./li>
+          <li data-i18n="gS3l3">Or skip takeover: manually set CLI env vars to 127.0.0.1:9527./li>
         </ul>
         <div class="terminal">
           <div class="term-bar">
@@ -134,20 +134,20 @@
         <span class="stepnum">4</span>
         <div class="kicker" data-i18n="gS4k"></div>
         <h2 data-i18n="gS4h2">After switching, how to confirm the request went through?</h2>
-        <p data-i18n="gS4p">default provider,actual request.,verifyactual destination: </p>
-        <div class="tip blue" data-i18n="gNavigationTip"><b>?</b>, MCP, Skills, "".; Esc ,.</div>
+        <p data-i18n="gS4p">default provider,actual request。,verifyactual destination:</p>
+        <div class="tip blue" data-i18n="gNavigationTip"><b>?</b>、MCP、Skills、「」。;Esc ,。</div>
         <ul>
-          <li data-i18n="gS4l1">provider card<b>""</b>,<b>tray</b>,.</li>
-          <li data-i18n="gS4l0"><b>⌘⇧K</b>(Windows/Linux Ctrl+Shift+K)<b></b>: ↑↓ , Enter , Esc ,.</li>
-          <li data-i18n="gS4l2"><b>no restart needed</b>.,; routing rulesdefault selection.</li>
-          <li data-i18n="gS4l3">The same provider can be reused across multiple CLIs by protocol. CLI( Key Claude Code Codex).</li>
-          <li data-i18n="gS4l9"><b>Responses</b>: Codex /v1/responses , /v1/chat/completions chat protocol; edit, OpenAI Responses .</li>
-          <li data-i18n="gS4l4"><b>protocol: </b>Keyway Anthropic, OpenAI Chat Gemini /,model, , . CLI protocol; Codex Responses .</li>
-          <li data-i18n="gS4l10"><b></b>: OpenRouter ,provider card / ,.</li>
-          <li data-i18n="gS4l5"><b>MCP</b>:  Keyway MCP , Claude Code Codex (stdio environment variables); ,.</li>
-          <li data-i18n="gS4l8">local proxy<b>http: //127.0.0.1: 9527/healthz</b>, CLI ,check.</li>
-          <li data-i18n="gS4l7">in app: <b>⌘N</b>, <b>⌘1..5</b>CLI , <b>⌘⇧M / ⌘⇧S</b>MCP / Skills (Windows/Linux Ctrl ).</li>
-          <li data-i18n="gS4l6"><b>Skills</b>:  vault Skills, Claude Code Codex; CLI skill .</li>
+          <li data-i18n="gS4l1">provider card<b>「」</b>,<b>tray</b>,。</li>
+          <li data-i18n="gS4l0"><b>⌘⇧K</b>(Windows/Linux Ctrl+Shift+K)<b></b>:↑↓ 、Enter 、Esc ,。</li>
+          <li data-i18n="gS4l2"><b>no restart needed</b>。,;routing rulesdefault selection。</li>
+          <li data-i18n="gS4l3">The same provider can be reused across multiple CLIs by protocol. CLI( Key Claude Code Codex)。</li>
+          <li data-i18n="gS4l9"><b>Responses</b>:Codex /v1/responses , /v1/chat/completions chat protocol;edit, OpenAI Responses 。</li>
+          <li data-i18n="gS4l4"><b>protocol:</b>Keyway Anthropic、OpenAI Chat Gemini /,model、、。 CLI protocol;Codex Responses 。</li>
+          <li data-i18n="gS4l10"><b></b>:OpenRouter ,provider card / ,。</li>
+          <li data-i18n="gS4l5"><b>MCP</b>: Keyway MCP , Claude Code Codex (stdio environment variables);,。</li>
+          <li data-i18n="gS4l8">local proxy<b>http://127.0.0.1:9527/healthz</b>, CLI ,check。</li>
+          <li data-i18n="gS4l7">in app:<b>⌘N</b>、<b>⌘1..5</b>CLI 、<b>⌘⇧M / ⌘⇧S</b>MCP / Skills (Windows/Linux Ctrl )。</li>
+          <li data-i18n="gS4l6"><b>Skills</b>: vault Skills, Claude Code Codex;CLI skill 。</li>
         </ul>
         <div class="terminal">
           <div class="term-bar">
@@ -157,7 +157,7 @@
           <div class="term-body">
             <div data-i18n="gSwitchExample1">1. Claude Code default provider A B</div>
             <div data-i18n="gSwitchExample2">2. Claude Code</div>
-            <div data-i18n="gSwitchExample3">3. check:  / B / model / HTTP</div>
+            <div data-i18n="gSwitchExample3">3. check: / B / model / HTTP</div>
             <div data-i18n="gSwitchExample4">actual destination B,checkrouting rulesfailover</div>
           </div>
         </div>
@@ -168,32 +168,32 @@
         <div class="kicker" data-i18n="gVerifyKicker">Hands-on verification</div>
         <h2 data-i18n="gVerifyTitle">How to confirm the first request actually went through Keyway?</h2>
         <ol>
-          <li data-i18n="gVerify1"><b>: </b>CLI ,click"".verify,.</li>
-          <li data-i18n="gVerify2"><b>check: </b>Keyway .run in Terminal<code>curl http: //127.0.0.1: 9527/healthz</code>(PowerShell<code>curl.exe</code>)., local proxy,upstream.</li>
-          <li data-i18n="gVerify3"><b>takeover: </b>takeover CLI.first timetakeover Codex ;  CLI ,.Gemini environment variables.</li>
-          <li data-i18n="gVerify4"><b>: </b>CLI " OK,".upstream,; .</li>
-          <li data-i18n="gVerify5"><b>: </b>CLI "",click.check,, model HTTP .CLI ,.</li>
-          <li data-i18n="gVerify6"><b>: </b>,,actual destination.failoverdefault selection; a requestdetermine.</li>
+          <li data-i18n="gVerify1"><b>:</b>CLI ,click「」。verify,。</li>
+          <li data-i18n="gVerify2"><b>check:</b>Keyway 。run in Terminal<code>curl http://127.0.0.1:9527/healthz</code>(PowerShell<code>curl.exe</code>)。、local proxy,upstream。</li>
+          <li data-i18n="gVerify3"><b>takeover:</b>takeover CLI。first timetakeover Codex ; CLI ,。Gemini environment variables。</li>
+          <li data-i18n="gVerify4"><b>:</b>CLI 「 OK,」。upstream,;。</li>
+          <li data-i18n="gVerify5"><b>:</b>CLI 「」,click。check,、model HTTP 。CLI ,。</li>
+          <li data-i18n="gVerify6"><b>:</b>,,actual destination。failoverdefault selection;a requestdetermine。</li>
         </ol>
-        <div class="tip" data-i18n="gVerifyBoundary"><b>: </b>"proxy operation"; "takeover"point to; ""."actual destination",.</div>
+        <div class="tip" data-i18n="gVerifyBoundary"><b>:</b>「proxy operation」;「takeover」point to;「」。「actual destination」,。</div>
       </section>
 
       <section class="step" id="advanced">
         <span class="stepnum">5</span>
         <div class="kicker" data-i18n="gS5k"></div>
-        <h2 data-i18n="gS5h2">, failover, ?</h2>
-        <p data-i18n="gS5p"><b>modelrouting rules</b>—— " → model",model: </p>
+        <h2 data-i18n="gS5h2">、failover、?</h2>
+        <p data-i18n="gS5p"><b>modelrouting rules</b>—— 「 → model」,model:</p>
         <ul>
-          <li data-i18n="gS5l1">: <code>claude</code>→ A; <code>deepseek</code>→ .CLI model,Keyway .</li>
-          <li data-i18n="gS5l2">"""": ,.</li>
-          <li data-i18n="gS5l3">(),; ,, ↑↓ .</li>
-          <li data-i18n="gS5l4">"",.</li>
-          <li data-i18n="gS5l6"><b></b>: ,""( thinking reasoning/thinking model)""(haiku / mini / flash / nano ) —— model,.</li>
-          <li data-i18n="gS5l5"><b></b>: (, 6 token ) —— ,.<code>x-keyway-route</code>.</li>
+          <li data-i18n="gS5l1">:<code>claude</code>→ A;<code>deepseek</code>→ 。CLI model,Keyway 。</li>
+          <li data-i18n="gS5l2">「」「」:,。</li>
+          <li data-i18n="gS5l3">(),;,, ↑↓ 。</li>
+          <li data-i18n="gS5l4">「」,。</li>
+          <li data-i18n="gS5l6"><b></b>:,「」( thinking reasoning/thinking model)「」(haiku / mini / flash / nano ) —— model,。</li>
+          <li data-i18n="gS5l5"><b></b>:(, 6 token ) —— ,。<code>x-keyway-route</code>。</li>
         </ul>
-        <p style="margin-top:18px;" data-i18n="gS5p2"><b>failover</b>—— ,verifymodel,failovercheck., 429 5xx ; ,.check<code>x-keyway-fallback</code>.</p>
-        <p style="margin-top:18px;" data-i18n="gS5p3"><b></b>—— "" CLI / token ; "" 100 (model,  token, ),; ,"",tray.</p>
-        <p style="margin-top:18px;" data-i18n="gS5p4"><b></b>—— ""( / / ), JSON (excludeskey,),migration; "/": , routing rules JSON,name,.</p>
+        <p style="margin-top:18px;" data-i18n="gS5p2"><b>failover</b>—— ,verifymodel,failovercheck。、429 5xx ;,。check<code>x-keyway-fallback</code>。</p>
+        <p style="margin-top:18px;" data-i18n="gS5p3"><b></b>—— 「」 CLI / token ;「」 100 (model、 token、),;,「」,tray。</p>
+        <p style="margin-top:18px;" data-i18n="gS5p4"><b></b>—— 「」( / / ), JSON (excludeskey,),migration;「/」:、routing rules JSON,name,。</p>
       </section>
 
       <section class="step" id="restore">
@@ -201,11 +201,11 @@
         <div class="kicker" data-i18n="gRestoreKicker">Safe exit and migration</div>
         <h2 data-i18n="gRestoreTitle">,?</h2>
         <ol>
-          <li data-i18n="gRestore1"><b>.</b>Keyway tray; fully quitlocal proxy,point to CLI .</li>
-          <li data-i18n="gRestore2"><b>takeover,restoretakeover CLI.</b>restore,takeover.,.</li>
-          <li data-i18n="gRestore3"><b>checkmanually.</b>manually, shell environment variablesrestore; . CLI verifydirect connection, Keyway.</li>
+          <li data-i18n="gRestore1"><b>。</b>Keyway tray;fully quitlocal proxy,point to CLI 。</li>
+          <li data-i18n="gRestore2"><b>takeover,restoretakeover CLI。</b>restore,takeover。,。</li>
+          <li data-i18n="gRestore3"><b>checkmanually。</b>manually、shell environment variablesrestore;。 CLI verifydirect connection, Keyway。</li>
         </ol>
-        <p data-i18n="gMigration"><b>migration: </b>→ JSON → Keyway → re-enter API Key → → takeover CLI.default provider,full; excludeskey, CLI request log.</p>
+        <p data-i18n="gMigration"><b>migration:</b>→ JSON → Keyway → re-enter API Key → → takeover CLI。default provider,full;excludeskey, CLI request log。</p>
       </section>
 
       <section class="step" id="faq">
@@ -213,14 +213,14 @@
         <div class="kicker" data-i18n="gFaqK"></div>
         <h2 data-i18n="gFaqH2">Troubleshooting</h2>
         <ul>
-          <li data-i18n="gFaqNoLogs"><b>CLI ,: </b>verify; checkenvironment variables, switching toolstakeover.provider carddetermine.</li>
-          <li data-i18n="gFaqLocal"><b>Connection refused / local proxy: </b>verify Keyway fully quit,check<code>/healthz</code>.,verify,.</li>
-          <li data-i18n="gFaqModel"><b>404 / model: </b>API Base URL, protocol CLI model.Codex Responses ,verifyupstream;  Chat .</li>
-          <li data-i18n="gFaqUpstream"><b>429 / 5xx: </b>check, .,backup; .</li>
-          <li data-i18n="gFaqL1"><b>401 / 403</b>: <code>x-keyway-hint</code>,check Key , .</li>
-          <li data-i18n="gFaqL2"><b></b>: verifyproxy operation CLI takeover,.modeldefault provider; first timetakeover Codex .</li>
-          <li data-i18n="gFaqL3"><b></b>: group page"restore",original configtakeover.</li>
-          <li data-i18n="gFaqL4"><b></b>: encrypted database; upstream..</li>
+          <li data-i18n="gFaqNoLogs"><b>CLI ,:</b>verify;checkenvironment variables、switching toolstakeover。provider carddetermine。</li>
+          <li data-i18n="gFaqLocal"><b>Connection refused / local proxy:</b>verify Keyway fully quit,check<code>/healthz</code>。,verify,。</li>
+          <li data-i18n="gFaqModel"><b>404 / model:</b>API Base URL、protocol CLI model。Codex Responses ,verifyupstream; Chat 。</li>
+          <li data-i18n="gFaqUpstream"><b>429 / 5xx:</b>check、。,backup;。</li>
+          <li data-i18n="gFaqL1"><b>401 / 403</b>:<code>x-keyway-hint</code>,check Key 、。</li>
+          <li data-i18n="gFaqL2"><b></b>:verifyproxy operation CLI takeover,。modeldefault provider;first timetakeover Codex 。</li>
+          <li data-i18n="gFaqL3"><b></b>:group page「restore」,original configtakeover。</li>
+          <li data-i18n="gFaqL4"><b></b>:encrypted database;upstream。。</li>
         </ul>
       </section>
 
@@ -228,8 +228,8 @@
 
     <section class="cta">
       <div class="container">
-        <h2 data-i18n="gCtaH2">Ready to start?</h2>
-        <p class="sub" data-i18n="gCtaSub">Free and open source. Take over your AI CLI in 5 minutes.</p>
+        <h2 data-i18n="gCtaH2">Ready to start??</h2>
+        <p class="sub" data-i18n="gCtaSub">、,takeover AI CLI。</p>
         <div class="links">
           <a class="alink" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="gCtaDl">Download Free</a>
           <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="gCtaSubmit">Submit a provider</a>
@@ -243,13 +243,13 @@
         <div class="footer-brand">
           <span class="brand"><img src="./logo.svg" width="20" height="20" />Keyway</span>
           <p>The local gateway for AI coding CLIs.<br />One key, one way.</p>
-          <p class="mono">127.0.0.1: 9527</p>
+          <p class="mono">127.0.0.1:9527</p>
         </div>
         <div class="footer-col"><b>Product</b>
-          <a href="/en/download.html">Download</a>
+          <a href="./download.html">Download</a>
           <a href="./guide.html#install">Quick Start</a>
-          <a href="/en/guide.html">Guide</a>
-          <a href="/en/blog/">Blog</a>
+          <a href="./guide.html">Guide</a>
+          <a href="./blog/">Blog</a>
         </div>
         <div class="footer-col"><b>Resources</b>
           <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
@@ -342,6 +342,8 @@
           gS4p: "The default provider is a selection, not proof of the actual destination. After switching, send a new request and verify its provider in the logs:",
           gNavigationTip: "<b>Looking for advanced tools?</b>Usage, MCP, Skills, Settings, and the guide are under “More” in navigation. Selecting a page closes the menu; Escape dismisses an open menu without leaving the current page.", gS4l0: "Global shortcut ⌘⇧K (Ctrl+Shift+K on Windows/Linux) opens the quick-switch panel anywhere: ↑↓ to select, Enter to switch, Esc to dismiss — hands stay on the keyboard.", gS4l1: "Click “Switch” on a provider card, or pick from the menu-bar tray. The selection applies to subsequent requests.", gS4l2: "Sessions already using the proxy need no restart. Switching affects new requests, not in-flight ones; routing rules may override the default provider.", gS4l3: "One provider can serve multiple CLIs per protocol (e.g. one relay key for both Claude Code and Codex).", gS4l9: "Responses bridge: per-provider toggle converts Codex /v1/responses requests to /v1/chat/completions for chat-only relays; enable it when editing a provider. Native Responses providers like official OpenAI do not need it.", gS4l4: "Protocol conversion has limits: Keyway implements selected Anthropic, OpenAI Chat and Gemini conversions. This does not guarantee lossless support for every model, tool, multimodal or reasoning parameter. Prefer native endpoints. Enable Codex Responses bridging separately and verify it with real tasks.", gS4l5: "Unified MCP management: define MCP servers once in Keyway and they are written into Claude Code's and Codex's configs automatically; manually configured entries are untouched.", gS4l6: "Unified Skills management: maintain skills in a local vault and sync them to Claude Code and Codex in one click; built-in or manually added skills are untouched.", gS4l7: "More in-app shortcuts: ⌘N new provider, ⌘1..5 switch CLI group, ⌘⇧M / ⌘⇧S jump to MCP / Skills management (Ctrl combos on Windows/Linux).", gS4l8: "The local proxy exposes http://127.0.0.1:9527/healthz returning the version and each CLI group's current provider — handy for scripts and health checks.", gS4l10: "Balance lookup: for OpenRouter-compatible relays, click the wallet icon on a provider card to view used and total quota before you need to top up.", gS5k: "Advanced", gS5h2: "Routing · failover · logs · profiles", gS5p: "Model routing rules — in Settings → Model routing, keep specific models on specific providers:", gS5l1: "E.g. rule claude → relay A; rule deepseek → official. Name the model in your CLI and Keyway dispatches it.", gS5l2: "Match by “contains” or “starts with” — the prefix mode is more precise and avoids accidental keyword hits.", gS5l3: "Each rule can be temporarily disabled with a toggle, keeping its config. Rules match top to bottom (first match wins); reorder with ↑↓.", gS5l4: "Requests that matched a rule are tagged blue in the Logs page, so routing is visible at a glance.", gS5l5: "Long-context split: requests above a size threshold (adjustable, ~60k tokens estimated by default) automatically go to a designated provider — big contexts on the cheap channel, daily chats unaffected. Matched responses carry an x-keyway-route header.", gS5l6: "Scene-based split: besides long-context, designate providers for deep-think (thinking enabled or reasoning/thinking tier models) and background-lite (haiku / mini / flash / nano tier tasks) — premium models where they matter, cheap channels for small jobs.", gS5p2: "Automatic failover — verify primary and backup providers, including support for the requested model. Enable failover for the group and inspect its candidate chain. Retryable connection failures, 429 and 5xx can try later candidates; not all errors retry and mid-stream recovery is not guaranteed. Check the x-keyway-fallback response header when fallback occurs.", gS5p3: "Usage & logs — the Usage page aggregates tokens and success rates by CLI and provider; Logs shows the last 100 requests (model, tokens in/out, status) for easy debugging; logs are grouped by day, and an optional periodic health check in Settings tests the current providers on a schedule and syncs to the tray.", gS5p4: "Profiles & backup — save the current provider set as a profile (work / personal / testing, one-tap switching) and export a JSON backup via the system save dialog (keys excluded) for moving machines. Config export / import shares providers, route rules and presets as a portable JSON — imports merge by name, so teams can share setups in one step.", gFaqK: "Troubleshooting", gFaqH2: "Having trouble?", gFaqL1: "401 / 403 responses carry an x-keyway-hint header — follow it to check key validity and quota.", gFaqL2: "Switch not taking effect: check proxy and takeover status, send a new request, then inspect its log. Model routing can override the default provider; first-time Codex takeover needs a new session.", gFaqL3: "Want your original setup back? Click “Restore” on the group page — the original config was backed up at takeover.", gFaqL4: "Where's my data? Configuration and usage records are encrypted locally. Request content and authentication go to the selected upstream. Uninstalling does not guarantee removal of app data or keychain entries.", gCtaH2: "Ready when you are.", gCtaSub: "Free and open source — take over every AI CLI in five minutes.", gCtaDl: "Download free", gCtaSubmit: "Suggest a provider" }, zh: {} }; (function () { var root = document.documentElement; var toggle = document.getElementById("langToggle"); var zhOrig = {}; document.querySelectorAll("[data-i18n]").forEach(function (el) { zhOrig[el.getAttribute("data-i18n")] = el.innerHTML; }); var zhTitle = document.title; function apply(lang) { var dict = lang === "zh" ? {} : (I18N[lang] || {}); document.querySelectorAll("[data-i18n]").forEach(function (el) { var k = el.getAttribute("data-i18n"); var v = dict[k] !== undefined ? dict[k] : zhOrig[k]; if (v !== undefined) el.innerHTML = v; }); root.setAttribute("lang", lang === "en" ? "en" : "zh-CN"); document.title = lang === "en" ? "Keyway Detailed Guide — setup, takeover, verification and troubleshooting" : zhTitle; toggle.textContent = lang === "en" ? "" : "EN"; try { localStorage.setItem("site-lang", lang); } catch (e) {} } var saved = null; try { saved = localStorage.getItem("site-lang"); } catch (e) {} if (!saved) saved = /^en/i.test(navigator.language) ? "en" : "zh"; apply(saved); toggle.addEventListener("click", function (e) { e.preventDefault(); apply(root.getAttribute("lang") === "en" ? "zh" : "en"); }); })();</script>
     <script src="./release-sync.js"></script>
-  <script src="/shared-header.js?v=2"></script>
+  <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
+<script src="/shared-header.js?v=6"></script>
 </body>
 </html>

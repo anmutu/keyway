@@ -10,6 +10,212 @@
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "Article", "headline": "为什么改了配置没生效?AI CLI 配置加载顺序详解", "url": "https://keyway.one/blog/why-config-not-applied.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
-<script src="/shared-header.js?v=2"></script>
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+    { "@type": "Question", "name": "为什么 CLI 运行中改配置文件不生效?", "acceptedAnswer": { "@type": "Answer", "text": "几乎所有 CLI 都在进程启动那一刻读取配置与环境变量,之后不再重读。这是刻意的稳定性行为:运行中的会话如果配置随时变化,行为将不可预测。" } },
+    { "@type": "Question", "name": "Windows setx 之后为什么当前窗口看不到变量?", "acceptedAnswer": { "@type": "Answer", "text": "setx 写入的是注册表里的用户变量,只影响之后新启动的进程;当前窗口的环境是它启动时的快照,不会刷新。当前窗口可用 $env:NAME=value 临时设置,或直接新开窗口。" } },
+    { "@type": "Question", "name": "IDE 里的终端为什么读不到新变量?", "acceptedAnswer": { "@type": "Answer", "text": "IDE 内嵌终端继承的是 IDE 主进程的环境,而 IDE 往往在你修改变量之前就启动了。重开终端标签不够,要重启整个 IDE(或用 IDE 的环境变量注入功能)。" } }
+  ] }
+  </script>
+  <style>
+    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e; --blue: #d97757; --hair: #e5e5e5; --bg-alt: #f0efeb;  --bg: #fafaf8; --nav-bg: rgba(250,250,248,.9); }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); line-height:1.78; -webkit-font-smoothing:antialiased; }
+    main { max-width:720px; margin:0 auto; padding:56px 22px 90px; }
+    h1 { font-size:30px; font-weight:700; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
+    .meta { color:var(--fg-3); font-size:13px; margin-bottom:26px; }
+    .meta a { color:var(--blue); text-decoration:none; }
+    h2 { font-size:22px; font-weight:650; margin:40px 0 12px; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
+    h3 { font-size:17px; font-weight:600; margin:26px 0 8px; }
+    p { color:var(--fg-2); font-size:16px; margin:10px 0; }
+    p b, li b { color:var(--fg); font-weight:600; }
+    ul, ol { color:var(--fg-2); font-size:15.5px; padding-left:22px; }
+    li { margin:6px 0; }
+    a { color:var(--blue); }
+    code { background:var(--bg-alt); padding:2px 7px; border-radius:6px; font-size:14px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+    pre { background:var(--bg-alt); border:1px solid var(--hair); border-radius:12px; padding:16px 18px; overflow-x:auto; font-size:13.5px; line-height:1.65; }
+    pre code { background:none; padding:0; font-size:13.5px; }
+    .answer { background:rgba(201,100,66,.07); border:1px solid rgba(201,100,66,.3); border-radius:12px; padding:16px 18px; margin:18px 0; }
+    .answer b { color:var(--blue); }
+    table { width:100%; border-collapse:collapse; font-size:14.5px; margin:14px 0; }
+    th { text-align:left; padding:8px 10px; border-bottom:2px solid var(--hair); font-weight:600; }
+    td { padding:8px 10px; border-bottom:1px solid var(--hair); color:var(--fg-2); vertical-align:top; }
+    td:first-child { color:var(--fg); }
+    details { border:1px solid var(--hair); border-radius:12px; padding:12px 16px; margin:10px 0; }
+    summary { font-weight:600; cursor:pointer; font-size:15px; }
+    details p { margin:8px 0 2px; }
+    footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
+    footer a { color:var(--blue); text-decoration:none; }
+    .next { display:block; text-decoration:none; color:inherit; border:1px solid var(--hair); border-radius:14px; padding:18px 20px; margin-top:36px; }
+    .next:hover { border-color:var(--blue); }
+    .next .tag { color:var(--blue); font-size:12px; font-weight:600; }
+    .next h2 { margin:6px 0 4px; font-size:18px; }
+
+      /* 导航:浅色磨砂细条(Apple global nav) */
+      nav {
+        position: sticky; top: 0; z-index: 50;
+        background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px);
+        height: 48px; box-shadow: 0 1px 0 rgba(0,0,0,.06);
+      }
+      .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 100%;
+        display: flex; align-items: center; justify-content: space-between; }
+      .nav-inner a {
+        color: rgba(31,30,29,.78); text-decoration: none;
+        font-size: 12.5px; transition: color .15s;
+      }
+      .nav-inner a:hover { color: #000; }
+      .nav-inner .brand { color: var(--fg); font-weight: 600; }
+      .nav-inner a.nav-dl {
+        background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
+        font-weight: 500; transition: background .15s;
+      }
+      .nav-inner a.nav-dl:hover { background: #c25f3f; color: #fff; }
+      .nav-links { display: flex; gap: 26px; align-items: center; }
+      .nav-links a#langLink { margin-right: 6px; }
+      @media (max-width: 640px) {
+        .nav-links { gap: 16px; }
+        .nav-main { display: none; }
+      }
+
+        --fg:#e8e8e6; --fg-2:#a0a09e; --fg-3:#6e6e6c;
+        --blue:#d97757; --bg:#1a1a1a; --bg-alt:#242424;
+        --nav-bg: rgba(26,26,26,.92); --hair: rgba(255,255,255,.1);
+      }
+
+      /* 站点页脚 */
+      .site-footer { background: var(--bg-alt); border-top: 1px solid var(--hair); padding: 56px 22px 28px; }
+      .footer-grid { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 36px; text-align: left; }
+      .footer-brand .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; font-family: ui-serif, Georgia, "Songti SC", serif; }
+      .footer-brand p { color: var(--fg-2); font-size: 13.5px; line-height: 1.7; margin: 12px 0 0; }
+      .footer-brand .mono, .footer-bar .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--fg-3); letter-spacing: .06em; }
+      .footer-col { display: flex; flex-direction: column; gap: 10px; }
+      .footer-col b { font-size: 12px; color: var(--fg-3); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+      .footer-col a { color: var(--fg-2); text-decoration: none; font-size: 14px; }
+      .footer-col a:hover { color: var(--blue); }
+      .footer-bar { max-width: 980px; margin: 36px auto 0; padding-top: 18px; border-top: 1px solid var(--hair); display: flex; justify-content: space-between; font-size: 12.5px; color: var(--fg-3); flex-wrap: wrap; gap: 8px; }
+      @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+
+      /* 语言下拉(TeapotRouter 式矢量国旗)与主题图标 */
+                  .flag { width: 16px; height: 12px; border-radius: 2px; display: block; object-fit: cover; }
+      /* 站级导航(与其他页面完全一致) */
+      nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
+      .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
+      .nav-inner a { color:rgba(31,30,29,.78); text-decoration:none; font-size:13px; }
+      .nav-inner a:hover { color:var(--fg); }
+      .nav-inner .brand { color:var(--fg); font-weight:600; }
+      .nav-links { display:flex; gap:18px; align-items:center; }
+      @media (max-width:640px) { .nav-links { gap:12px; } }
+
+      .locale-menu { position:relative; }
+      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
+      .locale-menu summary::-webkit-details-marker { display:none; }
+      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
+      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
+      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
+      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
+      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
+      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>为什么"改了配置没生效"?配置加载顺序详解</h1>
+    <p class="meta"><a href="./">博客</a> · 系列 · 第 5 篇 · 2026-11-06 · 约 6 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
+
+    <div class="answer"><b>30 秒答案:</b>因为配置和变量的读取都发生在<b>过去</b>——shell 配置文件在<b>窗口打开时</b>执行,环境变量在<b>CLI 进程启动时</b>被快照,配置文件同样<b>只在启动时读一次</b>。你改的是现在,程序看的是它出生那刻的世界。<b>新窗口 + 新进程</b>是万能解。</div>
+
+    <h2>一、一张时间轴看懂</h2>
+    <pre><code>你昨天                     你今天
+  │                          │
+  ▼                          ▼
+打开终端窗口                修改 .zshrc / setx / config.toml
+  │                          │
+  ▼                          ▼
+shell 执行 .zshrc ──► 环境就绪    (这些变化不影响任何已存在的东西)
+  │
+  ▼
+启动 CLI 进程:读环境快照 + 读配置文件 ──► 之后不再重读
+  │
+  ▼
+你今天在同一个窗口里改文件 ──► 运行中的 CLI 一无所知</code></pre>
+    <p>三层"快照"叠在一起:窗口层(shell 配置)、进程层(环境变量)、应用层(配置文件)。任何一层的修改,都要从那一层往下重新走一遍。</p>
+
+    <h2>二、三个系统的刷新规则</h2>
+    <table>
+      <tr><th>改了什么</th><th>macOS / Linux</th><th>Windows</th></tr>
+      <tr><td>shell 配置里的变量</td><td><code>source ~/.zshrc</code> 或新开窗口</td><td>—(见下行)</td></tr>
+      <tr><td>用户环境变量(setx)</td><td>—</td><td><b>必须新开</b> PowerShell/CMD 窗口;当前窗口可 <code>$env:名=值</code> 临时补</td></tr>
+      <tr><td>CLI 配置文件</td><td colspan="2" style="color:var(--fg)">新开 CLI 会话(三家 CLI 通用)</td></tr>
+      <tr><td>IDE 内嵌终端</td><td colspan="2" style="color:var(--fg)">继承 IDE 主进程环境——<b>重启整个 IDE</b>,重开标签页没用</td></tr>
+    </table>
+
+    <h2>三、五步排查法(按顺序执行,命中即停)</h2>
+    <ol>
+      <li><b>同一个窗口里</b>打印变量:<code>echo $MY_KEY</code>(macOS/Linux)/ <code>echo $env:MY_KEY</code>(Windows)。<br />打印不出来 → 窗口层问题:变量没写对地方、窗口是旧的。</li>
+      <li><b>确认只有一处定义</b>:grep 一下 shell 配置 + 检查 CLI 自己的配置文件,同名变量两处都在 → 先删一处(单一定义源原则)。</li>
+      <li><b>看进程是否新起</b>:当前 CLI 会话是改配置之前启动的吗?退出重开。</li>
+      <li><b>看文件本身</b>:JSON/TOML 语法错误会让整个配置被忽略或报错——贴进校验器过一遍;<code>.env</code> 检查有没有多余的引号和空格。</li>
+      <li><b>直连上游</b>:用 curl 绕过 CLI 单独测地址和 Key(前几篇都给过命令)——curl 通而 CLI 不通,问题在 CLI 配置;curl 也不通,问题在供应商或网络。</li>
+    </ol>
+
+    <h2>四、为什么这些工具都"只读一次"?</h2>
+    <p>不是偷懒,是稳定:会话进行到一半时配置若能随时变化,同一个会话前后两条请求可能走向不同供应商,计费、上下文、排错全部失控。"启动时定案"是这些 CLI 共同的工程选择。<b>矛盾在于人:</b>人希望"随手一切换",配置却天生静止——这个矛盾,就是下一篇文章(也是本系列收官)的主角。</p>
+
+    <h2>常见问题</h2>
+    <details><summary>source 之后还是不行?</summary><p>先确认你改的是当前 shell 实际加载的那个文件:macOS 默认 zsh 读 ~/.zshrc,但如果装过 oh-my-zsh 或改过 shell,情况会变;<code>echo $SHELL</code> 先看看自己用的是谁。</p></details>
+    <details><summary>有没有"改了立刻生效"的办法?</summary><p>对正在运行的会话,没有(原因见第四节)。想接近这种体验,需要"本地代理"类的方案——下一篇讲它的原理。</p></details>
+    <details><summary>CI/服务器上为什么更要小心?</summary><p>CI 每次都是全新进程,反而没有旧快照问题;真正的坑是把 Key 写进仓库或日志。服务器上的长驻进程同理:改完 .env 必须重启服务。</p></details>
+
+    <a class="next" href="./ai-cli-provider-cheatsheet.html">
+      <span class="tag">系列 · 第 6 篇 · 收官</span>
+      <h2>三家配置对照总表,以及管理工具的原理 →</h2>
+      <p>一张表装下全部细节;再看"本地代理"如何把六步切换变成一次点击。</p>
+    </a>
+  </main>
+
+    <footer class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand"><img src="../logo.svg" alt="Keyway" width="20" height="20" />Keyway</span>
+          <p>AI CLI 的本地网关<br />The local gateway for AI coding CLIs.</p>
+          <p class="mono">One key · one way</p>
+        </div>
+        <div class="footer-col">
+          <b>产品</b>
+          <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
+          <a href="../#quickstart">快速开始</a>
+          <a href="../guide.html">使用指南</a>
+          <a href="../docs        </div>
+        <div class="footer-col">
+          <b>资源</b>
+          <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer">Issues</a>
+          <a href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">提交供应商</a>
+        </div>
+        <div class="footer-col">
+          <b>法律</b>
+          <a href="../privacy.html">隐私</a>
+          <a href="../terms.html">条款</a>
+        </div>
+      </div>
+      <div class="footer-bar">
+        <span>© 2026 Keyway · MIT License</span>
+        <span class="mono">127.0.0.1:9527</span>
+      </div>
+    </footer>
+<script>
+      (function () {
+          
+        };
+        document.addEventListener("DOMContentLoaded", function () {
+          if (b) b.addEventListener("click", function () {
+          });
+        });
+      })();
+    </script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
+<script src="/shared-header.js?v=6"></script>
 </body>
 </html>

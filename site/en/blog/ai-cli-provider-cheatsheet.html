@@ -10,6 +10,224 @@
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "Article", "headline": "The three-CLI config cheat sheet, and how manager tools work", "url": "https://keyway.one/en/blog/ai-cli-provider-cheatsheet.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
-<script src="/shared-header.js?v=2"></script>
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+    { "@type": "Question", "name": "How do local-proxy tools switch providers without a restart?", "acceptedAnswer": { "@type": "Answer", "text": "At takeover, the CLI's endpoint is rewritten to a local proxy (e.g. 127.0.0.1:9527). From then on the CLI only knows that one address; switching changes only which upstream the proxy forwards to — no config changes, so sessions routed through the proxy need no restart." } },
+    { "@type": "Question", "name": "Does takeover touch my config files? Can I undo it?", "acceptedAnswer": { "@type": "Answer", "text": "It rewrites the line holding the provider address (backed up first). In Keyway: Claude Code's env.ANTHROPIC_BASE_URL, Codex's config.toml base_url, Gemini's .env GOOGLE_GEMINI_BASE_URL. One-click restore from the backup; if the file changed externally meanwhile, restore aborts instead of overwriting." } },
+    { "@type": "Question", "name": "Are API keys uploaded to the tool's servers?", "acceptedAnswer": { "@type": "Answer", "text": "With Keyway: no. It is a local-first desktop app; keys live in an on-device SQLCipher-encrypted database whose master key is held by the OS keychain. While forwarding, credentials are sent to the upstream provider you choose — the same data flow as manual configuration." } }
+  ] }
+  </script>
+  <style>
+    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e; --blue: #d97757; --hair: #e5e5e5; --bg-alt: #f0efeb;  --bg: #fafaf8; --nav-bg: rgba(250,250,248,.9); }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); line-height:1.78; -webkit-font-smoothing:antialiased; }
+    main { max-width:760px; margin:0 auto; padding:56px 22px 90px; }
+    h1 { font-size:30px; font-weight:700; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
+    .meta { color:var(--fg-3); font-size:13px; margin-bottom:26px; }
+    .meta a { color:var(--blue); text-decoration:none; }
+    h2 { font-size:22px; font-weight:650; margin:40px 0 12px; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
+    h3 { font-size:17px; font-weight:600; margin:26px 0 8px; }
+    p { color:var(--fg-2); font-size:16px; margin:10px 0; }
+    p b, li b { color:var(--fg); font-weight:600; }
+    ul, ol { color:var(--fg-2); font-size:15.5px; padding-left:22px; }
+    li { margin:6px 0; }
+    a { color:var(--blue); }
+    code { background:var(--bg-alt); padding:2px 7px; border-radius:6px; font-size:14px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+    pre { background:var(--bg-alt); border:1px solid var(--hair); border-radius:12px; padding:16px 18px; overflow-x:auto; font-size:13.5px; line-height:1.65; }
+    pre code { background:none; padding:0; font-size:13.5px; }
+    .answer { background:rgba(201,100,66,.07); border:1px solid rgba(201,100,66,.3); border-radius:12px; padding:16px 18px; margin:18px 0; }
+    .answer b { color:var(--blue); }
+    table { width:100%; border-collapse:collapse; font-size:14px; margin:14px 0; }
+    th { text-align:left; padding:8px 10px; border-bottom:2px solid var(--hair); font-weight:600; }
+    td { padding:8px 10px; border-bottom:1px solid var(--hair); color:var(--fg-2); vertical-align:top; }
+    td:first-child { color:var(--fg); white-space:nowrap; }
+    details { border:1px solid var(--hair); border-radius:12px; padding:12px 16px; margin:10px 0; }
+    summary { font-weight:600; cursor:pointer; font-size:15px; }
+    details p { margin:8px 0 2px; }
+    .btn { display:inline-block; background:var(--blue); color:#fff !important; text-decoration:none; padding:11px 26px; border-radius:980px; font-weight:500; margin:6px 8px 0 0; }
+    .btn:hover { background:#c25f3f; }
+    footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
+    footer a { color:var(--blue); text-decoration:none; }
+    .next { display:block; text-decoration:none; color:inherit; border:1px solid var(--hair); border-radius:14px; padding:18px 20px; margin-top:36px; }
+    .next:hover { border-color:var(--blue); }
+    .next .tag { color:var(--blue); font-size:12px; font-weight:600; }
+    .next h2 { margin:6px 0 4px; font-size:18px; }
+
+      /* 导航:浅色磨砂细条(Apple global nav) */
+      nav {
+        position: sticky; top: 0; z-index: 50;
+        background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px);
+        height: 48px; box-shadow: 0 1px 0 rgba(0,0,0,.06);
+      }
+      .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 100%;
+        display: flex; align-items: center; justify-content: space-between; }
+      .nav-inner a {
+        color: rgba(31,30,29,.78); text-decoration: none;
+        font-size: 12.5px; transition: color .15s;
+      }
+      .nav-inner a:hover { color: #000; }
+      .nav-inner .brand { color: var(--fg); font-weight: 600; }
+      .nav-inner a.nav-dl {
+        background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
+        font-weight: 500; transition: background .15s;
+      }
+      .nav-inner a.nav-dl:hover { background: #c25f3f; color: #fff; }
+      .nav-links { display: flex; gap: 26px; align-items: center; }
+      .nav-links a#langLink { margin-right: 6px; }
+      @media (max-width: 640px) {
+        .nav-links { gap: 16px; }
+        .nav-main { display: none; }
+      }
+
+        --fg:#e8e8e6; --fg-2:#a0a09e; --fg-3:#6e6e6c;
+        --blue:#d97757; --bg:#1a1a1a; --bg-alt:#242424;
+        --nav-bg: rgba(26,26,26,.92); --hair: rgba(255,255,255,.1);
+      }
+
+      /* 站点页脚 */
+      .site-footer { background: var(--bg-alt); border-top: 1px solid var(--hair); padding: 56px 22px 28px; }
+      .footer-grid { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 36px; text-align: left; }
+      .footer-brand .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; font-family: ui-serif, Georgia, "Songti SC", serif; }
+      .footer-brand p { color: var(--fg-2); font-size: 13.5px; line-height: 1.7; margin: 12px 0 0; }
+      .footer-brand .mono, .footer-bar .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--fg-3); letter-spacing: .06em; }
+      .footer-col { display: flex; flex-direction: column; gap: 10px; }
+      .footer-col b { font-size: 12px; color: var(--fg-3); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+      .footer-col a { color: var(--fg-2); text-decoration: none; font-size: 14px; }
+      .footer-col a:hover { color: var(--blue); }
+      .footer-bar { max-width: 980px; margin: 36px auto 0; padding-top: 18px; border-top: 1px solid var(--hair); display: flex; justify-content: space-between; font-size: 12.5px; color: var(--fg-3); flex-wrap: wrap; gap: 8px; }
+      @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+
+      /* 语言下拉(TeapotRouter 式矢量国旗)与主题图标 */
+                  .flag { width: 16px; height: 12px; border-radius: 2px; display: block; object-fit: cover; }
+      /* 站级导航(与其他页面完全一致) */
+      nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
+      .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
+      .nav-inner a { color:rgba(31,30,29,.78); text-decoration:none; font-size:13px; }
+      .nav-inner a:hover { color:var(--fg); }
+      .nav-inner .brand { color:var(--fg); font-weight:600; }
+      .nav-links { display:flex; gap:18px; align-items:center; }
+      @media (max-width:640px) { .nav-links { gap:12px; } }
+
+      .locale-menu { position:relative; }
+      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
+      .locale-menu summary::-webkit-details-marker { display:none; }
+      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
+      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
+      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
+      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
+      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
+      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>The three-CLI config cheat sheet, and how manager tools work</h1>
+    <p class="meta"><a href="./">Blog</a> · Series · Part 6 (finale)· 2026-11-06 · ~6 min · <a href="https://github.com/anmutu/keyway">author</a></p>
+
+    <div class="answer"><b>The 30-second answer:</b>everything manual fits in one table; and the core idea of local-proxy tools is a single sentence — <b>lock the CLI to a proxy on 127.0.0.1, so "switching providers" goes from editing config files to changing one setting of the proxy</b>. That's why switching stops needing restarts.</div>
+
+    <h2>1. The manual-config cheat sheet (bookmark this)</h2>
+    <table>
+      <tr><th></th><th>Codex</th><th>Claude Code</th><th>Gemini CLI</th></tr>
+      <tr><td>Config file</td><td><code>~/.codex/config.toml</code></td><td><code>~/.claude/settings.json</code></td><td><code>~/.gemini/.env</code></td></tr>
+      <tr><td>URL lives in</td><td><code>[model_providers.x] base_url</code></td><td><code>env.ANTHROPIC_BASE_URL</code></td><td><code>GOOGLE_GEMINI_BASE_URL</code></td></tr>
+      <tr><td>Key lives in</td><td>env var named by <code>env_key</code></td><td><code>ANTHROPIC_AUTH_TOKEN</code> or <code>ANTHROPIC_API_KEY</code></td><td><code>GEMINI_API_KEY</code> (plus /auth)</td></tr>
+      <tr><td>Activating</td><td>top-level <code>model_provider</code></td><td>—(the URL is the pointer)</td><td>—(the URL is the pointer)</td></tr>
+      <tr><td>Read at</td><td>process start</td><td>session start</td><td>process start (.env, once)</td></tr>
+      <tr><td>Windows path</td><td><code>%USERPROFILE%\.codex\</code></td><td><code>%USERPROFILE%\.claude\</code></td><td><code>%USERPROFILE%\.gemini\</code></td></tr>
+      <tr><td>Format traps</td><td>TOML syntax, wrong wire_api</td><td>JSON commas, two-place conflict</td><td>stray quotes/export, OAuth not switched</td></tr>
+    </table>
+    <p>Three formats, three sets of key names, three read timings — that's the entire complexity of manual management, and the entire reason it breaks.</p>
+
+    <h2>2. The switching bill: six manual steps vs the one click you expected</h2>
+    <pre><code>manual: open file → edit URL/key lines → save → close terminal → open new → new session
+expected: I want the other provider — click</code></pre>
+    <p>Part 5 explained why CLIs must "decide at startup" — not a bug, a stability choice. Is the conflict unsolvable? One structure dissolves it: <b>give the CLI a world with exactly one, never-changing address.</b></p>
+
+    <h2>3. How the local proxy works: one diagram</h2>
+    <pre><code>[manual]                             [proxy]
+                                      CLI ──► 127.0.0.1:9527 (local proxy)
+CLI ──► provider A  ← switch = edit+restart      │  proxy checks the current selection
+                                           ├──► provider A (official)
+CLI ──► provider B  ← again = edit+restart       ├──► provider B (third-party)
+                                           └──► provider C (backup / failover)</code></pre>
+    <p>Four steps:</p>
+    <ol>
+      <li><b>Takeover:</b>the tool <b>rewrites</b> the endpoint in the CLI's config to the local proxy (backing up the original first). As far as the CLI knows, the proxy <i>is</i> its provider.</li>
+      <li><b>Key custody:</b>each provider's key goes into the tool's local encrypted store; the CLI never holds real keys, and the proxy injects credentials per the current selection when forwarding.</li>
+      <li><b>Switching:</b>you pick another provider → only the proxy's forwarding target changes, <b>the config file doesn't move</b> → sessions already routed through the proxy send their next request to the new provider, <b>no restart</b>.</li>
+      <li><b>Restore:</b>done with it? One click puts the config back from the backup — the CLI returns to direct connection as if nothing happened.</li>
+    </ol>
+    <p>Free bonuses: the proxy sees the <b>actual destination</b> of every request (you selected A, but a routing rule or failover sent you to B — the log says so), plus token usage stats. Observability manual configuration can never give you.</p>
+
+    <h2>4. Honest boundaries (Keyway as the example)</h2>
+    <ul>
+      <li>the tool must stay running while the proxy is in use (tray-resident is fine); fully quitting stops forwarding;</li>
+      <li>after the first Codex takeover you need one new session (later switches don't);</li>
+      <li>"local" means the control plane is local: <b>request content and credentials still go to the upstream provider you choose</b> — identical to the manual data flow; keys are never uploaded to any third-party server (SQLCipher-encrypted on device, master key in the OS keychain);</li>
+      <li>in-flight requests are never migrated; switching affects subsequent requests.</li>
+    </ul>
+    <p>And that's the series. You now hold the complete manual picture for all three CLIs — and you know that "one-click switching" isn't magic, just a clever, restrained middleman.</p>
+    <p>
+      <a class="btn" href="https://github.com/anmutu/keyway/releases">Download Keyway — free</a>
+      <a class="btn" href="/en/guide.html" style="background:none;color:var(--blue);border:1px solid var(--hair);">Read the guide</a>
+    </p>
+
+    <h2>FAQ</h2>
+    <details><summary>Does the proxy slow requests down?</summary><p>The path becomes "local machine → upstream"; the only addition is one hop inside your own machine, typically sub-millisecond. The real latency always lives on the provider's side.</p></details>
+    <details><summary>What happens to my CLI if the tool crashes?</summary><p>The CLI can't reach "its provider" (the proxy is gone) and reports connection errors. The config file is still there — one-click restore (or manually pasting the backup value) returns it to direct connection, which is exactly why takeover must back things up.</p></details>
+    <details><summary>Is this the same as editing hosts or using a system proxy?</summary><p>No. A system proxy affects the whole machine's traffic; this kind of tool takes over a single CLI's API address — finer-grained and non-interfering.</p></details>
+
+    <a class="next" href="./switch-provider-by-hand.html">
+      <span class="tag">Series · Part 1</span>
+      <h2>← Back to the start: the three things you must change</h2>
+      <p>Re-run the six parts in order — you'll find you now see the whole path clearly.</p>
+    </a>
+  </main>
+
+    <footer class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand"><img src="../../logo.svg" alt="Keyway" width="20" height="20" />Keyway</span>
+          <p>AI CLI 的本地网关<br />The local gateway for AI coding CLIs.</p>
+          <p class="mono">One key · one way</p>
+        </div>
+        <div class="footer-col">
+          <b>产品</b>
+          <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
+          <a href="../../#quickstart">快速开始</a>
+          <a href="/en/guide.html">使用指南</a>
+          <a href="../../docs        </div>
+        <div class="footer-col">
+          <b>资源</b>
+          <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer">Issues</a>
+          <a href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">提交供应商</a>
+        </div>
+        <div class="footer-col">
+          <b>法律</b>
+          <a href="../../privacy.html">隐私</a>
+          <a href="../../terms.html">条款</a>
+        </div>
+      </div>
+      <div class="footer-bar">
+        <span>© 2026 Keyway · MIT License</span>
+        <span class="mono">127.0.0.1:9527</span>
+      </div>
+    </footer>
+<script>
+      (function () {
+          
+        };
+        document.addEventListener("DOMContentLoaded", function () {
+          if (b) b.addEventListener("click", function () {
+          });
+        });
+      })();
+    </script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
+<script src="/shared-header.js?v=6"></script>
 </body>
 </html>

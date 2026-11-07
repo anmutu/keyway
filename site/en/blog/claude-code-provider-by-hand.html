@@ -18,7 +18,7 @@
   ] }
   </script>
   <style>
-    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e; --blue: #d97757; --hair: #e5e5e5; --bg-alt: #f0efeb;  --bg: #faf9f5; --nav-bg: rgba(250,249,245,0.88); }
+    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e; --blue: #d97757; --hair: #e5e5e5; --bg-alt: #f0efeb;  --bg: #fafaf8; --nav-bg: rgba(250,250,248,.9); }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--fg); line-height:1.78; -webkit-font-smoothing:antialiased; }
     main { max-width:720px; margin:0 auto; padding:56px 22px 90px; }
@@ -54,19 +54,38 @@
     .next h2 { margin:6px 0 4px; font-size:18px; }
 
       /* 导航:浅色磨砂细条(Apple global nav) */
+      nav {
+        position: sticky; top: 0; z-index: 50;
+        background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px);
+        height: 48px; box-shadow: 0 1px 0 rgba(0,0,0,.06);
+      }
+      .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 100%;
+        display: flex; align-items: center; justify-content: space-between; }
+      .nav-inner a {
+        color: rgba(31,30,29,.78); text-decoration: none;
+        font-size: 12.5px; transition: color .15s;
+      }
+      .nav-inner a:hover { color: #000; }
+      .nav-inner .brand { color: var(--fg); font-weight: 600; }
       .nav-inner a.nav-dl {
         background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
         font-weight: 500; transition: background .15s;
       }
-      .nav-inner a.nav-dl:hover { background: #0074dd; color: #fff; }
+      .nav-inner a.nav-dl:hover { background: #c25f3f; color: #fff; }
+      .nav-links { display: flex; gap: 26px; align-items: center; }
       .nav-links a#langLink { margin-right: 6px; }
       @media (max-width: 640px) {
+        .nav-links { gap: 16px; }
         .nav-main { display: none; }
       }
 
-      
-      
-      
+        --fg:#e8e8e6; --fg-2:#a0a09e; --fg-3:#6e6e6c;
+        --blue:#d97757; --bg:#1a1a1a; --bg-alt:#242424;
+        --nav-bg: rgba(26,26,26,.92); --hair: rgba(255,255,255,.1);
+      }
+
+      /* 站点页脚 */
+      .site-footer { background: var(--bg-alt); border-top: 1px solid var(--hair); padding: 56px 22px 28px; }
       .footer-grid { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 36px; text-align: left; }
       .footer-brand .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; font-family: ui-serif, Georgia, "Songti SC", serif; }
       .footer-brand p { color: var(--fg-2); font-size: 13.5px; line-height: 1.7; margin: 12px 0 0; }
@@ -79,8 +98,59 @@
       @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
 
       /* 语言下拉(TeapotRouter 式矢量国旗)与主题图标 */
-      
-      
+                  .flag { width: 16px; height: 12px; border-radius: 2px; display: block; object-fit: cover; }
+      /* 站级导航(与其他页面完全一致) */
+      nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
+      .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
+      .nav-inner a { color:rgba(31,30,29,.78); text-decoration:none; font-size:13px; }
+      .nav-inner a:hover { color:var(--fg); }
+      .nav-inner .brand { color:var(--fg); font-weight:600; }
+      .nav-links { display:flex; gap:18px; align-items:center; }
+      @media (max-width:640px) { .nav-links { gap:12px; } }
+
+      .locale-menu { position:relative; }
+      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
+      .locale-menu summary::-webkit-details-marker { display:none; }
+      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
+      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
+      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
+      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
+      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
+      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Claude Code, by hand: settings.json vs environment variables</h1>
+    <p class="meta"><a href="./">Blog</a> · Series · Part 3 · 2026-11-06 · ~6 min · <a href="https://github.com/anmutu/keyway">author</a></p>
+
+    <div class="answer"><b>The 30-second answer:</b>switching Claude Code's provider = editing the <code>env</code> block in <code>~/.claude/settings.json</code>: set <code>ANTHROPIC_BASE_URL</code> (where requests go) plus <code>ANTHROPIC_AUTH_TOKEN</code> or <code>ANTHROPIC_API_KEY</code> (the identity), save, then <b>open a new session</b>. One extra trap vs Codex: the same settings can live in two places — the config file and your shell. <b>Keep exactly one.</b></div>
+
+    <h2>1. Claude Code's config map</h2>
+    <table>
+      <tr><th>Place</th><th>What it owns</th><th>Touched today?</th></tr>
+      <tr><td><code>~/.claude/settings.json</code></td><td>User-level settings; its <code>env</code> block can set environment variables — <b>the recommended home for manual provider config</b>.</td><td>✅ main</td></tr>
+      <tr><td>Shell env vars</td><td>Exporting the same names in <code>.zshrc</code> / <code>.bashrc</code> / <code>setx</code> works equally well.</td><td>⚠️ pick one of the two</td></tr>
+      <tr><td><code>~/.claude.json</code>(login state)</td><td>Claude Code's own runtime state, including official subscription login.</td><td>❌ don't hand-edit</td></tr>
+    </table>
+    <p><b>Why settings.json is recommended:</b>it's a plain JSON file — backup-able, diffable, movable to a new machine in one piece. Variables scattered across shell configs are invisible; three months later even you won't remember what you set.</p>
+
+    <h2>2. Hands on: four steps</h2>
+
+    <h3>Step 1 · Back up and open settings.json</h3>
+    <p><span class="os mac">macOS</span><span class="os linux">Linux</span></p>
+    <pre><code>cp ~/.claude/settings.json ~/.claude/settings.json.bak
+nano ~/.claude/settings.json   # macOS alternative: open -e</code></pre>
+    <p><span class="os win">Windows</span>(PowerShell)</p>
+    <pre><code>copy $env:USERPROFILE\.claude\settings.json $env:USERPROFILE\.claude\settings.json.bak
+notepad $env:USERPROFILE\.claude\settings.json</code></pre>
+
+    <h3>Step 2 · Write the env block (copy-ready)</h3>
+    <pre><code>{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.example.com",
+    "ANTHROPIC_AUTH_TOKEN": "sk-your-key"
+  }
 }</code></pre>
     <ul>
       <li><b>ANTHROPIC_BASE_URL</b>: the provider's Anthropic-compatible endpoint.</li>
@@ -164,6 +234,19 @@ Get-ChildItem env: | Where-Object Name -like "ANTHROPIC*"</code></pre>
         <span class="mono">127.0.0.1:9527</span>
       </div>
     </footer>
-<script src="/shared-header.js?v=2"></script>
+<script>
+      (function () {
+          
+        };
+        document.addEventListener("DOMContentLoaded", function () {
+          if (b) b.addEventListener("click", function () {
+          });
+        });
+      })();
+    </script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
+<script src="/shared-header.js?v=6"></script>
 </body>
 </html>

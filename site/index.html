@@ -77,7 +77,7 @@
         --fg-2: #5e5e5e;
         --fg-3: #8e8e8e;
         --blue: #d97757;
-        --bg: #faf9f5;
+        --bg: #fafaf8;
         --bg-alt: #f0efeb;
         --nav-bg: rgba(250,249,245,0.88);
         --hair: #e5e5e5;
@@ -110,13 +110,29 @@
       .container { max-width: 980px; margin: 0 auto; padding: 0 22px; }
 
       /* 导航:浅色磨砂细条(Apple global nav) */
+      nav {
+        position: sticky; top: 0; z-index: 50;
+        background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px);
+        height: 48px; box-shadow: 0 1px 0 rgba(0,0,0,.06);
+      }
+      .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 100%;
+        display: flex; align-items: center; justify-content: space-between; }
+      .nav-inner a {
+        color: rgba(0,0,0,.78); text-decoration: none;
+        font-size: 12.5px; transition: color .15s;
+      }
+      .nav-inner a:hover { color: #000; }
+      .nav-inner .brand { color: var(--fg); font-weight: 600; }
+      .nav-inner a { font-size: 13.5px; }
       .nav-inner a.nav-dl {
         background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
         font-weight: 500; transition: background .15s;
       }
       .nav-inner a.nav-dl:hover { background: #b5573a; color: #fff; }
+      .nav-links { display: flex; gap: 26px; align-items: center; }
       .nav-links a#langLink { margin-right: 6px; }
       @media (max-width: 640px) {
+        .nav-links { gap: 16px; }
         .nav-main { display: none; }
       }
 
@@ -312,23 +328,23 @@
 
       /* FAQ */
       .faq { max-width: 720px; margin: 48px auto 0; text-align: left; }
-      .faq details { border-bottom: 1px solid var(--hair); padding: 22px 6px; }
-      .faq details summary {
+      details { border-bottom: 1px solid var(--hair); padding: 22px 6px; }
+      details summary {
         font-size: 17px; font-weight: 600; cursor: pointer; list-style: none;
         display: flex; justify-content: space-between; align-items: center; gap: 18px;
         transition: color .15s;
       }
-      .faq details summary:hover { color: var(--blue); }
-      .faq details summary::-webkit-details-marker { display: none; }
-      .faq details summary::after {
+      details summary:hover { color: var(--blue); }
+      details summary::-webkit-details-marker { display: none; }
+      details summary::after {
         content: "+"; color: var(--fg-3); font-size: 24px; font-weight: 300; line-height: 1;
         flex: none; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
         transition: transform .25s ease, color .15s;
       }
-      .faq details summary:hover::after { color: var(--blue); }
-      .faq details[open] summary::after { transform: rotate(45deg); }
-      .faq details p { font-size: 15px; color: var(--fg-2); margin-top: 10px; line-height: 1.65; }
-      .faq details p code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: var(--bg-alt); border-radius: 5px; padding: 1px 5px; }
+      details summary:hover::after { color: var(--blue); }
+      details[open] summary::after { transform: rotate(45deg); }
+      details p { font-size: 15px; color: var(--fg-2); margin-top: 10px; line-height: 1.65; }
+      details p code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: var(--bg-alt); border-radius: 5px; padding: 1px 5px; }
 
       /* footnote + footer(Apple 风格) */
       .footnotes { background: var(--bg-alt); padding: 34px 0 30px; }
@@ -354,17 +370,343 @@
       @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
 
       /* ===== 昼夜双模式(默认跟随系统,手动记忆)===== */
-      
-      
-      
-      
-      
-      
-      
+        --fg:#e8e8e6; --fg-2:#a0a09e; --fg-3:#6e6e6c;
+        --blue:#d97757; --bg:#1a1a1a; --bg-alt:#242424;
+        --nav-bg: rgba(26,26,26,.92); --hair: rgba(255,255,255,.1);
+      }
 
       
       /* 控件样式(Lucide 图标 + 干净交互) */
-      );
+      .locale-menu { position: relative; }
+      .locale-menu summary { list-style: none; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; color: var(--fg-3); padding: 5px 8px; border-radius: 6px; transition: color .15s,background .15s; }
+      .locale-menu summary:hover { color: var(--fg); background: var(--bg-alt); }
+      .locale-menu summary::-webkit-details-marker { display: none; }
+      .locale-menu summary svg { opacity: .7; }
+  
+      .locale-menu { position:relative; }
+      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
+      .locale-menu summary::-webkit-details-marker { display:none; }
+      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
+      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
+      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
+      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
+      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
+      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
+  </style>
+  </head>
+  <body>
+    
+    <!-- Hero -->
+    <section class="hero container">
+      <h1 id="brandHero" aria-label="Keyway — AI CLI 的本地网关(local gateway for AI coding CLIs)"><span class="kw-seq" aria-hidden="true"><span class="kw" data-kw="key">key</span><span class="kw" data-kw="way">way</span><span class="kw kw-dot" data-kw="dot">.</span><span class="kw kw-one" data-kw="one">one</span></span></h1>
+      <div class="kw-motto" data-i18n="motto">One key · one way —— 一把 Key,一条通路。</div>
+      <div class="tagline" data-i18n="tagline">每一次请求,去向清楚。</div>
+      <p class="sub" data-i18n="heroSub">为 <b>Claude Code、Codex、Gemini CLI、OpenCode</b> 等提供<b>供应商切换、模型路由、自动故障转移</b>与<b>请求日志</b> — 不重启会话,看清每一次请求的实际去向。API Key 本机加密,MIT 开源。</p>
+      <div class="hero-proof" aria-label="Keyway highlights">
+        <span data-i18n="heroProof1">切换无需重启会话</span>
+        <span data-i18n="heroProof2">9 个 AI CLI</span>
+        <span data-i18n="heroProof3">API Key 本机加密 · 免费 · MIT 开源</span>
+      </div>
+      <div class="links">
+        <a class="btn" href="./download.html" data-i18n="freeDl">免费下载</a>
+        <a class="alink" href="#features" data-i18n="learnMore">进一步了解</a>
+      </div>
+                              <div class="hero-shot">
+        <div class="win-bar"><i></i><i></i><i></i><span>Keyway</span></div>
+        <img src="./app-light.png" alt="Keyway" />
+      </div>
+    </section>
+
+    <!-- 三特性 -->
+    <section class="alt" id="features" data-sec="01 · 特性 FEATURES">
+      <div class="container">
+        <h2 data-i18n="fTitle">不止切换,更要看清。</h2>
+        <p class="sub" data-i18n="fSub">默认供应商、连接状态、实际请求,各有依据。</p>
+        <div class="trio">
+          <div>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+            <h3 data-i18n="f1t">切换更省心。</h3>
+            <p data-i18n="f1d">已经通过代理的会话,切换默认供应商无需重启。后续请求按新配置转发,已发出的请求不会迁移。</p>
+          </div>
+          <div>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <h3 data-i18n="f2t">密钥加密存储。</h3>
+            <p data-i18n="f2d">API Key 存入本机 SQLCipher 加密数据库,主密钥由系统钥匙串保管。导出的供应商配置不含 API Key。</p>
+          </div>
+          <div>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <h3 data-i18n="f3t">出错有处可查。</h3>
+            <p data-i18n="f3d">从请求日志查看供应商、模型、状态码与错误信息。路由或故障转移改变了去向,也不只靠猜。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 本地边界 -->
+    <section id="quickstart" data-sec="02 · 快速开始 QUICKSTART">
+      <div class="container">
+        <h2 data-i18n="qsTitle">上手,只需三步。</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="n">1</div>
+            <h3 data-i18n="s1t">添加供应商。</h3>
+            <p data-i18n="s1d">或从现有 CLI 配置一键导入。GLM、Kimi、官方、任意中转,皆可。</p>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <h3 data-i18n="s2t">一键接管。</h3>
+            <p data-i18n="s2d">原配置自动备份,随时还原,进退自如。</p>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <h3 data-i18n="s3t">秒切。</h3>
+            <p data-i18n="s3d">发一条新请求,打开日志确认实际供应商与响应状态。</p>
+          </div>
+        </div>
+        <div class="links" style="margin-top:36px;">
+          <a class="alink" href="./guide.html" data-i18n="qsGuide">查看图文指南</a>
+          <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="qsSubmit">提交供应商</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 截图 -->
+    <section class="local-first" id="local-first" data-sec="03 · 请求路径 REQUEST PATH">
+      <div class="container">
+        <p class="eyebrow" data-i18n="localEyebrow">Local-first · 不是托管中转站</p>
+        <h2 data-i18n="localTitle">你的请求,经过哪里,你看得见。</h2>
+        <p class="sub" data-i18n="localSub">Keyway 把控制面留在本机:不托管你的 API Key,不替你销售模型,也不把默认供应商冒充成实际去向。</p>
+        <div class="boundary-flow" aria-label="Keyway request path">
+          <div class="flow-node">
+            <span class="flow-index">01</span>
+            <strong data-i18n="flowCli">你的 CLI</strong>
+            <small>Claude Code · Codex · Gemini</small>
+          </div>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <div class="flow-node flow-node-main">
+            <span class="flow-index">02</span>
+            <strong>Keyway</strong>
+            <small data-i18n="flowLocal">本机代理 · 127.0.0.1:9527</small>
+          </div>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <div class="flow-node">
+            <span class="flow-index">03</span>
+            <strong data-i18n="flowProvider">你选择的供应商</strong>
+            <small data-i18n="flowProviderSub">官方 · 中转 · 自建端点</small>
+          </div>
+        </div>
+        <div class="boundary-notes">
+          <div><b data-i18n="localNote1t">密钥留在本机</b><span data-i18n="localNote1d">本地加密存储,导出配置不含 API Key。</span></div>
+          <div><b data-i18n="localNote2t">状态分开看</b><span data-i18n="localNote2d">代理运行、CLI 接管、请求成功是三件事。</span></div>
+          <div><b data-i18n="localNote3t">改写可还原</b><span data-i18n="localNote3d">原配置自动备份,冲突时停止覆盖。</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 终端 -->
+    <section>
+      <div class="container">
+        <h2 data-i18n="tTitle">切换,一秒的事。</h2>
+        <p class="sub" data-i18n="tSub">先接入本地代理,再切换默认供应商。首次接管 Codex 后需新开一次会话;后续切换无需重开。</p>
+        <div class="qs-demo">
+          <div class="qs-panel">
+            <div class="qs-search">
+              <span class="qs-kbd">⌘⇧K</span>
+              <span class="qs-query">ki<span class="qs-caret"></span></span>
+            </div>
+            <div class="qs-row sel"><span class="qs-num">1</span><span class="qs-name"><span class="qs-hl">Ki</span>mi</span><span class="qs-ms">✓ 180ms</span></div>
+            <div class="qs-row"><span class="qs-num">2</span><span class="qs-name">GLM Coding Plan</span><span class="qs-ms">✓ 210ms</span></div>
+            <div class="qs-row"><span class="qs-num">3</span><span class="qs-name">DeepSeek</span><span class="qs-ms">✓ 460ms</span></div>
+            <div class="qs-row"><span class="qs-num">4</span><span class="qs-name">OpenAI</span><span class="qs-ms bad">✗ 401</span></div>
+            <div class="qs-foot" data-i18n="qsFoot">↑↓ 选择 · Enter 切换 · 1-9 直切 · Esc 关闭</div>
+          </div>
+          <div class="qs-cap" data-i18n="qsCap">⌘⇧K 快速切换面板 —— 无需改任何配置</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 全能力详细介绍 -->
+    <section id="capabilities" data-sec="04 · 能力 CAPABILITIES">
+      <div class="container">
+        <h2 data-i18n="capTitle">远不止切换。</h2>
+        <p class="sub" data-i18n="capSub">从密钥安全到请求观测,Keyway 是 AI CLI 的本地网关。</p>
+        <div class="cap-grid">
+          <div class="cap">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg><span data-i18n="c1t">自动故障转移</span></h3>
+            <p data-i18n="c1d">配置并启用备用供应商链,在可重试的上游失败时尝试下一候选。已开始的流式响应不保证无缝恢复。</p>
+          </div>
+          <div class="cap">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg><span data-i18n="c2t">模型路由规则</span></h3>
+            <p data-i18n="c2d">让特定模型走特定供应商:如 <code>claude-*</code> 官方、<code>deepseek-*</code> 中转,先预览路径,再按模型名自动分发。</p>
+          </div>
+          <div class="cap">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg><span data-i18n="c3t">请求日志</span></h3>
+            <p data-i18n="c3d">最近 100 条请求逐条可见:实际供应商、模型、上下行 token、状态码与耗时,排障一目了然。</p>
+          </div>
+          <div class="cap">
+            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span data-i18n="c4t">用量与成功率</span></h3>
+            <p data-i18n="c4d">按 CLI、按供应商汇总 token 用量与请求成功率,谁稳定、谁费钱,数据说话。</p>
+          </div>
+          <div class="cap">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span data-i18n="c5t">多配置档案</span></h3>
+            <p data-i18n="c5d">工作 / 个人 / 测试多套供应商组合一键快照保存、随时切换,互不干扰。</p>
+          </div>
+          <div class="cap">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg><span data-i18n="c6t">备份与迁移</span></h3>
+            <p data-i18n="c6d">供应商配置一键导出 JSON(不含密钥),换机、分享预设不发愁。可从 5 个支持自动接管的 CLI 配置导入。</p>
+          </div>
+          <div class="cap">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="c7t">密钥保险箱</span></h3>
+            <p data-i18n="c7d">API Key 存储于本机 SQLCipher 加密数据库,主密钥由系统钥匙串保管。导出的供应商配置不包含 API Key。</p>
+          </div>
+          <div class="cap">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg><span data-i18n="c8t">连通性测速</span></h3>
+            <p data-i18n="c8d">每个供应商一键测试连通性与延迟,切换前心里有数。</p>
+          </div>
+          <div class="cap">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20M6 15h6"/></svg><span data-i18n="c9t">新手引导 + 托盘</span></h3>
+            <p data-i18n="c9d">三步向导选 CLI、加供应商、一键接管;菜单栏常驻,随时秒切、查看主界面。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 三步 -->
+    <!-- 供应商预设一览 -->
+    <section id="providers" data-sec="05 · 供应商 PROVIDERS">
+      <div class="container">
+        <h2 data-i18n="pvPTitle">内置常见供应商,填个 Key 就能用。</h2>
+        <p class="sub" data-i18n="pvPSub">官方渠道、主流模型服务与第三方端点都有预设;任何 OpenAI / Anthropic / Gemini 兼容接口也可以自定义接入。</p>
+        <div class="prov-wall">
+          <span class="prov"><img src="./icons/claude.svg" alt="Claude" />Claude</span>
+          <span class="prov"><img src="./icons/openai.svg" alt="OpenAI" />OpenAI</span>
+          <span class="prov"><img src="./icons/gemini.svg" alt="Gemini" />Gemini</span>
+          <span class="prov"><img src="./icons/deepseek.svg" alt="DeepSeek" />DeepSeek</span>
+          <span class="prov"><img src="./icons/kimi.svg" alt="Kimi" />Kimi</span>
+          <span class="prov"><img src="./icons/zhipu.svg" alt="GLM" />GLM</span>
+          <span class="prov"><img src="./icons/qwen.svg" alt="Qwen" />Qwen</span>
+          <span class="prov"><img src="./icons/siliconflow.svg" alt="SiliconFlow" />SiliconFlow</span>
+          <span class="prov"><img src="./icons/openrouter.svg" alt="OpenRouter" />OpenRouter</span>
+          <a class="prov linked" href="https://coderplan.ai" target="_blank" rel="noreferrer"><img src="./icons/coderplan.svg" alt="CoderPlan" />CoderPlan</a>
+          <a class="prov linked" href="https://teapotrouter.com" target="_blank" rel="noreferrer"><img src="./icons/teapotrouter.png" alt="TeapotRouter" />TeapotRouter</a>
+          <span class="prov more" data-i18n="pvMore">+ 自定义兼容端点</span>
+        </div>
+        <p class="pv-note" data-i18n="pvNote">想推荐你的服务?<a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer" data-i18n="pvSubmitLink">提交收录申请</a>。</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2 data-i18n="pvTitle">两种面貌,同一种出色。</h2>
+        <div class="shots">
+          <figure class="shot">
+            <div class="win-bar"><i></i><i></i><i></i><span>Keyway</span></div>
+            <img src="./app-light.png" alt="light" loading="lazy" />
+            <figcaption data-i18n="lightMode">浅色模式</figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="win-bar dark"><i></i><i></i><i></i><span>Keyway</span></div>
+            <img src="./app-dark.png" alt="dark" loading="lazy" />
+            <figcaption data-i18n="darkMode">深色模式</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" data-sec="06 · 常见问题 FAQ" class="alt">
+      <div class="container">
+        <h2 data-i18n="faqTitle">常见问题。</h2>
+        <div class="faq">
+          <details>
+            <summary data-i18n="q1">Keyway 是如何工作的?</summary>
+            <p data-i18n="a1">Keyway 在本机运行代理(127.0.0.1:9527)。接入代理的 CLI 请求按默认供应商、路由规则与故障转移配置转发;请求日志用于查看实际去向。</p>
+          </details>
+          <details>
+            <summary data-i18n="q2">我的 API Key 如何存储?</summary>
+            <p data-i18n="a2">API Key 存入 SQLCipher 加密的本地数据库,数据库主密钥由系统钥匙串保管。导出的供应商配置不含 API Key;转发请求时会向所选上游发送认证信息。</p>
+          </details>
+          <details>
+            <summary data-i18n="q3">支持哪些 AI CLI?</summary>
+            <p data-i18n="a3">Keyway 提供 9 个 CLI 分组来管理供应商,覆盖 Anthropic / OpenAI / Gemini 三种协议。Claude Code、Codex CLI、Gemini CLI、OpenCode、OpenClaw 支持自动接管,其他分组可按 CLI 支持的变量手动接入,供应商可按协议复用。</p>
+          </details>
+          <details>
+            <summary data-i18n="q4">切换供应商后,正在运行的会话要重启吗?</summary>
+            <p data-i18n="a4">已通过代理的会话切换默认供应商无需重启,后续请求按新配置转发,已发出的请求不迁移。首次接管 Codex 需新开一次会话;路由规则仍优先生效。</p>
+          </details>
+          <details>
+            <summary data-i18n="q5">可以同时用多个供应商吗?</summary>
+            <p data-i18n="a5">可以。模型路由规则让不同模型走不同供应商;故障转移在上游出错时自动切到备用;多配置档案可整组切换工作 / 个人环境。</p>
+          </details>
+          <details>
+            <summary data-i18n="q6">想换回原来的配置怎么办?</summary>
+            <p data-i18n="a6">在接管管理中点击「还原」,撤销 Keyway 改写的配置字段,保留无关改动。目标字段或自动创建的条目被外部修改时会中止,文件与备份保留;请先检查冲突。</p>
+          </details>
+          <details>
+            <summary data-i18n="q7">收费吗?</summary>
+            <p data-i18n="a7">Keyway 完全免费且开源(MIT)。你只需为自己使用的模型供应商付费。</p>
+          </details>
+          <details>
+            <summary data-i18n="q8">退出 Keyway 后,CLI 还能用吗?</summary>
+            <p data-i18n="a8">已接入本地代理的 CLI 依赖 Keyway 运行。关闭窗口可驻留托盘,完全退出会停止代理;需要恢复直连时,请先还原配置。代理离线与上游供应商故障是两种不同状态。</p>
+          </details>
+        </div>
+        <div class="links" style="margin-top:40px;">
+          <a class="alink" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
+          <a class="alink" href="./guide.html" data-i18n="readGuide">阅读使用指南</a>
+          <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer" data-i18n="submitProvider">提交供应商</a>
+          <a class="alink dl-direct" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="freeDl2">免费下载</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footnotes + Footer -->
+    <div class="footnotes">
+      <div class="container">
+        <p data-i18n="fn1">* 配置与用量记录保存在本机加密数据库。代理会向选定的模型供应商发送请求内容与认证信息;本地存储不代表离线推理。</p>
+        <p data-i18n="fn2">** Claude Code、Codex、Gemini CLI、OpenCode、OpenClaw 分别为各自所有者的产品;Keyway 与 Anthropic、OpenAI、Google 无关联。</p>
+        <div class="divider"></div>
+      </div>
+    </div>
+    <footer class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand"><img src="./logo.svg" alt="Keyway" width="20" height="20" />Keyway</span>
+          <p>AI CLI 的本地网关<br />The local gateway for AI coding CLIs.</p>
+          <p class="mono">One key · one way</p>
+        </div>
+        <div class="footer-col">
+          <b>产品</b>
+          <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
+          <a href="#quickstart">快速开始</a>
+          <a href="./guide.html">使用指南</a>
+          <a href="./blog/">博客</a>
+        </div>
+        <div class="footer-col">
+          <b>资源</b>
+          <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer">Issues</a>
+          <a href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">提交供应商</a>
+        </div>
+        <div class="footer-col">
+          <b>法律</b>
+          <a href="./privacy.html">隐私</a>
+          <a href="./terms.html">条款</a>
+        </div>
+      </div>
+      <div class="footer-bar">
+        <span>© 2026 Keyway · MIT License</span>
+        <span class="mono">127.0.0.1:9527</span>
+      </div>
+    </footer>
+
+    <script>
+      // 滚动入场:区块内容淡入上移(Apple 式克制,仅一次)
+      (function () {
+        var els = document.querySelectorAll(
+          "section:not(.hero) h2, section:not(.hero) .sub, .trio > div, .cap, .step, .qs-demo, .shots, .table-wrap, .faq, section .links"
+        );
+        els.forEach(function (el) { el.classList.add("reveal"); });
         if (!("IntersectionObserver" in window)) {
           els.forEach(function (el) { el.classList.add("in"); });
           return;
@@ -630,6 +972,19 @@
         play(true);
       })();
     </script>
-  <script src="/shared-header.js?v=2"></script>
+  <script>
+      (function () {
+          
+        };
+        document.addEventListener("DOMContentLoaded", function () {
+          if (b) b.addEventListener("click", function () {
+          });
+        });
+      })();
+    </script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
+<script src="/shared-header.js?v=6"></script>
 </body>
 </html>

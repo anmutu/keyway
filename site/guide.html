@@ -41,7 +41,7 @@
     <style>
       :root {
         --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e;
-        --blue: #d97757; --bg: #faf9f5; --bg-alt: #f0efeb;
+        --blue: #d97757; --bg: #fafaf8; --bg-alt: #f0efeb;
         --nav-bg: rgba(250,249,245,0.88); --hair: #e5e5e5;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,6 +52,11 @@
         -webkit-font-smoothing: antialiased; letter-spacing: .011em;
       }
       .container { max-width: 760px; margin: 0 auto; padding: 0 22px; }
+      nav { position: sticky; top: 0; z-index: 50; background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px); height: 48px; box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+      .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 100%; display: flex; align-items: center; justify-content: space-between; }
+      .nav-inner a { color: rgba(0,0,0,.78); text-decoration: none; font-size: 12.5px; transition: color .15s; }
+      .nav-inner a:hover { color: #000; }
+      .nav-links { display: flex; gap: 26px; align-items: center; }
 
       /* Hero */
       header.hero { padding: 88px 0 30px; text-align: center; }
@@ -84,7 +89,7 @@
         font-size: 15px; font-weight: 500; padding: 10px 22px; border-radius: 980px;
         transition: background .2s;
       }
-      .dl-btn:hover { background: #0074dd; text-decoration: none !important; }
+      .dl-btn:hover { background: #c25f3f; text-decoration: none !important; }
       .dl-alt { display: inline-block; margin-left: 14px; font-size: 14px; }
       code {
         font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13.5px;
@@ -128,10 +133,18 @@
         header.hero .sub { animation-delay: .1s; } header.hero .toc { animation-delay: .2s; }
       }
     
-      
-      
-      
-      
+
+      .locale-menu { position:relative; }
+      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
+      .locale-menu summary::-webkit-details-marker { display:none; }
+      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
+      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
+      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
+      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
+      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
+      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
+  
+      .site-footer { background:var(--bg-alt); border-top:1px solid var(--hair); padding:56px 22px 28px; }
       .footer-grid { max-width:980px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:36px; text-align:left; }
       .footer-brand .brand { display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:17px; }
       .footer-brand p { color:var(--fg-2); font-size:13.5px; line-height:1.7; margin:12px 0 0; }
@@ -518,7 +531,6 @@
           toggle.textContent = lang === "en" ? "中文" : "EN";
           try { localStorage.setItem("site-lang", lang); } catch (e) {}
         }
-        var saved = null;
         try { saved = localStorage.getItem("site-lang"); } catch (e) {}
         if (!saved) saved = /^en/i.test(navigator.language) ? "en" : "zh";
         apply(saved);
@@ -529,6 +541,20 @@
       })();
     </script>
     <script src="./release-sync.js"></script>
-  <script src="/shared-header.js?v=2"></script>
+  <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>
+(function() {
+  var theme = null;
+  document.addEventListener("DOMContentLoaded", function() {
+    if (!btn) return;
+    btn.addEventListener("click", function() {
+    });
+  });
+})();
+</script>
+<script>
+(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();
+</script>
+<script src="/shared-header.js?v=6"></script>
 </body>
 </html>
