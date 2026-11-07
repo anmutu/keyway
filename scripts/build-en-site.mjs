@@ -98,13 +98,6 @@ html = html.replace(/(data-i18n="([^"]+)"[^>]*>)([^<]*)(<\/)/g, (m, open, _key, 
 html = html.replace(/ data-i18n="[^"]*"/g, "");
 
 // 语言切换链接 → 中文站
-// 语言下拉:中文页(指 EN 目标)→ 英文页(指中文目标)
-html = html.replace(/<details class="locale-menu"[^>]*><summary[^>]*>[\s\S]*?<\/summary><div class="locale-options">[\s\S]*?<\/div><\/details>/, (m) => {
-  const chev = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
-  const sum = '<img class="flag" src="./flags/cn.svg" alt="" width="16" height="12" />中文';
-  const opts = '<a href="../"><img class="flag" src="./flags/cn.svg" alt="" width="16" height="12" />中文</a><a href="./" aria-current="page"><img class="flag" src="./flags/gb.svg" alt="" width="16" height="12" />English</a>';
-  return '<details class="locale-menu" id="langMenu"><summary aria-label="Switch language">' + sum + chev + '</summary><div class="locale-options">' + opts + '</div></details>';
-});
 
 // 相对资源路径 ./ → ../(logo、截图、guide、release-sync);博客仍位于英文站根目录下。
 html = html.replace(/(src|href)="\.\//g, '$1="../');
@@ -115,6 +108,19 @@ html = html.replace(/(<a class="nav-blog" href="\.\/blog\/">)博客(<\/a>)/, "$1
 html = html.replace('href="../privacy.html"', 'href="./privacy.html"');
 html = html.replace('href="../terms.html"', 'href="./terms.html"');
 html = html.replace('href="../blog/"', 'href="./blog/"');
+
+// 语言下拉:整个 <details> 块从中文版换为英文版
+html = html.replace(/<details class="locale-menu"[^>]*>[\s\S]*?<\/details>/, (m) => {
+  const chev = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+  const gb = '<img class="flag" src="./flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" />';
+  const cn = '<img class="flag" src="./flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" />';
+  const sum = gb + '<span>EN</span>' + chev;
+  const opts = cn + '_SPLIT_' + gb; // 占位,后面拼
+  return '<details class="locale-menu" id="langMenu"><summary aria-label="Switch language">' + sum + '</summary><div class="locale-options">' +
+    '<a href="../" lang="zh">' + cn + '中文</a>' +
+    '<a href="./" lang="en" aria-current="page">' + gb + 'English</a>' +
+    '</div></details>';
+});
 
 // 英文页使用英文界面截图(正文相对路径;og/twitter/schema 在下方模板插入后统一替换)
 html = html.replace(/app-light\.png/g, "app-light-en.png");
