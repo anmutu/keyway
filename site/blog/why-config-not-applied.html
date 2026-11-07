@@ -118,7 +118,19 @@
       .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
       .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
   </style>
-</head>
+
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Keyway">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:title" content="为什么改了配置没生效?AI CLI 配置加载顺序详解">
+    <meta property="og:description" content="贯穿 AI CLI 手动配置的最大疑问:进程启动快照、shell 配置文件加载时机、Windows setx 的新窗口规则、IDE 内嵌终端的环境继承——一张图讲透,附五步排查法。">
+    <meta property="og:url" content="https://keyway.one/blog/why-config-not-applied.html">
+    <meta property="og:image" content="https://keyway.one/app-light.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="为什么改了配置没生效?AI CLI 配置加载顺序详解">
+    <meta name="twitter:description" content="贯穿 AI CLI 手动配置的最大疑问:进程启动快照、shell 配置文件加载时机、Windows setx 的新窗口规则、IDE 内嵌终端的环境继承——一张图讲透,附五步排查法。">
+    <meta name="twitter:image" content="https://keyway.one/app-light.png">
+  </head>
 <body>
   <main>
     <h1>为什么"改了配置没生效"?配置加载顺序详解</h1>
