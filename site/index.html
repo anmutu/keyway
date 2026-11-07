@@ -130,7 +130,7 @@
         background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
         font-weight: 500; transition: background .15s;
       }
-      .nav-inner a.nav-dl:hover { background: #0074dd; color: #fff; }
+      .nav-inner a.nav-dl:hover { background: #b5573a; color: #fff; }
       .nav-links { display: flex; gap: 26px; align-items: center; }
       .nav-inner a.nav-away::after { content: "↗"; font-size: 10px; vertical-align: 2px; opacity: .5; margin-left: 2px; }
       .nav-links a#langLink { margin-right: 6px; }
@@ -175,7 +175,7 @@
         font-size: 17px; font-weight: 500; padding: 12px 30px; border-radius: 980px;
         transition: background .2s;
       }
-      .btn:hover { background: #0074dd; }
+      .btn:hover { background: #b5573a; }
       .hero-shot {
         max-width: 980px; margin: 48px auto 0; border-radius: 18px; overflow: hidden;
         box-shadow: 0 30px 70px rgba(63,50,35,.18); border: 1px solid var(--hair);
@@ -209,8 +209,8 @@
       .kw-spark { position: absolute; color: var(--blue); font-size: .42em; opacity: 0; pointer-events: none; }
       .kw-dust { position: absolute; width: .16em; height: .16em; border-radius: 50%; background: var(--fg-3); opacity: 0; pointer-events: none; }
       .kw-trail { position: absolute; width: .13em; height: .13em; border-radius: 50%; background: var(--blue); opacity: 0; pointer-events: none; }
-      .kw-underline { position: absolute; bottom: -.16em; height: 3px; border-radius: 3px; background: linear-gradient(100deg, var(--blue) 0%, #4da3ff 22%, var(--blue) 50%, #4da3ff 78%, var(--blue) 100%); background-size: 220% 100%; transform-origin: left center; transform: scaleX(0); pointer-events: none; }
-      .kw-glow { position: absolute; inset: -90px -170px; background: radial-gradient(closest-side, rgba(0,102,204,.12), transparent 72%); opacity: 0; pointer-events: none; }
+      .kw-underline { position: absolute; bottom: -.16em; height: 3px; border-radius: 3px; background: linear-gradient(100deg, var(--blue) 0%, #e29a7d 22%, var(--blue) 50%, #e29a7d 78%, var(--blue) 100%); background-size: 220% 100%; transform-origin: left center; transform: scaleX(0); pointer-events: none; }
+      .kw-glow { position: absolute; inset: -90px -170px; background: radial-gradient(closest-side, rgba(201,100,66,.14), transparent 72%); opacity: 0; pointer-events: none; }
       .hero h1 { position: relative; }
       .hero.intro-hold .kw-motto, .hero.intro-hold .tagline, .hero.intro-hold .hero-proof, .hero.intro-hold .sub,
       .hero.intro-hold .links, .hero.intro-hold .platform-links, .hero.intro-hold .install-line, .hero.intro-hold .download-note,
@@ -435,17 +435,17 @@
         <p class="sub" data-i18n="fSub">默认供应商、连接状态、实际请求,各有依据。</p>
         <div class="trio">
           <div>
-            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
             <h3 data-i18n="f1t">切换更省心。</h3>
             <p data-i18n="f1d">已经通过代理的会话,切换默认供应商无需重启。后续请求按新配置转发,已发出的请求不会迁移。</p>
           </div>
           <div>
-            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
             <h3 data-i18n="f2t">密钥加密存储。</h3>
             <p data-i18n="f2d">API Key 存入本机 SQLCipher 加密数据库,主密钥由系统钥匙串保管。导出的供应商配置不含 API Key。</p>
           </div>
           <div>
-            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
             <h3 data-i18n="f3t">出错有处可查。</h3>
             <p data-i18n="f3d">从请求日志查看供应商、模型、状态码与错误信息。路由或故障转移改变了去向,也不只靠猜。</p>
           </div>
@@ -543,39 +543,39 @@
         <p class="sub" data-i18n="capSub">从密钥安全到请求观测,Keyway 是 AI CLI 的本地网关。</p>
         <div class="cap-grid">
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg><span data-i18n="c1t">自动故障转移</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg><span data-i18n="c1t">自动故障转移</span></h3>
             <p data-i18n="c1d">配置并启用备用供应商链,在可重试的上游失败时尝试下一候选。已开始的流式响应不保证无缝恢复。</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg><span data-i18n="c2t">模型路由规则</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg><span data-i18n="c2t">模型路由规则</span></h3>
             <p data-i18n="c2d">让特定模型走特定供应商:如 <code>claude-*</code> 官方、<code>deepseek-*</code> 中转,先预览路径,再按模型名自动分发。</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg><span data-i18n="c3t">请求日志</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg><span data-i18n="c3t">请求日志</span></h3>
             <p data-i18n="c3d">最近 100 条请求逐条可见:实际供应商、模型、上下行 token、状态码与耗时,排障一目了然。</p>
           </div>
           <div class="cap">
-            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span data-i18n="c4t">用量与成功率</span></h3>
+            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span data-i18n="c4t">用量与成功率</span></h3>
             <p data-i18n="c4d">按 CLI、按供应商汇总 token 用量与请求成功率,谁稳定、谁费钱,数据说话。</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span data-i18n="c5t">多配置档案</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span data-i18n="c5t">多配置档案</span></h3>
             <p data-i18n="c5d">工作 / 个人 / 测试多套供应商组合一键快照保存、随时切换,互不干扰。</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg><span data-i18n="c6t">备份与迁移</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg><span data-i18n="c6t">备份与迁移</span></h3>
             <p data-i18n="c6d">供应商配置一键导出 JSON(不含密钥),换机、分享预设不发愁。可从 5 个支持自动接管的 CLI 配置导入。</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="c7t">密钥保险箱</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="c7t">密钥保险箱</span></h3>
             <p data-i18n="c7d">API Key 存储于本机 SQLCipher 加密数据库,主密钥由系统钥匙串保管。导出的供应商配置不包含 API Key。</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg><span data-i18n="c8t">连通性测速</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg><span data-i18n="c8t">连通性测速</span></h3>
             <p data-i18n="c8d">每个供应商一键测试连通性与延迟,切换前心里有数。</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20M6 15h6"/></svg><span data-i18n="c9t">新手引导 + 托盘</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20M6 15h6"/></svg><span data-i18n="c9t">新手引导 + 托盘</span></h3>
             <p data-i18n="c9d">三步向导选 CLI、加供应商、一键接管;菜单栏常驻,随时秒切、查看主界面。</p>
           </div>
         </div>

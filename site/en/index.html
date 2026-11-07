@@ -129,7 +129,7 @@
         background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
         font-weight: 500; transition: background .15s;
       }
-      .nav-inner a.nav-dl:hover { background: #0074dd; color: #fff; }
+      .nav-inner a.nav-dl:hover { background: #b5573a; color: #fff; }
       .nav-links { display: flex; gap: 26px; align-items: center; }
       .nav-inner a.nav-away::after { content: "↗"; font-size: 10px; vertical-align: 2px; opacity: .5; margin-left: 2px; }
       .nav-links a#langLink { margin-right: 6px; }
@@ -174,7 +174,7 @@
         font-size: 17px; font-weight: 500; padding: 12px 30px; border-radius: 980px;
         transition: background .2s;
       }
-      .btn:hover { background: #0074dd; }
+      .btn:hover { background: #b5573a; }
       .hero-shot {
         max-width: 980px; margin: 48px auto 0; border-radius: 18px; overflow: hidden;
         box-shadow: 0 30px 70px rgba(63,50,35,.18); border: 1px solid var(--hair);
@@ -208,8 +208,8 @@
       .kw-spark { position: absolute; color: var(--blue); font-size: .42em; opacity: 0; pointer-events: none; }
       .kw-dust { position: absolute; width: .16em; height: .16em; border-radius: 50%; background: var(--fg-3); opacity: 0; pointer-events: none; }
       .kw-trail { position: absolute; width: .13em; height: .13em; border-radius: 50%; background: var(--blue); opacity: 0; pointer-events: none; }
-      .kw-underline { position: absolute; bottom: -.16em; height: 3px; border-radius: 3px; background: linear-gradient(100deg, var(--blue) 0%, #4da3ff 22%, var(--blue) 50%, #4da3ff 78%, var(--blue) 100%); background-size: 220% 100%; transform-origin: left center; transform: scaleX(0); pointer-events: none; }
-      .kw-glow { position: absolute; inset: -90px -170px; background: radial-gradient(closest-side, rgba(0,102,204,.12), transparent 72%); opacity: 0; pointer-events: none; }
+      .kw-underline { position: absolute; bottom: -.16em; height: 3px; border-radius: 3px; background: linear-gradient(100deg, var(--blue) 0%, #e29a7d 22%, var(--blue) 50%, #e29a7d 78%, var(--blue) 100%); background-size: 220% 100%; transform-origin: left center; transform: scaleX(0); pointer-events: none; }
+      .kw-glow { position: absolute; inset: -90px -170px; background: radial-gradient(closest-side, rgba(201,100,66,.14), transparent 72%); opacity: 0; pointer-events: none; }
       .hero h1 { position: relative; }
       .hero.intro-hold .kw-motto, .hero.intro-hold .tagline, .hero.intro-hold .hero-proof, .hero.intro-hold .sub,
       .hero.intro-hold .links, .hero.intro-hold .platform-links, .hero.intro-hold .install-line, .hero.intro-hold .download-note,
@@ -434,17 +434,17 @@
         <p class="sub">Default providers, connection status and actual requests — clearly distinguished.</p>
         <div class="trio">
           <div>
-            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
             <h3>Switch with clarity.</h3>
             <p>Sessions already using the proxy need no restart when changing the default provider. New requests follow the updated configuration; in-flight requests do not migrate.</p>
           </div>
           <div>
-            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
             <h3>Encrypted key storage.</h3>
             <p>API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.</p>
           </div>
           <div>
-            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="tico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
             <h3>Errors you can inspect.</h3>
             <p>Check providers, models, status codes and errors in request logs. When routing or failover changes the destination, you have more than a guess.</p>
           </div>
@@ -542,39 +542,39 @@
         <p class="sub">From key safety to request observability, Keyway is the local gateway for your AI CLIs.</p>
         <div class="cap-grid">
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg><span>Automatic failover</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg><span>Automatic failover</span></h3>
             <p>Configure and enable a backup chain to try the next candidate after retryable upstream failures. Recovery is not guaranteed once a streaming response has begun.</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg><span>Model routing rules</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg><span>Model routing rules</span></h3>
             <p>Route specific models to specific providers: e.g. <code>claude-*</code> to official, <code>deepseek-*</code> to a relay — preview the path, then dispatch by model name.</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg><span>Request logs</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg><span>Request logs</span></h3>
             <p>The last 100 requests, item by item: actual provider, model, tokens in/out, status code and latency. Debugging at a glance.</p>
           </div>
           <div class="cap">
-            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span>Usage & success rate</span></h3>
+            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span>Usage & success rate</span></h3>
             <p>Token usage and request success rate aggregated by CLI and by provider. Who's stable, who's costly — let data decide.</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span>Multiple profiles</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span>Multiple profiles</span></h3>
             <p>Work / personal / testing — snapshot provider sets, save and switch anytime without interference.</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg><span>Backup & migration</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg><span>Backup & migration</span></h3>
             <p>Export provider configs to JSON with one click (keys excluded). Moving machines or sharing presets is easy. Imports from the 5 CLIs with automatic takeover.</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Key vault</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Key vault</span></h3>
             <p>API keys are stored in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys.</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg><span>Connectivity test</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg><span>Connectivity test</span></h3>
             <p>One-click latency and reachability test per provider, before you switch.</p>
           </div>
           <div class="cap">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20M6 15h6"/></svg><span>Onboarding + tray</span></h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c96442" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20M6 15h6"/></svg><span>Onboarding + tray</span></h3>
             <p>A three-step wizard: pick CLIs, add providers, take over in one click. Lives in the menu bar for instant switching.</p>
           </div>
         </div>
