@@ -377,6 +377,22 @@
       .footer-col a:hover { color: var(--blue); }
       .footer-bar { max-width: 980px; margin: 36px auto 0; padding-top: 18px; border-top: 1px solid var(--hair); display: flex; justify-content: space-between; font-size: 12.5px; color: var(--fg-3); }
       @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+
+      /* ===== 昼夜双模式(默认跟随系统,手动记忆)===== */
+      html[data-theme="night"] {
+        --fg:#ece7db; --fg-2:#b3aca0; --fg-3:#7d766b;
+        --blue:#d97757; --bg:#211f1c; --bg-alt:#2a2723;
+        --nav-bg: rgba(33,31,28,.9); --hair: rgba(255,255,255,.13);
+      }
+      html[data-theme="night"] body { background: var(--bg); }
+      html[data-theme="night"] .nav-inner a { color: rgba(236,231,219,.75); }
+      html[data-theme="night"] .nav-inner a:hover { color: #fff; }
+      html[data-theme="night"] .local-first { background: #1a1917; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
+      html[data-theme="night"] .hero-proof span { background: rgba(255,255,255,.05); }
+      html[data-theme="night"] .install-line button { background: transparent; }
+      html[data-theme="night"] .prov { background: rgba(255,255,255,.05); }
+      html[data-theme="night"] .hero-shot { background: transparent; }
+      html[data-theme="night"] .win-bar { background: #2a2723; }
   </style>
   </head>
   <body>
@@ -390,6 +406,8 @@
           <a class="nav-away" href="../guide.html">Guide</a>
           <a class="nav-blog" href="./blog/">Blog</a>
           <a class="nav-main" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
+          <a class="nav-away" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
+          <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:1px solid var(--hair);background:transparent;color:var(--fg-2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;">🌙</button>
           <a href="../" id="langLink">中文</a>
           <a class="nav-dl" id="navDownload" href="https://github.com/anmutu/keyway/releases">Download</a>
         </div>
@@ -991,5 +1009,26 @@
         play(true);
       })();
     </script>
-  </body>
+  <script>
+      (function () {
+        var saved = null;
+        try { saved = localStorage.getItem("kw-theme"); } catch (e) {}
+        var theme = saved || (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day");
+        var apply = function () {
+          document.documentElement.setAttribute("data-theme", theme);
+          var b = document.getElementById("themeToggle");
+          if (b) b.textContent = theme === "night" ? "☀️" : "🌙";
+        };
+        apply();
+        document.addEventListener("DOMContentLoaded", function () {
+          var b = document.getElementById("themeToggle");
+          if (b) b.addEventListener("click", function () {
+            theme = theme === "night" ? "day" : "night";
+            try { localStorage.setItem("kw-theme", theme); } catch (e) {}
+            apply();
+          });
+        });
+      })();
+    </script>
+</body>
 </html>

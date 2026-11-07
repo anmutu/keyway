@@ -40,9 +40,9 @@
     </script>
     <style>
       :root {
-        --fg: #1d1d1f; --fg-2: #62626d; --fg-3: #86868b;
-        --blue: #0066cc; --bg: #ffffff; --bg-alt: #f5f5f7;
-        --nav-bg: rgba(251, 251, 253, 0.82); --hair: #d2d2d7;
+        --fg: #1f1e1d; --fg-2: #5d5952; --fg-3: #8f887c;
+        --blue: #c96442; --bg: #faf9f5; --bg-alt: #f0eee6;
+        --nav-bg: rgba(250,249,245,0.88); --hair: #ddd6c6;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html { scroll-behavior: smooth; }
@@ -132,7 +132,11 @@
         header.hero * { animation: fadeUp .8s cubic-bezier(.28,.11,.32,1) both; }
         header.hero .sub { animation-delay: .1s; } header.hero .toc { animation-delay: .2s; }
       }
-    </style>
+    
+      html[data-theme="night"] { --fg:#ece7db; --fg-2:#b3aca0; --fg-3:#7d766b; --blue:#d97757; --bg:#211f1c; --bg-alt:#2a2723; --nav-bg: rgba(33,31,28,.9); --hair: rgba(255,255,255,.13); }
+      html[data-theme="night"] body { background: var(--bg); color: var(--fg); }
+      html[data-theme="night"] main, html[data-theme="night"] footer { background: transparent; }
+</style>
   </head>
   <body>
     <nav>
