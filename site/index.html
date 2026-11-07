@@ -312,23 +312,23 @@
 
       /* FAQ */
       .faq { max-width: 720px; margin: 48px auto 0; text-align: left; }
-      details { border-bottom: 1px solid var(--hair); padding: 22px 6px; }
-      details summary {
+      .faq details { border-bottom: 1px solid var(--hair); padding: 22px 6px; }
+      .faq details summary {
         font-size: 17px; font-weight: 600; cursor: pointer; list-style: none;
         display: flex; justify-content: space-between; align-items: center; gap: 18px;
         transition: color .15s;
       }
-      details summary:hover { color: var(--blue); }
-      details summary::-webkit-details-marker { display: none; }
-      details summary::after {
+      .faq details summary:hover { color: var(--blue); }
+      .faq details summary::-webkit-details-marker { display: none; }
+      .faq details summary::after {
         content: "+"; color: var(--fg-3); font-size: 24px; font-weight: 300; line-height: 1;
         flex: none; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
         transition: transform .25s ease, color .15s;
       }
-      details summary:hover::after { color: var(--blue); }
-      details[open] summary::after { transform: rotate(45deg); }
-      details p { font-size: 15px; color: var(--fg-2); margin-top: 10px; line-height: 1.65; }
-      details p code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: var(--bg-alt); border-radius: 5px; padding: 1px 5px; }
+      .faq details summary:hover::after { color: var(--blue); }
+      .faq details[open] summary::after { transform: rotate(45deg); }
+      .faq details p { font-size: 15px; color: var(--fg-2); margin-top: 10px; line-height: 1.65; }
+      .faq details p code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: var(--bg-alt); border-radius: 5px; padding: 1px 5px; }
 
       /* footnote + footer(Apple 风格) */
       .footnotes { background: var(--bg-alt); padding: 34px 0 30px; }
