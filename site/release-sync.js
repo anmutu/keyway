@@ -90,12 +90,12 @@
     .then(function (applied) {
       if (applied) return;
       // GitHub API 不可达(常见于部分网络)时,从同源镜像读最新版本号
-      fetch("https://keyway.one/downloads/latest-version.txt", { cache: "no-store" })
+      fetch("/downloads/latest-version.txt", { cache: "no-store" })
         .then(function (r) { return r.ok ? r.text() : ""; })
         .then(function (t) {
           var tag = (t || "").trim();
           if (/^v\d+(\.\d+){2}$/.test(tag)) applyRelease({ tag_name: tag, assets: [] });
         })
-        .catch(function () {});
+        .catch(function () { /* version file unreachable on localhost */ });
     });
 })();

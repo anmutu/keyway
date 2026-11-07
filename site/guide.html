@@ -534,5 +534,6 @@
     <script src="./release-sync.js"></script>
   <script>(function(){var s=null;try{s=localStorage.getItem("kw-theme")}catch(e){}var t=s||(matchMedia("(prefers-color-scheme: dark)").matches?"night":"day");document.documentElement.setAttribute("data-theme",t);document.addEventListener("DOMContentLoaded",function(){var b=document.getElementById("themeToggle");if(b)b.addEventListener("click",function(){t=t==="night"?"day":"night";try{localStorage.setItem("kw-theme",t)}catch(e){}document.documentElement.setAttribute("data-theme",t)})}})();</script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];document.querySelectorAll('img[src*="logo.svg"]').forEach(function(img){var p=img.src.split("/");p.pop();img.src=p.join("/")+"/logos/logo-"+m[d]+".svg";});})();</script>
 </body>
 </html>

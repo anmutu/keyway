@@ -295,5 +295,6 @@ HTTPS 请求(地址 = Base URL + 路径;认证 = 请求头里的 Key)
     </script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];document.querySelectorAll('img[src*="logo.svg"]').forEach(function(img){var p=img.src.split("/");p.pop();img.src=p.join("/")+"/logos/logo-"+m[d]+".svg";});})();</script>
 </body>
 </html>
