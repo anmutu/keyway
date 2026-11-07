@@ -13,10 +13,10 @@
   </script>
   <style>
     :root { --fg:#1f1e1d; --fg-2:#5d5952; --fg-3:#8f887c; --blue:#c96442; --bg: #faf9f5; --bg-alt:#f0eee6; --nav-bg: rgba(250,249,245,0.88); --hair:#ddd6c6; }
-    html[data-theme="night"] { --fg:#ece7db; --fg-2:#b3aca0; --fg-3:#7d766b; --blue:#d97757; --bg:#211f1c; --bg-alt:#2a2723; --nav-bg:rgba(33,31,28,.9); --hair:rgba(255,255,255,.13); }
+    
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.75 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; -webkit-font-smoothing:antialiased; }
-    html[data-theme="night"] body { background:var(--bg); }
+    
     main { max-width:720px; margin:0 auto; padding:64px 22px 100px; }
     h1 { font-size:34px; font-weight:700; font-family:ui-serif,Georgia,"Songti SC",serif; margin:0 0 4px; }
     .meta { color:var(--fg-3); font-size:13px; margin-bottom:36px; }
@@ -50,14 +50,7 @@
     .footer-col a:hover { color:var(--blue); }
     .footer-bar { max-width:980px; margin:36px auto 0; padding-top:18px; border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-size:12.5px; color:var(--fg-3); flex-wrap:wrap; gap:8px; }
     @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-  </style>
-</head>
-<body>
-      <script>document.addEventListener("click",function(e){var m=document.getElementById("langMenu");if(m&&m.open&&!m.contains(e.target))m.open=false;});</script>
+      );</script>
 
   <main>
     <h1>Download Keyway</h1>
@@ -116,23 +109,6 @@
       });
     });
   </script>
-<script>
-(function() {
-  var theme = null;
-  try { theme = localStorage.getItem("kw-theme"); } catch(e) {}
-  if (!theme) theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day";
-  document.documentElement.setAttribute("data-theme", theme);
-  document.addEventListener("DOMContentLoaded", function() {
-    var btn = document.getElementById("themeToggle");
-    if (!btn) return;
-    btn.addEventListener("click", function() {
-      theme = theme === "night" ? "day" : "night";
-      try { localStorage.setItem("kw-theme", theme); } catch(e) {}
-      document.documentElement.setAttribute("data-theme", theme);
-    });
-  });
-})();
-</script>
 <script src="/shared-header.js?v=2"></script>
 </body>
 </html>

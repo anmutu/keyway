@@ -65,17 +65,9 @@
         .nav-main { display: none; }
       }
 
-      html[data-theme="night"] {
-        --fg:#e8e8e6; --fg-2:#a0a09e; --fg-3:#6e6e6c;
-        --blue:#d97757; --bg:#1a1a1a; --bg-alt:#242424;
-        --nav-bg: rgba(26,26,26,.92); --hair: rgba(255,255,255,.1);
-      }
-      html[data-theme="night"] body { background: var(--bg); }
-      html[data-theme="night"]
-      html[data-theme="night"]
-
-      /* 站点页脚 */
-      .site-footer { background: var(--bg-alt); border-top: 1px solid var(--hair); padding: 56px 22px 28px; }
+      
+      
+      
       .footer-grid { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 36px; text-align: left; }
       .footer-brand .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; font-family: ui-serif, Georgia, "Songti SC", serif; }
       .footer-brand p { color: var(--fg-2); font-size: 13.5px; line-height: 1.7; margin: 12px 0 0; }
@@ -88,54 +80,8 @@
       @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
 
       /* 语言下拉(TeapotRouter 式矢量国旗)与主题图标 */
-      html[data-theme="night"]
-      html[data-theme="night"]
-      /* 站级导航(与其他页面完全一致) */
-      @media (max-width:640px) { }
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Claude Code 手动换供应商:settings.json 与环境变量,谁说了算?</h1>
-    <p class="meta"><a href="./">博客</a> · 系列 · 第 3 篇 · 2026-11-06 · 约 7 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
-
-    <div class="answer"><b>30 秒答案:</b>Claude Code 换供应商 = 改 <code>~/.claude/settings.json</code> 里的 <code>env</code> 块:设 <code>ANTHROPIC_BASE_URL</code>(发往哪)+ <code>ANTHROPIC_AUTH_TOKEN</code> 或 <code>ANTHROPIC_API_KEY</code>(用什么身份),保存后<b>新开会话</b>。它比 Codex 多一个坑:配置可以写在两个地方(配置文件和终端环境变量),<b>只留一处</b>是铁律。</div>
-
-    <h2>一、Claude Code 的配置版图</h2>
-    <p>Claude Code 涉及的位置同样只有三个角色:</p>
-    <table>
-      <tr><th>位置</th><th>管什么</th><th>本文动不动</th></tr>
-      <tr><td><code>~/.claude/settings.json</code></td><td>用户级设置,其中 <code>env</code> 块可以写入环境变量——<b>手动换供应商的推荐位置</b>。</td><td>✅ 主战场</td></tr>
-      <tr><td>终端环境变量</td><td>在 <code>.zshrc</code> / <code>.bashrc</code> / <code>setx</code> 里导出同名变量,效果等价。</td><td>⚠️ 与上面二选一</td></tr>
-      <tr><td><code>~/.claude.json</code>(登录态等)</td><td>Claude Code 自己维护的运行状态,含官方订阅登录信息。</td><td>❌ 不要手改</td></tr>
-    </table>
-    <p><b>为什么推荐 settings.json:</b>它是一个普通 JSON 文件——可备份、可 diff、换机器能整体迁移;而散落在 shell 配置里的变量看不见摸不着,三个月后你自己都想不起来设过什么。</p>
-
-    <h2>二、动手:四步完成</h2>
-
-    <h3>第 1 步 · 备份并打开 settings.json</h3>
-    <p><span class="os mac">macOS</span><span class="os linux">Linux</span></p>
-    <pre><code>cp ~/.claude/settings.json ~/.claude/settings.json.bak
-nano ~/.claude/settings.json   # macOS 也可 open -e</code></pre>
-    <p><span class="os win">Windows</span>(PowerShell)</p>
-    <pre><code>copy $env:USERPROFILE\.claude\settings.json $env:USERPROFILE\.claude\settings.json.bak
-notepad $env:USERPROFILE\.claude\settings.json</code></pre>
-
-    <h3>第 2 步 · 写入 env 块(可直接抄,改两处)</h3>
-    <pre><code>{
-  "env": {
-    "ANTHROPIC_BASE_URL": "https://api.example.com",
-    "ANTHROPIC_AUTH_TOKEN": "sk-你的key"
-  }
+      
+      
 }</code></pre>
     <ul>
       <li><b>ANTHROPIC_BASE_URL</b>:供应商给的 Anthropic 兼容地址。</li>
@@ -219,27 +165,6 @@ Get-ChildItem env: | Where-Object Name -like "ANTHROPIC*"</code></pre>
         <span class="mono">127.0.0.1:9527</span>
       </div>
     </footer>
-<script>
-      (function () {
-        var saved = null;
-        try { saved = localStorage.getItem("kw-theme"); } catch (e) {}
-        var theme = saved || (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day");
-        var apply = function () {
-          document.documentElement.setAttribute("data-theme", theme);
-          var b = document.getElementById("themeToggle");
-          
-        };
-        apply();
-        document.addEventListener("DOMContentLoaded", function () {
-          var b = document.getElementById("themeToggle");
-          if (b) b.addEventListener("click", function () {
-            theme = theme === "night" ? "day" : "night";
-            try { localStorage.setItem("kw-theme", theme); } catch (e) {}
-            apply();
-          });
-        });
-      })();
-    </script>
 <script src="/shared-header.js?v=2"></script>
 </body>
 </html>

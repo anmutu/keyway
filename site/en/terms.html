@@ -23,23 +23,11 @@
     a { color:var(--blue); }
     footer { border-top:1px solid var(--hair); padding:26px 22px; text-align:center; color:var(--fg-2); font-size:13px; }
   
-      html[data-theme="night"] { --fg:#ece7db; --fg-2:#b3aca0; --fg-3:#7d766b; --blue:#d97757; --bg:#211f1c; --bg-alt:#2a2723; --nav-bg: rgba(33,31,28,.9); --hair: rgba(255,255,255,.13); }
-      html[data-theme="night"] body { background: var(--bg); color: var(--fg); }
-      html[data-theme="night"] main, html[data-theme="night"] footer { background: transparent; }
-      html[data-theme="night"]
-      /* 站级导航(与其他页面完全一致) */
-      @media (max-width:640px) { }
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-      html[data-theme="night"]
-  
-      .site-footer { background:var(--bg-alt); border-top:1px solid var(--hair); padding:56px 22px 28px; }
+      
+      
+      
+      
+      
       .footer-grid { max-width:980px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:36px; text-align:left; }
       .footer-brand .brand { display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:17px; }
       .footer-brand p { color:var(--fg-2); font-size:13.5px; line-height:1.7; margin:12px 0 0; }
@@ -92,23 +80,6 @@
         <span class="mono">One key · one way</span>
       </div>
     </footer>
-<script>
-(function() {
-  var theme = null;
-  try { theme = localStorage.getItem("kw-theme"); } catch(e) {}
-  if (!theme) theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day";
-  document.documentElement.setAttribute("data-theme", theme);
-  document.addEventListener("DOMContentLoaded", function() {
-    var btn = document.getElementById("themeToggle");
-    if (!btn) return;
-    btn.addEventListener("click", function() {
-      theme = theme === "night" ? "day" : "night";
-      try { localStorage.setItem("kw-theme", theme); } catch(e) {}
-      document.documentElement.setAttribute("data-theme", theme);
-    });
-  });
-})();
-</script>
 <script src="/shared-header.js?v=2"></script>
 </body>
 </html>

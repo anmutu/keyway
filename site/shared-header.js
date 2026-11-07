@@ -52,7 +52,7 @@
           '<a href="' + guide + '">' + L("使用指南", "Guide") + '</a>' +
           '<a href="' + blog + '">' + L("博客", "Blog") + '</a>' +
           '<a href="' + download + '">' + L("下载", "Download") + '</a>' +
-          '<button id="themeToggle" type="button" aria-label="' + L("切换昼夜模式", "Toggle theme") + '" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px!important;border-radius:8px;cursor:pointer;display:inline-flex!important;align-items:center!important;justify-content:center!important;">' + MOON + SUN + '</button>' +
+          '' +
           '<details class="locale-menu" id="langMenu">' +
             '<summary aria-label="' + L("切换语言", "Switch language") + '">' + summaryFlag + '<span>' + summaryLabel + '</span>' + CHEV + '</summary>' +
             '<div class="locale-options">' + opts + '</div>' +
@@ -64,8 +64,8 @@
   // CSS(一次性注入)
   var css =
     ':root{--fg:#1a1a1a;--fg-2:#5e5e5e;--fg-3:#8e8e8e;--blue:#d97757;--bg:#faf9f5;--bg-alt:#f0efeb;--nav-bg:rgba(250,249,245,.88);--hair:#e5e5e5;}' +
-    'html[data-theme="night"]{--fg:#e8e8e6;--fg-2:#a0a09e;--fg-3:#6e6e6c;--blue:#d97757;--bg:#1a1a1a;--bg-alt:#242424;--nav-bg:rgba(26,26,26,.92);--hair:rgba(255,255,255,.1);}' +
-    'html[data-theme="night"] body{background:var(--bg);color:var(--fg);}' +
+    '--fg-2:#a0a09e;--fg-3:#6e6e6c;--blue:#d97757;--bg:#1a1a1a;--bg-alt:#242424;--nav-bg:rgba(26,26,26,.92);--hair:rgba(255,255,255,.1);}' +
+    'color:var(--fg);}' +
     'nav{position:sticky!important;top:0!important;z-index:50!important;background:var(--nav-bg);backdrop-filter:saturate(180%) blur(20px);height:48px!important;box-shadow:0 1px 0 var(--hair);}' +
     '.nav-inner{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif!important;font-size:13px!important;letter-spacing:0!important;word-spacing:0!important;max-width:980px!important;margin:0 auto;padding:0 22px!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:space-between!important;}' +
     '.nav-inner a{font-family:inherit!important;font-size:13px!important;letter-spacing:0!important;color:rgba(31,30,29,.78);text-decoration:none;font-size:13px;}' +
@@ -73,13 +73,11 @@
     '.nav-inner .brand{color:var(--fg);font-weight:600;}' +
     '.nav-links{display:flex!important;gap:18px!important;align-items:center!important;}' +
     '@media(max-width:640px!important){.nav-links{gap:12px!important;}.nav-links a:nth-child(n+4){display:none!important;}}' +
-    'html[data-theme="night"] .nav-inner a{font-family:inherit!important;font-size:13px!important;letter-spacing:0!important;color:rgba(236,231,219,.75);}' +
-    'html[data-theme="night"] .nav-inner a:hover{color:#fff;}' +
-    '#themeToggle svg{display:block!important;}' +
-    '#themeToggle:hover{color:var(--fg);background:var(--bg-alt);}' +
-    '.ico-sun{display:none!important;}' +
-    'html[data-theme="night"] .ico-sun{display:block!important;}' +
-    'html[data-theme="night"] .ico-moon{display:none!important;}' +
+    'font-size:13px!important;letter-spacing:0!important;color:rgba(236,231,219,.75);}' +
+    '}' +
+    '' +
+    '}' +
+    '}' +
     '.locale-menu{position:relative!important;}' +
     '.locale-menu summary{list-style:none!important;font-family:inherit!important;font-size:12.5px!important;width:70px!important;min-width:70px!important;max-width:70px!important;overflow:hidden!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;gap:5px!important;cursor:pointer;font-size:12.5px;color:var(--fg-3);padding:5px 8px!important;border-radius:6px;}' +
     '.locale-menu summary::-webkit-details-marker{display:none!important;}' +
@@ -89,8 +87,8 @@
     '.locale-options a{display:flex!important;align-items:center!important;gap:8px!important;padding:8px 12px!important;border-radius:7px;font-size:13.5px;color:var(--fg-2);text-decoration:none;}' +
     '.locale-options a:hover{background:var(--bg-alt);color:var(--fg);}' +
     '.locale-options a[aria-current]{color:var(--blue);font-weight:600;}' +
-    'html[data-theme="night"] .locale-options{background:var(--bg-alt);}' +
-    'html[data-theme="night"] .locale-menu summary{color:rgba(236,231,219,.75);}';
+    '}' +
+    '}';
 
   // 注入 CSS(如果页面还没有)
   if (!document.getElementById('shared-header-css')) {
@@ -108,19 +106,7 @@
     document.body.insertAdjacentHTML('afterbegin', html);
   }
 
-  // ===== 主题切换 =====
-  var theme = null;
-  try { theme = localStorage.getItem("kw-theme"); } catch (e) {}
-  if (!theme) theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day";
-  document.documentElement.setAttribute("data-theme", theme);
-  var btn = document.getElementById("themeToggle");
-  if (btn) {
-    btn.addEventListener("click", function () {
-      theme = theme === "night" ? "day" : "night";
-      try { localStorage.setItem("kw-theme", theme); } catch (e) {}
-      document.documentElement.setAttribute("data-theme", theme);
-    });
-  }
+  
 
   // ===== 每日 logo =====
   var d = new Date().getDay();
