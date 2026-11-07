@@ -112,8 +112,8 @@ html = html.replace('href="../blog/"', 'href="./blog/"');
 // 语言下拉:整个 <details> 块从中文版换为英文版
 html = html.replace(/<details class="locale-menu"[^>]*>[\s\S]*?<\/details>/, (m) => {
   const chev = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
-  const gb = '<img class="flag" src="./flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" />';
-  const cn = '<img class="flag" src="./flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" />';
+  const gb = '<img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" />';
+  const cn = '<img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" />';
   const sum = gb + '<span>EN</span>' + chev;
   const opts = cn + '_SPLIT_' + gb; // 占位,后面拼
   return '<details class="locale-menu" id="langMenu"><summary aria-label="Switch language">' + sum + '</summary><div class="locale-options">' +
@@ -125,6 +125,12 @@ html = html.replace(/<details class="locale-menu"[^>]*>[\s\S]*?<\/details>/, (m)
 // 英文页使用英文界面截图(正文相对路径;og/twitter/schema 在下方模板插入后统一替换)
 html = html.replace(/app-light\.png/g, "app-light-en.png");
 html = html.replace(/app-dark\.png/g, "app-dark-en.png");
+
+// heroSub 含 <b> 标签,通用正则匹配不到,特殊处理
+html = html.replace(
+  'data-i18n="heroSub">为 <b>Claude Code、Codex、Gemini CLI、OpenCode</b> 等提供<b>供应商切换、模型路由、自动故障转移</b>与<b>请求日志</b> — 不重启会话,看清每一次请求的实际去向。API Key 本机加密,MIT 开源。</p>',
+  'data-i18n="heroSub">Provider switching, model routing, automatic failover and request logs for <b>Claude Code, Codex, Gemini CLI, OpenCode</b> — no session restarts, see exactly where every request goes. API keys encrypted on-device. Free, open source (MIT).</p>'
+);
 
 // 下载备注初始文案(网络失败时的兜底文本)
 html = html.replace(
