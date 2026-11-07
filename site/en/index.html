@@ -393,6 +393,22 @@
       html[data-theme="night"] .prov { background: rgba(255,255,255,.05); }
       html[data-theme="night"] .hero-shot { background: transparent; }
       html[data-theme="night"] .win-bar { background: #2a2723; }
+
+      /* 语言下拉(TeapotRouter 式矢量国旗)与主题图标 */
+      .locale-menu { position: relative; }
+      .locale-menu summary { list-style: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12.5px; color: rgba(31,30,29,.78); padding: 4px 6px; border-radius: 6px; }
+      .locale-menu summary::-webkit-details-marker { display: none; }
+      .locale-menu summary:hover { color: var(--fg); background: var(--bg-alt); }
+      .locale-options { position: absolute; right: 0; top: calc(100% + 6px); background: var(--bg); border: 1px solid var(--hair); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 2px; min-width: 128px; box-shadow: 0 14px 34px rgba(40,30,20,.12); z-index: 80; }
+      .locale-options a { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; font-size: 13px; color: var(--fg-2); text-decoration: none; }
+      .locale-options a:hover { background: var(--bg-alt); color: var(--fg); }
+      .locale-options a[aria-current] { color: var(--blue); font-weight: 600; }
+      .flag { width: 16px; height: 12px; border-radius: 2px; display: block; object-fit: cover; }
+      html[data-theme="night"] .locale-menu summary { color: rgba(236,231,219,.75); }
+      html[data-theme="night"] .locale-options { background: var(--bg-alt); box-shadow: 0 14px 34px rgba(0,0,0,.4); }
+      #themeToggle svg { display: block; }
+      html[data-theme="day"] .ico-sun { display: none; }
+      html[data-theme="night"] .ico-moon { display: none; }
   </style>
   </head>
   <body>
@@ -405,8 +421,8 @@
         <div class="nav-links">
           <a class="nav-blog nav-away" href="./blog/">Blog</a>
           <a class="nav-away" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
-          <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:1px solid var(--hair);background:transparent;color:var(--fg-2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;">🌙</button>
-          <a href="../en/" id="langLink">🇬🇧 EN</a>
+          <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:1px solid var(--hair);background:transparent;color:var(--fg-2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-4.77 4.77M19.07 4.93l-1.41 1.41"/></svg></button>
+          <details class="locale-menu" id="langMenu"><summary aria-label="Switch language"><img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" />中文<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../"><img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" />中文</a><a href="../" aria-current="page"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />English</a></div></details>
           <a class="nav-dl" id="navDownload" href="https://github.com/anmutu/keyway/releases">Download</a>
         </div>
       </div>
@@ -1015,7 +1031,7 @@
         var apply = function () {
           document.documentElement.setAttribute("data-theme", theme);
           var b = document.getElementById("themeToggle");
-          if (b) b.textContent = theme === "night" ? "☀️" : "🌙";
+          
         };
         apply();
         document.addEventListener("DOMContentLoaded", function () {
@@ -1028,5 +1044,6 @@
         });
       })();
     </script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
 </body>
 </html>

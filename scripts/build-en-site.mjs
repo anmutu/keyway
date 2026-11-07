@@ -98,7 +98,13 @@ html = html.replace(/(data-i18n="([^"]+)"[^>]*>)([^<]*)(<\/)/g, (m, open, _key, 
 html = html.replace(/ data-i18n="[^"]*"/g, "");
 
 // 语言切换链接 → 中文站
-html = html.replace('<a href="./en/" id="langLink">EN</a>', '<a href="../" id="langLink">中文</a>');
+// 语言下拉:中文页(指 EN 目标)→ 英文页(指中文目标)
+html = html.replace(/<details class="locale-menu"[^>]*><summary[^>]*>[\s\S]*?<\/summary><div class="locale-options">[\s\S]*?<\/div><\/details>/, (m) => {
+  const chev = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+  const sum = '<img class="flag" src="./flags/cn.svg" alt="" width="16" height="12" />中文';
+  const opts = '<a href="../"><img class="flag" src="./flags/cn.svg" alt="" width="16" height="12" />中文</a><a href="./" aria-current="page"><img class="flag" src="./flags/gb.svg" alt="" width="16" height="12" />English</a>';
+  return '<details class="locale-menu" id="langMenu"><summary aria-label="Switch language">' + sum + chev + '</summary><div class="locale-options">' + opts + '</div></details>';
+});
 
 // 相对资源路径 ./ → ../(logo、截图、guide、release-sync);博客仍位于英文站根目录下。
 html = html.replace(/(src|href)="\.\//g, '$1="../');
