@@ -403,8 +403,6 @@
       .locale-menu summary svg { opacity: .7; }
             #themeToggle svg { display: block; }
       #themeToggle:hover { color: var(--fg); background: var(--bg-alt); }
-      html[data-theme="day"] .ico-sun { display: none; }
-      html[data-theme="night"] .ico-moon { display: none; }
       html[data-theme="night"] .locale-options { background: var(--bg-alt); }
   
       .locale-menu { position:relative; }
@@ -418,7 +416,10 @@
       .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
       html[data-theme="night"] .locale-options { background:var(--bg-alt); }
       html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
-</style>
+      .ico-sun { display: none !important; }
+      html[data-theme="night"] .ico-sun { display: block !important; }
+      html[data-theme="night"] .ico-moon { display: none !important; }
+  </style>
   </head>
   <body>
     <nav>

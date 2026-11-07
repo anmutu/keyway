@@ -139,10 +139,7 @@
 
                   #themeToggle svg { display:block; }
       #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
-      .ico-sun { display:none; }
       html[data-theme="night"] .ico-sun { display:block; }
-      html[data-theme="night"] .ico-moon { display:none; }
-
       .locale-menu { position:relative; }
       .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
       .locale-menu summary::-webkit-details-marker { display:none; }
@@ -154,7 +151,10 @@
       .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
       html[data-theme="night"] .locale-options { background:var(--bg-alt); }
       html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
-</style>
+      .ico-sun { display: none !important; }
+      html[data-theme="night"] .ico-sun { display: block !important; }
+      html[data-theme="night"] .ico-moon { display: none !important; }
+  </style>
   </head>
   <body>
     <nav>

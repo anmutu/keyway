@@ -20,8 +20,6 @@
             #themeToggle svg { display:block; }
     #themeToggle { border:none; background:transparent; color:var(--fg-3); width:32px; height:32px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
     #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
-    html[data-theme="day"] .ico-sun { display:none; }
-    html[data-theme="night"] .ico-moon { display:none; }
     nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
     .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
     .nav-inner a { color:rgba(31,30,29,.78); text-decoration:none; font-size:13px; }
@@ -72,7 +70,10 @@
       .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
       html[data-theme="night"] .locale-options { background:var(--bg-alt); }
       html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
-</style>
+      .ico-sun { display: none !important; }
+      html[data-theme="night"] .ico-sun { display: block !important; }
+      html[data-theme="night"] .ico-moon { display: none !important; }
+  </style>
 </head>
 <body>
   <script>(function(){var s=null;try{s=localStorage.getItem("kw-theme")}catch(e){}var t=s||(matchMedia("(prefers-color-scheme: dark)").matches?"night":"day");document.documentElement.setAttribute("data-theme",t);document.addEventListener("DOMContentLoaded",function(){var b=document.getElementById("themeToggle");if(b)b.addEventListener("click",function(){t=t==="night"?"day":"night";try{localStorage.setItem("kw-theme",t)}catch(e){}document.documentElement.setAttribute("data-theme",t)})}})();</script>

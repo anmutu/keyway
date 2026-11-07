@@ -106,9 +106,6 @@
       html[data-theme="night"] .locale-menu summary { color: rgba(236,231,219,.75); }
       html[data-theme="night"] .locale-options { background: var(--bg-alt); box-shadow: 0 14px 34px rgba(0,0,0,.4); }
       #themeToggle svg { display: block; }
-      html[data-theme="day"] .ico-sun { display: none; }
-      html[data-theme="night"] .ico-moon { display: none; }
-  
       /* 站级导航(与其他页面完全一致) */
       nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
       .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
@@ -120,9 +117,7 @@
                   #themeToggle svg { display:block; }
       #themeToggle { border:none; background:transparent; color:var(--fg-3); width:32px; height:32px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
       #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
-      .ico-sun { display:none; }
       html[data-theme="night"] .ico-sun { display:block; }
-      html[data-theme="night"] .ico-moon { display:none; }
       html[data-theme="night"] nav { background:var(--nav-bg); }
       html[data-theme="night"] .nav-inner a { color:rgba(236,231,219,.75); }
       html[data-theme="night"] .locale-options { background:var(--bg-alt); }
@@ -139,7 +134,10 @@
       .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
       html[data-theme="night"] .locale-options { background:var(--bg-alt); }
       html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
-</style>
+      .ico-sun { display: none !important; }
+      html[data-theme="night"] .ico-sun { display: block !important; }
+      html[data-theme="night"] .ico-moon { display: none !important; }
+  </style>
 </head>
 <body>
 <nav>
