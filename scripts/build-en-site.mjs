@@ -126,10 +126,42 @@ html = html.replace(/<details class="locale-menu"[^>]*>[\s\S]*?<\/details>/, (m)
 html = html.replace(/app-light\.png/g, "app-light-en.png");
 html = html.replace(/app-dark\.png/g, "app-dark-en.png");
 
+
+// ===== 导航、页脚与零散中文 → 英文(无 data-i18n 的硬编码文本) =====
+const NAV_FOOTER = [
+  // 导航链接
+  ['>首页</a>', '>Home</a>'],
+  ['>使用指南</a>', '>Guide</a>'],
+  ['>博客</a>', '>Blog</a>'],
+  ['>下载</a>', '>Download</a>'],
+  // 版本备注
+  ['>最新正式版 v0.2.17 · macOS / Windows / Linux<', '>Latest stable release v0.2.17 · macOS / Windows / Linux<'],
+  // 供应商区
+  ['>内置常见供应商,填个 Key 就能用。</h2>', '>Common providers built in — just paste your key.</h2>'],
+  ['>官方渠道、主流模型服务与第三方端点都有预设;任何 OpenAI / Anthropic / Gemini 兼容接口也可以自定义接入。</p>', '>Presets for official endpoints, popular model services and third-party gateways; any OpenAI / Anthropic / Gemini compatible endpoint works too.</p>'],
+  ['>想推荐你的服务?', '>Want your service listed?'],
+  ['>提交收录申请</a>', '>Submit a provider</a>'],
+  ['>+ 自定义兼容端点', '>+ custom endpoints'],
+  // 页脚品牌列
+  ['>AI CLI 的本地网关<br />The local gateway for AI coding CLIs.</p>', '>The local gateway for AI coding CLIs.<br />Switch providers, route models, trace requests.</p>'],
+  // 页脚列标题
+  ['>产品</b>', '>Product</b>'],
+  ['>资源</b>', '>Resources</b>'],
+  ['>法律</b>', '>Legal</b>'],
+  // 页脚链接
+  ['>快速开始</a>', '>Quick Start</a>'],
+  ['>隐私</a>', '>Privacy</a>'],
+  ['>提交供应商</a>', '>Submit a provider</a>'],
+  ['>条款</a>', '>Terms</a>'],
+];
+for (const [zh, en] of NAV_FOOTER) {
+  html = html.split(zh).join(en);
+}
+
 // heroSub 含 <b> 标签,通用正则匹配不到,特殊处理
 html = html.replace(
-  'data-i18n="heroSub">为 <b>Claude Code、Codex、Gemini CLI、OpenCode</b> 等提供<b>供应商切换、模型路由、自动故障转移</b>与<b>请求日志</b> — 不重启会话,看清每一次请求的实际去向。API Key 本机加密,MIT 开源。</p>',
-  'data-i18n="heroSub">Provider switching, model routing, automatic failover and request logs for <b>Claude Code, Codex, Gemini CLI, OpenCode</b> — no session restarts, see exactly where every request goes. API keys encrypted on-device. Free, open source (MIT).</p>'
+  /class="sub"[^>]*>为 <b>Claude Code[^<]*<\/b>[^<]*<b>[^<]*<\/b>[^<]*<b>[^<]*<\/b>[\s\S]*?<\/p>/,
+  'class="sub">Provider switching, model routing, automatic failover and request logs for <b>Claude Code, Codex, Gemini CLI, OpenCode</b> — no session restarts, see exactly where every request goes. API keys encrypted on-device. Free, open source (MIT).</p>'
 );
 
 // 下载备注初始文案(网络失败时的兜底文本)
