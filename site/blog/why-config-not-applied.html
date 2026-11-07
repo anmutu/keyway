@@ -20,7 +20,7 @@
   <style>
     :root { --fg: #1f1e1d; --fg-2: #5d5952; --fg-3: #8f887c; --blue: #c96442; --hair: #ddd6c6; --bg-alt: #f0eee6; }
     * { box-sizing:border-box; }
-    body { margin:0; background:#faf9f5; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; color:var(--fg); background:#fff; line-height:1.78; -webkit-font-smoothing:antialiased; }
+    body { margin:0; background:var(--bg); color:var(--fg); line-height:1.78; -webkit-font-smoothing:antialiased; }
     main { max-width:720px; margin:0 auto; padding:56px 22px 90px; }
     h1 { font-size:30px; font-weight:700; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
     .meta { color:var(--fg-3); font-size:13px; margin-bottom:26px; }
@@ -114,7 +114,33 @@
       #themeToggle svg { display: block; }
       html[data-theme="day"] .ico-sun { display: none; }
       html[data-theme="night"] .ico-moon { display: none; }
-  </style>
+  
+      /* 站级导航(与其他页面完全一致) */
+      nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
+      .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
+      .nav-inner a { color:rgba(31,30,29,.78); text-decoration:none; font-size:13px; }
+      .nav-inner a:hover { color:var(--fg); }
+      .nav-inner .brand { color:var(--fg); font-weight:600; }
+      .nav-links { display:flex; gap:18px; align-items:center; }
+      @media (max-width:640px) { .nav-links { gap:12px; } }
+      .locale-menu { position:relative; }
+      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:5px; cursor:pointer; font-size:13px; color:var(--fg-3); padding:5px 8px; border-radius:6px; }
+      .locale-menu summary::-webkit-details-marker { display:none; }
+      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
+      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:130px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
+      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
+      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
+      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
+      #themeToggle svg { display:block; }
+      #themeToggle { border:none; background:transparent; color:var(--fg-3); width:32px; height:32px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+      #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
+      html[data-theme="day"] .ico-sun { display:none; }
+      html[data-theme="night"] .ico-moon { display:none; }
+      html[data-theme="night"] nav { background:var(--nav-bg); }
+      html[data-theme="night"] .nav-inner a { color:rgba(236,231,219,.75); }
+      html[data-theme="night"] .locale-options { background:var(--bg-alt); }
+      html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
+</style>
 </head>
 <body>
 <nav>
