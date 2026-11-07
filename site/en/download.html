@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Download Keyway — macOS / Windows / Linux</title>
+  <meta name="description" content="Keyway 免费Download:macOS(Apple/Intel)、Windows、Linux(AppImage/deb/rpm)全平台安装包,支持 Homebrew 一键安装与终端 curl 安装。" />
+  <link rel="canonical" href="https://keyway.one/download.html" />
+  <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "WebPage", "name": "Download Keyway", "url": "https://keyway.one/download.html", "inLanguage": "zh-CN", "datePublished": "2026-11-07", "dateModified": "2026-11-07", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  </script>
+  <style>
+    :root { --fg:#1f1e1d; --fg-2:#5d5952; --fg-3:#8f887c; --blue:#c96442; --bg:#faf9f5; --bg-alt:#f0eee6; --nav-bg:rgba(250,249,245,.88); --hair:#ddd6c6; }
+    html[data-theme="night"] { --fg:#ece7db; --fg-2:#b3aca0; --fg-3:#7d766b; --blue:#d97757; --bg:#211f1c; --bg-alt:#2a2723; --nav-bg:rgba(33,31,28,.9); --hair:rgba(255,255,255,.13); }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.75 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; -webkit-font-smoothing:antialiased; }
+    html[data-theme="night"] body { background:var(--bg); }
+            #themeToggle svg { display:block; }
+    #themeToggle { border:none; background:transparent; color:var(--fg-3); width:32px; height:32px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+    #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
+    nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
+    .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
+    .nav-inner a { color:rgba(31,30,29,.78); text-decoration:none; font-size:13px; }
+    .nav-inner .brand { color:var(--fg); font-weight:600; }
+    .nav-links { display:flex; gap:18px; align-items:center; }
+    main { max-width:720px; margin:0 auto; padding:64px 22px 100px; }
+    h1 { font-size:34px; font-weight:700; font-family:ui-serif,Georgia,"Songti SC",serif; margin:0 0 4px; }
+    .meta { color:var(--fg-3); font-size:13px; margin-bottom:36px; }
+    .meta a { color:var(--blue); text-decoration:none; }
+    h2 { font-size:20px; font-weight:600; font-family:ui-serif,Georgia,"Songti SC",serif; margin:44px 0 12px; }
+    p { color:var(--fg-2); font-size:15.5px; margin:10px 0; }
+    p b { color:var(--fg); }
+    a { color:var(--blue); }
+    code { background:var(--bg-alt); padding:2px 7px; border-radius:5px; font-size:13.5px; font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+    pre { background:var(--bg-alt); border:1px solid var(--hair); border-radius:10px; padding:16px 18px; overflow-x:auto; font-size:13.5px; line-height:1.6; }
+    pre code { background:none; padding:0; }
+    .install-line { display:flex; gap:10px; align-items:center; margin:14px 0; flex-wrap:wrap; }
+    .install-line code { background:var(--bg-alt); border:1px solid var(--hair); padding:8px 14px; border-radius:8px; font-size:13.5px; }
+    .install-line button { border:1px solid var(--hair); background:transparent; color:var(--fg-2); padding:8px 18px; border-radius:8px; font-size:13px; cursor:pointer; }
+    .install-line button:hover { border-color:var(--blue); color:var(--blue); }
+    table { width:100%; border-collapse:collapse; font-size:14px; margin:14px 0 20px; }
+    th { text-align:left; padding:8px 10px; border-bottom:2px solid var(--hair); font-weight:600; }
+    td { padding:8px 10px; border-bottom:1px solid var(--hair); color:var(--fg-2); }
+    td:first-child { color:var(--fg); white-space:nowrap; }
+    .dl-btn { display:inline-flex; align-items:center; gap:8px; background:var(--blue); color:#faf9f5; text-decoration:none; padding:12px 28px; border-radius:980px; font-size:16px; font-weight:600; margin:6px 0; transition:opacity .15s; }
+    .dl-btn:hover { opacity:.85; }
+    .dl-note { font-size:12.5px; color:var(--fg-3); margin-top:8px; }
+    .site-footer { background:var(--bg-alt); border-top:1px solid var(--hair); padding:56px 22px 28px; }
+    .footer-grid { max-width:980px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:36px; text-align:left; }
+    .footer-brand .brand { display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:17px; font-family:ui-serif,Georgia,"Songti SC",serif; }
+    .footer-brand p { color:var(--fg-2); font-size:13.5px; line-height:1.7; margin:12px 0 0; }
+    .footer-brand .mono, .footer-bar .mono { font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--fg-3); letter-spacing:.06em; }
+    .footer-col { display:flex; flex-direction:column; gap:10px; }
+    .footer-col b { font-size:12px; color:var(--fg-3); letter-spacing:.1em; text-transform:uppercase; font-weight:600; }
+    .footer-col a { color:var(--fg-2); text-decoration:none; font-size:14px; }
+    .footer-col a:hover { color:var(--blue); }
+    .footer-bar { max-width:980px; margin:36px auto 0; padding-top:18px; border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-size:12.5px; color:var(--fg-3); flex-wrap:wrap; gap:8px; }
+    @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }
+  
+      .locale-menu { position:relative; }
+      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
+      .locale-menu summary::-webkit-details-marker { display:none; }
+      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
+      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
+      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
+      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
+      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
+      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
+      html[data-theme="night"] .locale-options { background:var(--bg-alt); }
+      html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
+      .ico-sun { display: none !important; }
+      html[data-theme="night"] .ico-sun { display: block !important; }
+      html[data-theme="night"] .ico-moon { display: none !important; }
+  </style>
+</head>
+<body>
+  <script>(function(){var s=null;try{s=localStorage.getItem("kw-theme")}catch(e){}var t=s||(matchMedia("(prefers-color-scheme: dark)").matches?"night":"day");document.documentElement.setAttribute("data-theme",t);document.addEventListener("DOMContentLoaded",function(){var b=document.getElementById("themeToggle");if(b)b.addEventListener("click",function(){t=t==="night"?"day":"night";try{localStorage.setItem("kw-theme",t)}catch(e){}document.documentElement.setAttribute("data-theme",t)})}})();</script>
+  <nav>
+      <div class="nav-inner">
+        <a href="../" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
+          <img src="./logo.svg" width="18" height="18" alt="Keyway logo" style="border-radius:4px;" />
+          <span class="brand">Keyway</span>
+        </a>
+        <div class="nav-links">
+          <a href="../">Home</a>
+          <a href="./guide.html">Guide</a>
+          <a href="./blog/">Blog</a>
+          <a href="./download.html">Download</a>
+          <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言 / Switch language"><img class="flag" src="./flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" /><span>ZH</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/download.html" lang="en"><img class="flag" src="./flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" />English</a><a href="./download.html" lang="zh" aria-current="page"><img class="flag" src="./flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" />中文</a></div></details>
+        </div>
+      </div>
+    </nav>
+  <script>document.addEventListener("click",function(e){var m=document.getElementById("langMenu");if(m&&m.open&&!m.contains(e.target))m.open=false;});</script>
+
+  <main>
+    <h1>Download Keyway</h1>
+    <p class="meta">Free · Open source (MIT) · macOS / Windows / Linux · <a href="../">返回Home</a></p>
+
+    <h2>macOS one-line install (recommended)</h2>
+    <p>Runs in Terminal — auto-detects chip, downloads and installs without Gatekeeper prompts:</p>
+    <div class="install-line"><code>curl -fsSL https://keyway.one/install.sh | sh</code><button id="copyCmd" type="button">Copy</button></div>
+
+    <h2>Homebrew</h2>
+    <pre><code>brew install --cask --no-quarantine anmutu/tap/keyway</code></pre>
+
+    <h2>Direct downloads</h2>
+    <table>
+      <tr><th>平台</th><th>要求</th><th>Download</th></tr>
+      <tr><td>macOS · Apple silicon</td><td>macOS 13+</td><td><a class="dl-btn" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases">Download .dmg</a></td></tr>
+      <tr><td>macOS · Intel</td><td>macOS 13+</td><td><a class="dl-btn" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases">Download .dmg</a></td></tr>
+      <tr><td>Windows</td><td>Windows 10+</td><td><a class="dl-btn" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases">Download .exe</a></td></tr>
+      <tr><td>Linux · AppImage</td><td>glibc 2.31+</td><td><a class="dl-btn" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases">Download .AppImage</a></td></tr>
+      <tr><td>Linux · .deb</td><td>Ubuntu/Debian</td><td><a class="dl-btn" data-release-asset="deb" href="https://github.com/anmutu/keyway/releases">Download .deb</a></td></tr>
+      <tr><td>Linux · .rpm</td><td>Fedora/RHEL</td><td><a class="dl-btn" data-release-asset="rpm" href="https://github.com/anmutu/keyway/releases">Download .rpm</a></td></tr>
+    </table>
+    <p class="dl-note" data-release-version>最新正式版 · macOS / Windows / Linux</p>
+    <p class="dl-note">All platforms and past versions:<a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">GitHub Releases</a></p>
+
+    <h2>First launch on macOS</h2>
+    <p>The app is not notarized (personal open-source project). If prompted "cannot verify developer" — right-click Keyway.app → Open; if prompted<b>「已损坏」</b>,终端执行:</p>
+    <pre><code>xattr -dr com.apple.quarantine /Applications/Keyway.app</code></pre>
+    <p>The app is fine — Gatekeeper false positive. See <a href="./blog/">Blog</a>。
+
+    <h2>In-app auto-update</h2>
+    <p>Keyway has a built-in updater — new versions are offered automatically. Homebrew users can also run <code>brew upgrade --cask keyway</code>。</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="brand"><img src="./logo.svg" width="20" height="20" />Keyway</span>
+        <p>The local gateway for AI coding CLIs<br />The local gateway for AI coding CLIs.</p>
+        <p class="mono">One key · one way</p>
+      </div>
+      <div class="footer-col"><b>Product</b><a href="./download.html">Download</a><a href="#quickstart">Quick Start</a><a href="./guide.html">Guide</a><a href="./blog/">Blog</a></div>
+      <div class="footer-col"><b>Resources</b><a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a><a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer">Issues</a></div>
+      <div class="footer-col"><b>Legal</b><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a></div>
+    </div>
+    <div class="footer-bar"><span>© 2026 Keyway · MIT License</span><span class="mono">127.0.0.1:9527</span></div>
+  </footer>
+
+  <script src="./release-sync.js"></script>
+  <script>
+    document.getElementById("copyCmd").addEventListener("click", function () {
+      var cmd = this.previousElementSibling;
+      var b = this;
+      navigator.clipboard.writeText(cmd.textContent.trim()).then(function () {
+        b.textContent = "✓ Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1600);
+      });
+    });
+  </script>
+<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+</body>
+</html>
