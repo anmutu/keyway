@@ -109,29 +109,13 @@
       .container { max-width: 980px; margin: 0 auto; padding: 0 22px; }
 
       /* 导航:浅色磨砂细条(Apple global nav) */
-      nav {
-        position: sticky; top: 0; z-index: 50;
-        background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px);
-        height: 48px; box-shadow: 0 1px 0 rgba(0,0,0,.06);
-      }
-      .nav-inner { max-width: 980px; margin: 0 auto; padding: 0 22px; height: 100%;
-        display: flex; align-items: center; justify-content: space-between; }
-      .nav-inner a {
-        color: rgba(0,0,0,.78); text-decoration: none;
-        font-size: 12.5px; transition: color .15s;
-      }
-      .nav-inner a:hover { color: #000; }
-      .nav-inner .brand { color: var(--fg); font-weight: 600; }
-      .nav-inner a { font-size: 13.5px; }
       .nav-inner a.nav-dl {
         background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
         font-weight: 500; transition: background .15s;
       }
       .nav-inner a.nav-dl:hover { background: #b5573a; color: #fff; }
-      .nav-links { display: flex; gap: 26px; align-items: center; }
       .nav-links a#langLink { margin-right: 6px; }
       @media (max-width: 640px) {
-        .nav-links { gap: 16px; }
         .nav-main { display: none; }
       }
 
@@ -375,8 +359,8 @@
         --nav-bg: rgba(26,26,26,.92); --hair: rgba(255,255,255,.1);
       }
       html[data-theme="night"] body { background: var(--bg); }
-      html[data-theme="night"] .nav-inner a { color: rgba(236,231,219,.75); }
-      html[data-theme="night"] .nav-inner a:hover { color: #fff; }
+      html[data-theme="night"]
+      html[data-theme="night"]
       html[data-theme="night"] .local-first { background: #1a1917; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
       html[data-theme="night"] .hero-proof span { background: rgba(255,255,255,.05); }
       html[data-theme="night"]
@@ -992,6 +976,6 @@
         });
       })();
     </script>
-<script src="/shared-header.js"></script>
+<script src="/shared-header.js?v=2"></script>
 </body>
 </html>

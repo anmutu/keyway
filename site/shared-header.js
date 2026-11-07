@@ -6,7 +6,7 @@
 (function () {
   "use strict";
 
-  var isEN = document.documentElement.lang === "en";
+  var isEN = window.location.pathname.startsWith("/en/");
   var L = function (zh, en) { return isEN ? en : zh; };
 
   // 路径:根据当前页面位置计算绝对路径
@@ -43,7 +43,7 @@
   var html =
     '<nav>' +
       '<div class="nav-inner">' +
-        '<a href="' + home + '" style="display:flex;align-items:center;gap:7px;text-decoration:none;">' +
+        '<a href="' + home + '" style="display:flex!important;align-items:center!important;gap:7px!important;text-decoration:none;">' +
           '<img src="/logo.svg" width="18" height="18" alt="Keyway" style="border-radius:4px;" />' +
           '<span class="brand">Keyway</span>' +
         '</a>' +
@@ -52,7 +52,7 @@
           '<a href="' + guide + '">' + L("使用指南", "Guide") + '</a>' +
           '<a href="' + blog + '">' + L("博客", "Blog") + '</a>' +
           '<a href="' + download + '">' + L("下载", "Download") + '</a>' +
-          '<button id="themeToggle" type="button" aria-label="' + L("切换昼夜模式", "Toggle theme") + '" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">' + MOON + SUN + '</button>' +
+          '<button id="themeToggle" type="button" aria-label="' + L("切换昼夜模式", "Toggle theme") + '" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px!important;border-radius:8px;cursor:pointer;display:inline-flex!important;align-items:center!important;justify-content:center!important;">' + MOON + SUN + '</button>' +
           '<details class="locale-menu" id="langMenu">' +
             '<summary aria-label="' + L("切换语言", "Switch language") + '">' + summaryFlag + '<span>' + summaryLabel + '</span>' + CHEV + '</summary>' +
             '<div class="locale-options">' + opts + '</div>' +
@@ -66,27 +66,27 @@
     ':root{--fg:#1a1a1a;--fg-2:#5e5e5e;--fg-3:#8e8e8e;--blue:#d97757;--bg:#faf9f5;--bg-alt:#f0efeb;--nav-bg:rgba(250,249,245,.88);--hair:#e5e5e5;}' +
     'html[data-theme="night"]{--fg:#e8e8e6;--fg-2:#a0a09e;--fg-3:#6e6e6c;--blue:#d97757;--bg:#1a1a1a;--bg-alt:#242424;--nav-bg:rgba(26,26,26,.92);--hair:rgba(255,255,255,.1);}' +
     'html[data-theme="night"] body{background:var(--bg);color:var(--fg);}' +
-    'nav{position:sticky;top:0;z-index:50;background:var(--nav-bg);backdrop-filter:saturate(180%) blur(20px);height:48px;box-shadow:0 1px 0 var(--hair);}' +
-    '.nav-inner{max-width:980px;margin:0 auto;padding:0 22px;height:100%;display:flex;align-items:center;justify-content:space-between;}' +
+    'nav{position:sticky!important;top:0!important;z-index:50!important;background:var(--nav-bg);backdrop-filter:saturate(180%) blur(20px);height:48px!important;box-shadow:0 1px 0 var(--hair);}' +
+    '.nav-inner{max-width:980px!important;margin:0 auto;padding:0 22px!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:space-between!important;}' +
     '.nav-inner a{color:rgba(31,30,29,.78);text-decoration:none;font-size:13px;}' +
     '.nav-inner a:hover{color:var(--fg);}' +
     '.nav-inner .brand{color:var(--fg);font-weight:600;}' +
-    '.nav-links{display:flex;gap:18px;align-items:center;}' +
-    '@media(max-width:640px){.nav-links{gap:12px;}.nav-links a:nth-child(n+4){display:none;}}' +
+    '.nav-links{display:flex!important;gap:18px!important;align-items:center!important;}' +
+    '@media(max-width:640px!important){.nav-links{gap:12px!important;}.nav-links a:nth-child(n+4){display:none!important;}}' +
     'html[data-theme="night"] .nav-inner a{color:rgba(236,231,219,.75);}' +
     'html[data-theme="night"] .nav-inner a:hover{color:#fff;}' +
-    '#themeToggle svg{display:block;}' +
+    '#themeToggle svg{display:block!important;}' +
     '#themeToggle:hover{color:var(--fg);background:var(--bg-alt);}' +
     '.ico-sun{display:none!important;}' +
     'html[data-theme="night"] .ico-sun{display:block!important;}' +
     'html[data-theme="night"] .ico-moon{display:none!important;}' +
-    '.locale-menu{position:relative;}' +
-    '.locale-menu summary{list-style:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px;color:var(--fg-3);padding:5px 8px;border-radius:6px;}' +
-    '.locale-menu summary::-webkit-details-marker{display:none;}' +
+    '.locale-menu{position:relative!important;}' +
+    '.locale-menu summary{list-style:none;display:inline-flex!important;align-items:center!important;gap:5px!important;cursor:pointer;font-size:12.5px;color:var(--fg-3);padding:5px 8px!important;border-radius:6px;}' +
+    '.locale-menu summary::-webkit-details-marker{display:none!important;}' +
     '.locale-menu summary:hover{color:var(--fg);background:var(--bg-alt);}' +
-    '.flag{width:16px;height:12px;border-radius:2px;display:block;object-fit:cover;}' +
-    '.locale-options{position:absolute;right:0;top:calc(100% + 4px);background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:4px;display:flex;flex-direction:column;min-width:132px;box-shadow:0 12px 32px rgba(40,30,20,.14);z-index:90;}' +
-    '.locale-options a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;font-size:13.5px;color:var(--fg-2);text-decoration:none;}' +
+    '.flag{width:16px;height:12px!important;border-radius:2px;display:block!important;object-fit:cover;}' +
+    '.locale-options{position:absolute!important;right:0;top:calc(100% + 4px)!important;background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:4px!important;display:flex!important;flex-direction:column;min-width:132px;box-shadow:0 12px 32px rgba(40,30,20,.14);z-index:90!important;}' +
+    '.locale-options a{display:flex!important;align-items:center!important;gap:8px!important;padding:8px 12px!important;border-radius:7px;font-size:13.5px;color:var(--fg-2);text-decoration:none;}' +
     '.locale-options a:hover{background:var(--bg-alt);color:var(--fg);}' +
     '.locale-options a[aria-current]{color:var(--blue);font-weight:600;}' +
     'html[data-theme="night"] .locale-options{background:var(--bg-alt);}' +
