@@ -414,15 +414,15 @@
   <body>
     <nav>
       <div class="nav-inner">
-        <a href="../" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
+        <a href="./" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
           <img src="../logo.svg" width="18" height="18" alt="Keyway logo" style="border-radius:4px;" />
           <span class="brand">Keyway</span>
         </a>
         <div class="nav-links">
-          <a href="../">Home</a>
-          <a href="../guide.html">Guide</a>
+          <a href="./">Home</a>
+          <a href="./guide.html">Guide</a>
           <a href="./blog/">Blog</a>
-          <a href="../download.html">Download</a>
+          <a href="./download.html">Download</a>
           <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
           <details class="locale-menu" id="langMenu"><summary aria-label="Switch language"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" /><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../" lang="zh"><img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" />中文</a><a href="./" lang="en" aria-current="page"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" />English</a></div></details>
         </div>
@@ -441,7 +441,7 @@
         <span>Keys encrypted on-device · Free · MIT</span>
       </div>
       <div class="links">
-        <a class="btn" href="../download.html">Download for Apple silicon</a>
+        <a class="btn" href="./download.html">Download for Apple silicon</a>
         <a class="alink" href="#features">Learn more</a>
       </div>
                               <div class="hero-shot">
@@ -497,7 +497,7 @@
           </div>
         </div>
         <div class="links" style="margin-top:36px;">
-          <a class="alink" href="../guide.html">Step-by-step guide</a>
+          <a class="alink" href="./guide.html">Step-by-step guide</a>
           <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
         </div>
       </div>
@@ -686,7 +686,7 @@
         </div>
         <div class="links" style="margin-top:40px;">
           <a class="alink" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
-          <a class="alink" href="../guide.html">Read the guide</a>
+          <a class="alink" href="./guide.html">Read the guide</a>
           <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
           <a class="alink dl-direct" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">Download free</a>
         </div>
@@ -712,7 +712,7 @@
           <b>Product</b>
           <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">Download</a>
           <a href="#quickstart">Quick Start</a>
-          <a href="../guide.html">Guide</a>
+          <a href="./guide.html">Guide</a>
           <a href="./blog/">Blog</a>
         </div>
         <div class="footer-col">
@@ -1028,5 +1028,6 @@
     </script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
 </body>
 </html>

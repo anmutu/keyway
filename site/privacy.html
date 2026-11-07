@@ -63,7 +63,19 @@
       .ico-sun { display: none !important; }
       html[data-theme="night"] .ico-sun { display: block !important; }
       html[data-theme="night"] .ico-moon { display: none !important; }
-  </style>
+  
+      .site-footer { background:var(--bg-alt); border-top:1px solid var(--hair); padding:56px 22px 28px; }
+      .footer-grid { max-width:980px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:36px; text-align:left; }
+      .footer-brand .brand { display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:17px; }
+      .footer-brand p { color:var(--fg-2); font-size:13.5px; line-height:1.7; margin:12px 0 0; }
+      .footer-brand .mono, .footer-bar .mono { font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--fg-3); }
+      .footer-col { display:flex; flex-direction:column; gap:10px; }
+      .footer-col b { font-size:12px; color:var(--fg-3); letter-spacing:.1em; text-transform:uppercase; }
+      .footer-col a { color:var(--fg-2); text-decoration:none; font-size:14px; }
+      .footer-col a:hover { color:var(--blue); }
+      .footer-bar { max-width:980px; margin:36px auto 0; padding-top:18px; border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-size:12.5px; color:var(--fg-3); flex-wrap:wrap; gap:8px; }
+      @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }
+</style>
 </head>
 <body>
 <nav>
@@ -98,9 +110,36 @@
     <h2>联系</h2>
     <p>隐私相关问题请通过 <a href="https://github.com/anmutu/keyway/issues" rel="noreferrer">GitHub Issues</a> 联系维护者(anmutu)。</p>
   </main>
-  <footer>© 2026 Keyway · MIT License · <a href="../">首页</a> · <a href="./terms.html">使用条款</a></footer>
+      <footer class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand"><img src="./logo.svg" width="20" height="20" />Keyway</span>
+          <p>AI CLI 的本地网关<br />The local gateway for AI coding CLIs.</p>
+          <p class="mono">One key · one way</p>
+        </div>
+        <div class="footer-col"><b>产品</b>
+          <a href="./download.html">下载</a>
+          <a href="./guide.html#install">快速开始</a>
+          <a href="./guide.html">使用指南</a>
+          <a href="./blog/">博客</a>
+        </div>
+        <div class="footer-col"><b>资源</b>
+          <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer">Issues</a>
+          <a href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">提交供应商</a>
+        </div>
+        <div class="footer-col"><b>法律</b>
+          <a href="./privacy.html">隐私</a>
+          <a href="./terms.html">条款</a>
+        </div>
+      </div>
+      <div class="footer-bar">
+        <span>© 2026 Keyway · MIT License</span>
+        <span class="mono">127.0.0.1:9527</span>
+      </div>
+    </footer>
 <script>(function(){var s=null;try{s=localStorage.getItem("kw-theme")}catch(e){}var t=s||(matchMedia("(prefers-color-scheme: dark)").matches?"night":"day");document.documentElement.setAttribute("data-theme",t);document.addEventListener("DOMContentLoaded",function(){var b=document.getElementById("themeToggle");if(b)b.addEventListener("click",function(){t=t==="night"?"day":"night";try{localStorage.setItem("kw-theme",t)}catch(e){}document.documentElement.setAttribute("data-theme",t)})}})();</script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
-<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];document.querySelectorAll('img[src*="logo.svg"]').forEach(function(img){var p=img.src.split("/");p.pop();img.src=p.join("/")+"/logos/logo-"+m[d]+".svg";});})();</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
 </body>
 </html>

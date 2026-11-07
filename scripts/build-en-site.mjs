@@ -108,6 +108,21 @@ html = html.replace(/(<a class="nav-blog" href="\.\/blog\/">)博客(<\/a>)/, "$1
 html = html.replace('href="../privacy.html"', 'href="./privacy.html"');
 html = html.replace('href="../terms.html"', 'href="./terms.html"');
 html = html.replace('href="../blog/"', 'href="./blog/"');
+// EN 首页:页面链接必须留在 /en/ 内,不能跑到中文版
+html = html.replace('href="../guide.html"', 'href="./guide.html"');
+html = html.replace('href="../download.html"', 'href="./download.html"');
+// EN 首页:logo 和 Home 链接 → 留在 /en/
+html = html.replace('href="../" style="display:flex', 'href="./" style="display:flex');
+html = html.split('href="../">Home</a>').join('href="./">Home</a>');
+html = html.split('href="../" >Home</a>').join('href="./" >Home</a>');
+// 通用:EN 首页所有 href="../" 都应该变成 "./" (除了明确的根目录资源)
+// 但只改 nav 里的 Home/logo 链接
+html = html.replace(/(<a[^>]*href="\.\.\/"[^>]*>)(Home|Keyway)/g, '$1'.replace('../','./') + '$2');
+
+// 页脚的 Guide 链接也要修正
+html = html.split('href="../guide.html"').join('href="./guide.html"');
+html = html.split('href="../download.html"').join('href="./download.html"');
+
 
 // 语言下拉:整个 <details> 块从中文版换为英文版
 html = html.replace(/<details class="locale-menu"[^>]*>[\s\S]*?<\/details>/, (m) => {

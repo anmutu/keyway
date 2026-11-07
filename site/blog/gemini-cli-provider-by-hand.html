@@ -276,6 +276,6 @@ curl "$GOOGLE_GEMINI_BASE_URL" -I   # 地址可达性(通则返回 HTTP 状态�
     </script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
-<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];document.querySelectorAll('img[src*="logo.svg"]').forEach(function(img){var p=img.src.split("/");p.pop();img.src=p.join("/")+"/logos/logo-"+m[d]+".svg";});})();</script>
+<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
 </body>
 </html>
