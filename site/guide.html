@@ -40,9 +40,9 @@
     </script>
     <style>
       :root {
-        --fg: #1f1e1d; --fg-2: #5d5952; --fg-3: #8f887c;
-        --blue: #c96442; --bg: #faf9f5; --bg-alt: #f0eee6;
-        --nav-bg: rgba(250,249,245,0.88); --hair: #ddd6c6;
+        --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e;
+        --blue: #d97757; --bg: #fafaf8; --bg-alt: #f0efeb;
+        --nav-bg: rgba(250,249,245,0.88); --hair: #e5e5e5;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html { scroll-behavior: smooth; }
@@ -139,7 +139,8 @@
 
                   #themeToggle svg { display:block; }
       #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
-      html[data-theme="day"] .ico-sun { display:none; }
+      .ico-sun { display:none; }
+      html[data-theme="night"] .ico-sun { display:block; }
       html[data-theme="night"] .ico-moon { display:none; }
 
       .locale-menu { position:relative; }

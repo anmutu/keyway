@@ -72,14 +72,14 @@
     <style>
       /* ============ Apple.cn 风格:极简、留白、超大标题、亮色 ============ */
       :root {
-        --fg: #1f1e1d;
-        --fg-2: #5d5952;
-        --fg-3: #8f887c;
-        --blue: #c96442;
-        --bg: #faf9f5;
-        --bg-alt: #f0eee6;
+        --fg: #1a1a1a;
+        --fg-2: #5e5e5e;
+        --fg-3: #8e8e8e;
+        --blue: #d97757;
+        --bg: #fafaf8;
+        --bg-alt: #f0efeb;
         --nav-bg: rgba(250,249,245,0.88);
-        --hair: #ddd6c6;
+        --hair: #e5e5e5;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html { scroll-behavior: smooth; }
@@ -145,7 +145,7 @@
         letter-spacing: .18em; color: var(--blue); margin-bottom: 18px;
       }
       section.alt { background: var(--bg-alt); }
-      h2 { font-size: 46px; font-weight: 600; letter-spacing: -.01em; line-height: 1.12; font-family: ui-serif, Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "Noto Serif CJK SC", serif; }
+      h2 { font-size: 44px; font-weight: 550; letter-spacing: -.008em; line-height: 1.15; font-family: ui-serif, Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "Noto Serif CJK SC", serif; }
       .sub { font-size: 21px; color: var(--fg-2); margin-top: 12px; font-weight: 400; }
       .links { margin-top: 18px; display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; }
       .alink {
@@ -379,9 +379,9 @@
 
       /* ===== 昼夜双模式(默认跟随系统,手动记忆)===== */
       html[data-theme="night"] {
-        --fg:#ece7db; --fg-2:#b3aca0; --fg-3:#7d766b;
-        --blue:#d97757; --bg:#211f1c; --bg-alt:#2a2723;
-        --nav-bg: rgba(33,31,28,.9); --hair: rgba(255,255,255,.13);
+        --fg:#e8e8e6; --fg-2:#a0a09e; --fg-3:#6e6e6c;
+        --blue:#d97757; --bg:#1a1a1a; --bg-alt:#242424;
+        --nav-bg: rgba(26,26,26,.92); --hair: rgba(255,255,255,.1);
       }
       html[data-theme="night"] body { background: var(--bg); }
       html[data-theme="night"] .nav-inner a { color: rgba(236,231,219,.75); }

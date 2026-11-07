@@ -11,7 +11,7 @@
   { "@context": "https://schema.org", "@type": "WebPage", "name": "Keyway Terms", "url": "https://keyway.one/en/terms.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <style>
-    :root { --fg: #1f1e1d; --fg-2: #5d5952; --blue: #c96442; --hair: #ddd6c6;  --bg: #faf9f5; --nav-bg: rgba(250,249,245,.88); }
+    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --blue: #d97757; --hair: #e5e5e5;  --bg: #fafaf8; --nav-bg: rgba(250,250,248,.9); }
     * { box-sizing: border-box; }
     body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif; color:var(--fg); background:#faf9f5; line-height:1.75; -webkit-font-smoothing:antialiased; }
     main { max-width:680px; margin:0 auto; padding:64px 22px 80px; }
@@ -29,7 +29,8 @@
 
                   #themeToggle svg { display:block; }
       #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
-      html[data-theme="day"] .ico-sun { display:none; }
+      .ico-sun { display:none; }
+      html[data-theme="night"] .ico-sun { display:block; }
       html[data-theme="night"] .ico-moon { display:none; }
 
       /* 站级导航(与其他页面完全一致) */
@@ -43,7 +44,8 @@
                   #themeToggle svg { display:block; }
       #themeToggle { border:none; background:transparent; color:var(--fg-3); width:32px; height:32px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
       #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
-      html[data-theme="day"] .ico-sun { display:none; }
+      .ico-sun { display:none; }
+      html[data-theme="night"] .ico-sun { display:block; }
       html[data-theme="night"] .ico-moon { display:none; }
       html[data-theme="night"] nav { background:var(--nav-bg); }
       html[data-theme="night"] .nav-inner a { color:rgba(236,231,219,.75); }
