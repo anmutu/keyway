@@ -76,8 +76,7 @@
   </style>
 </head>
 <body>
-  <script>(function(){var s=null;try{s=localStorage.getItem("kw-theme")}catch(e){}var t=s||(matchMedia("(prefers-color-scheme: dark)").matches?"night":"day");document.documentElement.setAttribute("data-theme",t);document.addEventListener("DOMContentLoaded",function(){var b=document.getElementById("themeToggle");if(b)b.addEventListener("click",function(){t=t==="night"?"day":"night";try{localStorage.setItem("kw-theme",t)}catch(e){}document.documentElement.setAttribute("data-theme",t)})}})();</script>
-  <nav>
+    <nav>
       <div class="nav-inner">
         <a href="./" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
           <img src="./logo.svg" width="18" height="18" alt="Keyway logo" style="border-radius:4px;" />
@@ -153,6 +152,22 @@
     });
   </script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
-<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
+<script>
+(function() {
+  var theme = null;
+  try { theme = localStorage.getItem("kw-theme"); } catch(e) {}
+  if (!theme) theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day";
+  document.documentElement.setAttribute("data-theme", theme);
+  document.addEventListener("DOMContentLoaded", function() {
+    var btn = document.getElementById("themeToggle");
+    if (!btn) return;
+    btn.addEventListener("click", function() {
+      theme = theme === "night" ? "day" : "night";
+      try { localStorage.setItem("kw-theme", theme); } catch(e) {}
+      document.documentElement.setAttribute("data-theme", theme);
+    });
+  });
+})();
+</script>
 </body>
 </html>
