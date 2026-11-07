@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Switching AI providers: the three things you must change — Keyway Blog</title>
+  <title>Switching AI providers: the three things you must change — Keyway Docs</title>
   <meta name="description" content="Switch AI CLI providers by hand, no tools: where the Base URL goes, where the API key lives, why protocols don't mix — and the exact locations on macOS, Windows and Linux." />
-  <link rel="canonical" href="https://keyway.one/en/blog/switch-provider-by-hand.html" />
-  <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/blog/switch-provider-by-hand.html" />
+  <link rel="canonical" href="https://keyway.one/en/docs/switch-provider-by-hand.html" />
+  <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/docs/switch-provider-by-hand.html" />
   <script type="application/ld+json">
-  { "@context": "https://schema.org", "@type": "Article", "headline": "Switching AI providers: the three things you must change", "url": "https://keyway.one/en/blog/switch-provider-by-hand.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  { "@context": "https://schema.org", "@type": "Article", "headline": "Switching AI providers: the three things you must change", "url": "https://keyway.one/en/docs/switch-provider-by-hand.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -128,19 +128,16 @@
           <span class="brand">Keyway</span>
         </a>
         <div class="nav-links">
- <a class="nav-main nav-away" href="../../#features">Features</a>
-                    <a class="nav-main nav-away" href="../../#quickstart">Get Started</a>
-          <a class="nav-main nav-away" href="../../#local-first">Local-first</a>
-          <a class="nav-main nav-away" href="../../#capabilities">Capabilities</a>
-          <a class="nav-main nav-away" href="../../#faq">FAQ</a>
-          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><img class="flag" src="../../flags/cn.svg" alt="" width="16" height="12" />中文<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../../blog/switch-provider-by-hand.html"><img class="flag" src="../../flags/cn.svg" alt="" width="16" height="12" />中文</a><a href="./switch-provider-by-hand.html" aria-current="page"><img class="flag" src="../../flags/gb.svg" alt="" width="16" height="12" />English</a></div></details>
-          <a class="nav-dl" href="https://github.com/anmutu/keyway/releases">Download</a>
+          <a class="nav-away" href="./">Docs</a>
+          <a class="nav-away" href="../../download.html">Download</a>
+          <button id="themeToggle" type="button" aria-label="切换昼夜模式" title="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>中文</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../../docs/switch-provider-by-hand.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a><a href="./switch-provider-by-hand.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a></div></details>
         </div>
       </div>
     </nav>
   <main>
     <h1>Switching AI providers: the three things you must change</h1>
-    <p class="meta"><a href="./">Blog</a> · Series · Part 1 · 2026-11-06 · ~5 min · <a href="https://github.com/anmutu/keyway">author</a></p>
+    <p class="meta"><a href="./">Docs</a> · Series · Part 1 · 2026-11-06 · ~5 min · <a href="https://github.com/anmutu/keyway">author</a></p>
 
     <div class="answer"><b>The 30-second answer:</b>you touch three things — <b>① the Base URL</b>, written into the CLI's config file; <b>② the API key</b>, usually stored as an environment variable; <b>③ the pointer</b> that tells the CLI to actually use it, followed by a <b>fresh session</b>. The only difference between operating systems is which directory the file lives in and how env vars are persisted.</div>
 
@@ -235,7 +232,7 @@ Streaming response ──► the CLI renders it in your terminal</code></pre>
           <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
           <a href="../../#quickstart">快速开始</a>
           <a href="../../guide.html">使用指南</a>
-          <a href="../../blog/">博客</a>
+          <a href="../../docs/">文档</a>
         </div>
         <div class="footer-col">
           <b>资源</b>

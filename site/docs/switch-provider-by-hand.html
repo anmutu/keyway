@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>换一家 AI 供应商,你的电脑上要动哪三个地方? — Keyway 博客</title>
+  <title>换一家 AI 供应商,你的电脑上要动哪三个地方? — Keyway 文档</title>
   <meta name="description" content="不用任何工具手动换 AI 供应商:接口地址(Base URL)配在哪、API Key 放哪、协议为什么不能混;macOS/Windows/Linux 的配置位置与验证方法全图解。" />
-  <link rel="canonical" href="https://keyway.one/blog/switch-provider-by-hand.html" />
-    <link rel="alternate" hreflang="en" href="https://keyway.one/en/blog/switch-provider-by-hand.html" />
+  <link rel="canonical" href="https://keyway.one/docs/switch-provider-by-hand.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/docs/switch-provider-by-hand.html" />
   <script type="application/ld+json">
-  { "@context": "https://schema.org", "@type": "Article", "headline": "换一家 AI 供应商,你的电脑上要动哪三个地方?", "url": "https://keyway.one/blog/switch-provider-by-hand.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  { "@context": "https://schema.org", "@type": "Article", "headline": "换一家 AI 供应商,你的电脑上要动哪三个地方?", "url": "https://keyway.one/docs/switch-provider-by-hand.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -128,21 +128,16 @@
           <span class="brand">Keyway</span>
         </a>
         <div class="nav-links">
- <a class="nav-main nav-away" href="../#features">功能</a>
-                    <a class="nav-main nav-away" href="../#quickstart">快速开始</a>
-          <a class="nav-main nav-away" href="../#local-first">本地优先</a>
-          <a class="nav-main nav-away" href="../#capabilities">能力</a>
-          <a class="nav-main nav-away" href="../#faq">FAQ</a>
-          <a class="nav-away" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
-          <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:1px solid var(--hair);background:transparent;color:var(--fg-2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-4.77 4.77M19.07 4.93l-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />EN<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/blog/switch-provider-by-hand.html"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />English</a><a href="./switch-provider-by-hand.html" aria-current="page"><img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" />中文</a></div></details>
-          <a class="nav-dl" href="https://github.com/anmutu/keyway/releases">下载</a>
+          <a class="nav-away" href="./">文档</a>
+          <a class="nav-away" href="../download.html">下载</a>
+          <button id="themeToggle" type="button" aria-label="切换昼夜模式" title="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/docs/switch-provider-by-hand.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a><a href="./switch-provider-by-hand.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a></div></details>
         </div>
       </div>
     </nav>
   <main>
     <h1>换一家 AI 供应商,你的电脑上要动哪三个地方?</h1>
-    <p class="meta"><a href="./">博客</a> · 系列 · 第 1 篇 · 2026-11-06 · 约 6 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
+    <p class="meta"><a href="./">文档</a> · 系列 · 第 1 篇 · 2026-11-06 · 约 6 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
 
     <div class="answer"><b>30 秒答案:</b>要动三个地方——<b>①接口地址(Base URL)</b>,写进 CLI 的配置文件;<b>②API Key</b>,通常存成环境变量;<b>③让 CLI 用上它</b>,把默认供应商指过去并<b>新开一个会话</b>。三个 OS 的区别只是"文件在哪个目录、环境变量怎么存"。</div>
 
@@ -237,7 +232,7 @@ HTTPS 请求(地址 = Base URL + 路径;认证 = 请求头里的 Key)
           <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
           <a href="../#quickstart">快速开始</a>
           <a href="../guide.html">使用指南</a>
-          <a href="../blog/">博客</a>
+          <a href="../docs/">文档</a>
         </div>
         <div class="footer-col">
           <b>资源</b>

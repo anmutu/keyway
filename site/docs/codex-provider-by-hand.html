@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Codex 手动换供应商:config.toml 逐行讲解 — Keyway 博客</title>
+  <title>Codex 手动换供应商:config.toml 逐行讲解 — Keyway 文档</title>
   <meta name="description" content="不用任何工具,手动把 OpenAI Codex CLI 指到自定义供应商:找到 ~/.codex/config.toml、写 model_providers 配置块、配环境变量 Key、新开会话并用命令验证;附 macOS/Windows/Linux 差异与常见报错表。" />
-  <link rel="canonical" href="https://keyway.one/blog/codex-provider-by-hand.html" />
-    <link rel="alternate" hreflang="en" href="https://keyway.one/en/blog/codex-provider-by-hand.html" />
+  <link rel="canonical" href="https://keyway.one/docs/codex-provider-by-hand.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/docs/codex-provider-by-hand.html" />
   <script type="application/ld+json">
-  { "@context": "https://schema.org", "@type": "Article", "headline": "Codex 手动换供应商:config.toml 逐行讲解", "url": "https://keyway.one/blog/codex-provider-by-hand.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  { "@context": "https://schema.org", "@type": "Article", "headline": "Codex 手动换供应商:config.toml 逐行讲解", "url": "https://keyway.one/docs/codex-provider-by-hand.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -129,21 +129,16 @@
           <span class="brand">Keyway</span>
         </a>
         <div class="nav-links">
- <a class="nav-main nav-away" href="../#features">功能</a>
-                    <a class="nav-main nav-away" href="../#quickstart">快速开始</a>
-          <a class="nav-main nav-away" href="../#local-first">本地优先</a>
-          <a class="nav-main nav-away" href="../#capabilities">能力</a>
-          <a class="nav-main nav-away" href="../#faq">FAQ</a>
-          <a class="nav-away" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
-          <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:1px solid var(--hair);background:transparent;color:var(--fg-2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-4.77 4.77M19.07 4.93l-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />EN<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/blog/codex-provider-by-hand.html"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />English</a><a href="./codex-provider-by-hand.html" aria-current="page"><img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" />中文</a></div></details>
-          <a class="nav-dl" href="https://github.com/anmutu/keyway/releases">下载</a>
+          <a class="nav-away" href="./">文档</a>
+          <a class="nav-away" href="../download.html">下载</a>
+          <button id="themeToggle" type="button" aria-label="切换昼夜模式" title="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/docs/codex-provider-by-hand.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a><a href="./codex-provider-by-hand.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a></div></details>
         </div>
       </div>
     </nav>
   <main>
     <h1>Codex 手动换供应商:config.toml 逐行讲解</h1>
-    <p class="meta"><a href="./">博客</a> · 系列 · 第 2 篇 · 2026-11-06 · 约 8 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
+    <p class="meta"><a href="./">文档</a> · 系列 · 第 2 篇 · 2026-11-06 · 约 8 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
 
     <div class="answer"><b>30 秒答案:</b>Codex 的供应商配置全部在 <code>~/.codex/config.toml</code>:写一个 <code>[model_providers.名字]</code> 块填接口地址,Key 放进块里 <code>env_key</code> 指定的环境变量,顶层 <code>model_provider</code> 指向这个块,然后<b>新开终端 + 新开 codex 会话</b>。改文件不重启会话,等于什么都没改。</div>
 
@@ -276,7 +271,7 @@ source ~/.bashrc</code></pre>
           <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
           <a href="../#quickstart">快速开始</a>
           <a href="../guide.html">使用指南</a>
-          <a href="../blog/">博客</a>
+          <a href="../docs/">文档</a>
         </div>
         <div class="footer-col">
           <b>资源</b>

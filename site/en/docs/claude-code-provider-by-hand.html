@@ -1,27 +1,26 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Code 手动换供应商:settings.json 与环境变量,谁说了算? — Keyway 博客</title>
-  <meta name="description" content="不用工具手动把 Claude Code 指到自定义供应商:settings.json 的 env 块、ANTHROPIC_BASE_URL / AUTH_TOKEN / API_KEY 各自的作用与区别、单一定义源原则、三系统配置与验证方法。" />
-  <link rel="canonical" href="https://keyway.one/blog/claude-code-provider-by-hand.html" />
-    <link rel="alternate" hreflang="en" href="https://keyway.one/en/blog/claude-code-provider-by-hand.html" />
+  <title>Claude Code, by hand: settings.json vs environment variables — Keyway Docs</title>
+  <meta name="description" content="Point Claude Code at any provider by hand: the settings.json env block, ANTHROPIC_BASE_URL / AUTH_TOKEN / API_KEY explained, the single-source-of-truth rule, per-OS steps and verification." />
+  <link rel="canonical" href="https://keyway.one/en/docs/claude-code-provider-by-hand.html" />
+  <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/docs/claude-code-provider-by-hand.html" />
   <script type="application/ld+json">
-  { "@context": "https://schema.org", "@type": "Article", "headline": "Claude Code 手动换供应商:settings.json 与环境变量,谁说了算?", "url": "https://keyway.one/blog/claude-code-provider-by-hand.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  { "@context": "https://schema.org", "@type": "Article", "headline": "Claude Code, by hand: settings.json vs environment variables", "url": "https://keyway.one/en/docs/claude-code-provider-by-hand.html", "inLanguage": "en", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-    { "@type": "Question", "name": "Claude Code 的供应商配置在哪个文件?", "acceptedAnswer": { "@type": "Answer", "text": "在 ~/.claude/settings.json 的 env 块里设置 ANTHROPIC_BASE_URL 与 ANTHROPIC_AUTH_TOKEN(或 ANTHROPIC_API_KEY)。Windows 路径为 %USERPROFILE%\\.claude\\settings.json。" } },
-    { "@type": "Question", "name": "ANTHROPIC_AUTH_TOKEN 和 ANTHROPIC_API_KEY 有什么区别?", "acceptedAnswer": { "@type": "Answer", "text": "AUTH_TOKEN 以 Bearer 方式发送,是第三方 Anthropic 兼容端点常用的方式;API_KEY 使用 x-api-key 请求头,是 Anthropic 官方 API 的方式。用哪个以供应商文档为准,通常只需要设一个。" } },
-    { "@type": "Question", "name": "settings.json 的 env 块和终端里 export 的变量,哪个优先?", "acceptedAnswer": { "@type": "Answer", "text": "两处都会生效,同时设置容易互相干扰、排查困难。实践原则是单一定义源:选一处管理(推荐 settings.json,因为它跟着配置文件走、可备份),把另一处清掉。" } },
-    { "@type": "Question", "name": "改完 Claude Code 配置要重启吗?", "acceptedAnswer": { "@type": "Answer", "text": "需要。Claude Code 会话在启动时确定端点与认证,改完 settings.json 或环境变量后应新开一个会话。" } }
+    { "@type": "Question", "name": "Which file holds Claude Code provider config?", "acceptedAnswer": { "@type": "Answer", "text": "~/.claude/settings.json, in the env block: ANTHROPIC_BASE_URL plus ANTHROPIC_AUTH_TOKEN (or ANTHROPIC_API_KEY). Windows path: %USERPROFILE%\\.claude\\settings.json." } },
+    { "@type": "Question", "name": "ANTHROPIC_AUTH_TOKEN vs ANTHROPIC_API_KEY?", "acceptedAnswer": { "@type": "Answer", "text": "AUTH_TOKEN is sent as a Bearer token — the common choice for third-party Anthropic-compatible endpoints. API_KEY uses the x-api-key header, the official Anthropic API style. Follow your provider's docs; usually you set exactly one." } },
+    { "@type": "Question", "name": "Does Claude Code need a restart after config changes?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. A Claude Code session fixes its endpoint and credentials at startup — open a new session after editing settings.json or environment variables." } }
   ] }
   </script>
   <style>
     :root { --fg: #1f1e1d; --fg-2: #5d5952; --fg-3: #8f887c; --blue: #c96442; --hair: #ddd6c6; --bg-alt: #f0eee6; }
     * { box-sizing:border-box; }
-    body { margin:0; background:#faf9f5; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; color:var(--fg); background:#fff; line-height:1.78; -webkit-font-smoothing:antialiased; }
+    body { margin:0; background:#faf9f5; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif; color:var(--fg); background:#fff; line-height:1.78; -webkit-font-smoothing:antialiased; }
     main { max-width:720px; margin:0 auto; padding:56px 22px 90px; }
     h1 { font-size:30px; font-weight:700; letter-spacing:-.01em; line-height:1.25; margin:0 0 6px; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
     .meta { color:var(--fg-3); font-size:13px; margin-bottom:26px; }
@@ -123,121 +122,115 @@
 <body>
 <nav>
       <div class="nav-inner">
-        <a href="../" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
-          <img src="../logo.svg" width="18" height="18" alt="Keyway logo" style="border-radius:4px;" />
+        <a href="../../" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
+          <img src="../../logo.svg" width="18" height="18" alt="Keyway logo" style="border-radius:4px;" />
           <span class="brand">Keyway</span>
         </a>
         <div class="nav-links">
- <a class="nav-main nav-away" href="../#features">功能</a>
-                    <a class="nav-main nav-away" href="../#quickstart">快速开始</a>
-          <a class="nav-main nav-away" href="../#local-first">本地优先</a>
-          <a class="nav-main nav-away" href="../#capabilities">能力</a>
-          <a class="nav-main nav-away" href="../#faq">FAQ</a>
-          <a class="nav-away" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
-          <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:1px solid var(--hair);background:transparent;color:var(--fg-2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-4.77 4.77M19.07 4.93l-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />EN<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/blog/claude-code-provider-by-hand.html"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />English</a><a href="./claude-code-provider-by-hand.html" aria-current="page"><img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" />中文</a></div></details>
-          <a class="nav-dl" href="https://github.com/anmutu/keyway/releases">下载</a>
+          <a class="nav-away" href="./">Docs</a>
+          <a class="nav-away" href="../../download.html">Download</a>
+          <button id="themeToggle" type="button" aria-label="切换昼夜模式" title="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>中文</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../../docs/claude-code-provider-by-hand.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a><a href="./claude-code-provider-by-hand.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a></div></details>
         </div>
       </div>
     </nav>
   <main>
-    <h1>Claude Code 手动换供应商:settings.json 与环境变量,谁说了算?</h1>
-    <p class="meta"><a href="./">博客</a> · 系列 · 第 3 篇 · 2026-11-06 · 约 7 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
+    <h1>Claude Code, by hand: settings.json vs environment variables</h1>
+    <p class="meta"><a href="./">Docs</a> · Series · Part 3 · 2026-11-06 · ~6 min · <a href="https://github.com/anmutu/keyway">author</a></p>
 
-    <div class="answer"><b>30 秒答案:</b>Claude Code 换供应商 = 改 <code>~/.claude/settings.json</code> 里的 <code>env</code> 块:设 <code>ANTHROPIC_BASE_URL</code>(发往哪)+ <code>ANTHROPIC_AUTH_TOKEN</code> 或 <code>ANTHROPIC_API_KEY</code>(用什么身份),保存后<b>新开会话</b>。它比 Codex 多一个坑:配置可以写在两个地方(配置文件和终端环境变量),<b>只留一处</b>是铁律。</div>
+    <div class="answer"><b>The 30-second answer:</b>switching Claude Code's provider = editing the <code>env</code> block in <code>~/.claude/settings.json</code>: set <code>ANTHROPIC_BASE_URL</code> (where requests go) plus <code>ANTHROPIC_AUTH_TOKEN</code> or <code>ANTHROPIC_API_KEY</code> (the identity), save, then <b>open a new session</b>. One extra trap vs Codex: the same settings can live in two places — the config file and your shell. <b>Keep exactly one.</b></div>
 
-    <h2>一、Claude Code 的配置版图</h2>
-    <p>Claude Code 涉及的位置同样只有三个角色:</p>
+    <h2>1. Claude Code's config map</h2>
     <table>
-      <tr><th>位置</th><th>管什么</th><th>本文动不动</th></tr>
-      <tr><td><code>~/.claude/settings.json</code></td><td>用户级设置,其中 <code>env</code> 块可以写入环境变量——<b>手动换供应商的推荐位置</b>。</td><td>✅ 主战场</td></tr>
-      <tr><td>终端环境变量</td><td>在 <code>.zshrc</code> / <code>.bashrc</code> / <code>setx</code> 里导出同名变量,效果等价。</td><td>⚠️ 与上面二选一</td></tr>
-      <tr><td><code>~/.claude.json</code>(登录态等)</td><td>Claude Code 自己维护的运行状态,含官方订阅登录信息。</td><td>❌ 不要手改</td></tr>
+      <tr><th>Place</th><th>What it owns</th><th>Touched today?</th></tr>
+      <tr><td><code>~/.claude/settings.json</code></td><td>User-level settings; its <code>env</code> block can set environment variables — <b>the recommended home for manual provider config</b>.</td><td>✅ main</td></tr>
+      <tr><td>Shell env vars</td><td>Exporting the same names in <code>.zshrc</code> / <code>.bashrc</code> / <code>setx</code> works equally well.</td><td>⚠️ pick one of the two</td></tr>
+      <tr><td><code>~/.claude.json</code>(login state)</td><td>Claude Code's own runtime state, including official subscription login.</td><td>❌ don't hand-edit</td></tr>
     </table>
-    <p><b>为什么推荐 settings.json:</b>它是一个普通 JSON 文件——可备份、可 diff、换机器能整体迁移;而散落在 shell 配置里的变量看不见摸不着,三个月后你自己都想不起来设过什么。</p>
+    <p><b>Why settings.json is recommended:</b>it's a plain JSON file — backup-able, diffable, movable to a new machine in one piece. Variables scattered across shell configs are invisible; three months later even you won't remember what you set.</p>
 
-    <h2>二、动手:四步完成</h2>
+    <h2>2. Hands on: four steps</h2>
 
-    <h3>第 1 步 · 备份并打开 settings.json</h3>
+    <h3>Step 1 · Back up and open settings.json</h3>
     <p><span class="os mac">macOS</span><span class="os linux">Linux</span></p>
     <pre><code>cp ~/.claude/settings.json ~/.claude/settings.json.bak
-nano ~/.claude/settings.json   # macOS 也可 open -e</code></pre>
+nano ~/.claude/settings.json   # macOS alternative: open -e</code></pre>
     <p><span class="os win">Windows</span>(PowerShell)</p>
     <pre><code>copy $env:USERPROFILE\.claude\settings.json $env:USERPROFILE\.claude\settings.json.bak
 notepad $env:USERPROFILE\.claude\settings.json</code></pre>
 
-    <h3>第 2 步 · 写入 env 块(可直接抄,改两处)</h3>
+    <h3>Step 2 · Write the env block (copy-ready)</h3>
     <pre><code>{
   "env": {
     "ANTHROPIC_BASE_URL": "https://api.example.com",
-    "ANTHROPIC_AUTH_TOKEN": "sk-你的key"
+    "ANTHROPIC_AUTH_TOKEN": "sk-your-key"
   }
 }</code></pre>
     <ul>
-      <li><b>ANTHROPIC_BASE_URL</b>:供应商给的 Anthropic 兼容地址。</li>
-      <li><b>ANTHROPIC_AUTH_TOKEN</b>:以 Bearer 方式发送,第三方端点最常用。<b>ANTHROPIC_API_KEY</b> 则走 <code>x-api-key</code> 头(官方 API 方式)——<b>用哪个看供应商文档,通常只设一个</b>。</li>
-      <li>文件里已有其他配置(如 <code>permissions</code>)?<b>保留它们</b>,只增改 <code>env</code> 块。</li>
+      <li><b>ANTHROPIC_BASE_URL</b>: the provider's Anthropic-compatible endpoint.</li>
+      <li><b>ANTHROPIC_AUTH_TOKEN</b>: sent as a Bearer token — the most common style for third-party endpoints. <b>ANTHROPIC_API_KEY</b> instead uses the <code>x-api-key</code> header (official API style) — <b>pick per your provider's docs; usually just one</b>.</li>
+      <li>Other settings already in the file (like <code>permissions</code>)? <b>Keep them</b>; only add/edit the <code>env</code> block.</li>
     </ul>
 
-    <h3>第 3 步 · 清掉另一处的旧变量(防打架)</h3>
-    <p>如果你以前在终端里导出过这些变量,现在两处同时存在,行为取决于各处的加载时机,排查起来非常痛苦。检查并清理:</p>
-    <pre><code># macOS / Linux:看看 shell 配置里有没有残留
+    <h3>Step 3 · Remove the same variables from your shell (avoid the fight)</h3>
+    <p>If you exported these variables before, both places now define them and behavior depends on load order — miserable to debug. Check and clean:</p>
+    <pre><code># macOS / Linux: any leftovers in shell configs?
 grep -n "ANTHROPIC" ~/.zshrc ~/.bashrc 2>/dev/null
 
-# Windows PowerShell:看用户变量里有没有
+# Windows PowerShell: any in the current environment?
 Get-ChildItem env: | Where-Object Name -like "ANTHROPIC*"</code></pre>
-    <p>有残留就删掉对应行(或 <code>Remove-Item Env:ANTHROPIC_xxx</code> 仅清当前窗口),保证<b>唯一来源是 settings.json</b>。</p>
+    <p>Delete leftover lines (or <code>Remove-Item Env:ANTHROPIC_xxx</code> for the current window) so the <b>single source of truth is settings.json</b>.</p>
 
-    <h3>第 4 步 · 新开会话并验证</h3>
+    <h3>Step 4 · New session, verify</h3>
     <ol>
-      <li>新开终端窗口 → 新开 Claude Code 会话;</li>
-      <li>随便问一句,正常回复即通;</li>
-      <li>排查时可用 curl 直测上游:
+      <li>New terminal window → new Claude Code session;</li>
+      <li>Ask anything — a normal reply means the path works;</li>
+      <li>To isolate problems, curl the upstream directly:
         <pre><code>curl https://api.example.com/v1/messages \
-  -H "x-api-key: sk-你的key" \
+  -H "x-api-key: sk-your-key" \
   -H "anthropic-version: 2023-06-01" \
   -H "content-type: application/json" \
   -d '{"model":"claude-3-5-haiku-latest","max_tokens":16,"messages":[{"role":"user","content":"hi"}]}'</code></pre>
-        返回正常 JSON = 地址与 Key 双双正确;<b>401</b> = Key 或认证方式选错(试试换另一个变量);<b>404</b> = 地址路径不对。</li>
+        Normal JSON = address and key both good. <b>401</b> = wrong key or wrong auth variable (try the other one); <b>404</b> = wrong path.</li>
     </ol>
 
-    <h2>三、常见坑速查</h2>
+    <h2>3. Pitfall lookup</h2>
     <table>
-      <tr><th>症状</th><th>最可能的原因</th><th>解法</th></tr>
-      <tr><td>改完没变化</td><td>旧会话未重启 / 两处定义打架</td><td>新开会话;确认只有 settings.json 一处定义</td></tr>
-      <tr><td>401</td><td>AUTH_TOKEN 与 API_KEY 用错边</td><td>按供应商文档换另一个变量</td></tr>
-      <tr><td>404</td><td>base_url 路径不对</td><td>对照供应商文档;Anthropic 端点一般<b>不</b>额外带 /v1 之外的路径</td></tr>
-      <tr><td>JSON 解析报错</td><td>settings.json 少了逗号/引号</td><td>JSON 校验器过一遍再保存</td></tr>
+      <tr><th>Symptom</th><th>Most likely cause</th><th>Fix</th></tr>
+      <tr><td>No change</td><td>old session / definitions fighting in two places</td><td>new session; keep a single source of truth</td></tr>
+      <tr><td>401</td><td>AUTH_TOKEN vs API_KEY mismatch</td><td>switch to the variable your provider documents</td></tr>
+      <tr><td>404</td><td>wrong base_url path</td><td>compare with provider docs; Anthropic endpoints usually take no extra path beyond the API root</td></tr>
+      <tr><td>JSON parse error</td><td>missing comma/quote in settings.json</td><td>run it through a JSON validator</td></tr>
     </table>
 
-    <h2>四、切换成本:和 Codex 一样的宿命</h2>
-    <p>换回官方、换第二家、来回切——每一步都是"改文件 → 新开会话"的循环,而且 Claude Code 的订阅登录与 API 模式还会互相穿插(订阅登录时不需要任何 env,一旦设了 BASE_URL 则走自定义端点)。手动管理三家 CLI 的配置,文件越改越像一张藏宝图。<b>下一篇看 Gemini CLI,它的坑最特别:配置在一个 .env 文件里,而且只在进程启动时读。</b></p>
+    <h2>4. Switching cost: the same fate as Codex</h2>
+    <p>Back to official, to a second provider, back again — each round is "edit file → new session", with subscription login and API mode interleaving (subscription login needs no env vars at all; setting BASE_URL switches you to the custom endpoint). Manually herding three CLIs' configs turns your machine into a treasure map. <b>Next: Gemini CLI — its trap is the most interesting: config lives in a .env file that is read only when the process starts.</b></p>
 
-    <h2>常见问题</h2>
-    <details><summary>订阅(Claude Pro/Max)和这些配置冲突吗?</summary><p>订阅登录时 Claude Code 走官方 OAuth,不需要这些变量;一旦设置了 ANTHROPIC_BASE_URL,请求就改发你指定的端点。两种是不同模式,别同时混用。</p></details>
-    <details><summary>项目级和用户级 settings 有什么关系?</summary><p>项目目录下还可以有 .claude/settings.json,会与用户级合并。给某个项目单独配供应商是可行的,但手动管理两层的合并结果会更绕,新手建议先只动用户级。</p></details>
-    <details><summary>Key 写进 settings.json 安全吗?</summary><p>与放在 shell 配置里安全等级相同(本机可读)。底线同样是:不要把带 Key 的文件提交进 git、不要截图外发。备份文件(.bak)同样含 Key,注意同样对待。</p></details>
+    <h2>FAQ</h2>
+    <details><summary>Do subscription (Claude Pro/Max) and these settings conflict?</summary><p>With subscription login, Claude Code uses official OAuth and needs none of these variables; once ANTHROPIC_BASE_URL is set, requests go to your endpoint instead. Two different modes — don't mix them at once.</p></details>
+    <details><summary>Project vs user settings?</summary><p>A project can carry its own .claude/settings.json, merged with the user-level one. Per-project providers are possible but juggling merge results manually gets confusing fast — beginners should stick to the user level.</p></details>
+    <details><summary>Is the key safe inside settings.json?</summary><p>Same exposure as shell configs (locally readable). Same rules: no git, no screenshots — and the .bak backup contains the key too, treat it the same.</p></details>
 
     <a class="next" href="./gemini-cli-provider-by-hand.html">
-      <span class="tag">系列 · 第 4 篇 · 下一篇</span>
-      <h2>Gemini CLI 手动换供应商:.env 与两种认证 →</h2>
-      <p>GOOGLE_GEMINI_BASE_URL 写在哪、API Key 与 OAuth 怎么选、"新进程才读 .env"的经典坑。</p>
+      <span class="tag">Series · Part 4 · Next</span>
+      <h2>Gemini CLI, by hand: .env and two auth modes →</h2>
+      <p>Where GOOGLE_GEMINI_BASE_URL goes, API key vs OAuth, and the classic "new process only" trap.</p>
     </a>
   </main>
 
     <footer class="site-footer">
       <div class="footer-grid">
         <div class="footer-brand">
-          <span class="brand"><img src="../logo.svg" alt="Keyway" width="20" height="20" />Keyway</span>
+          <span class="brand"><img src="../../logo.svg" alt="Keyway" width="20" height="20" />Keyway</span>
           <p>AI CLI 的本地网关<br />The local gateway for AI coding CLIs.</p>
           <p class="mono">One key · one way</p>
         </div>
         <div class="footer-col">
           <b>产品</b>
           <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
-          <a href="../#quickstart">快速开始</a>
-          <a href="../guide.html">使用指南</a>
-          <a href="../blog/">博客</a>
+          <a href="../../#quickstart">快速开始</a>
+          <a href="../../guide.html">使用指南</a>
+          <a href="../../docs/">文档</a>
         </div>
         <div class="footer-col">
           <b>资源</b>
@@ -247,8 +240,8 @@ Get-ChildItem env: | Where-Object Name -like "ANTHROPIC*"</code></pre>
         </div>
         <div class="footer-col">
           <b>法律</b>
-          <a href="../privacy.html">隐私</a>
-          <a href="../terms.html">条款</a>
+          <a href="../../privacy.html">隐私</a>
+          <a href="../../terms.html">条款</a>
         </div>
       </div>
       <div class="footer-bar">

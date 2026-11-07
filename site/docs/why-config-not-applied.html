@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>为什么改了配置没生效?AI CLI 配置加载顺序详解 — Keyway 博客</title>
+  <title>为什么改了配置没生效?AI CLI 配置加载顺序详解 — Keyway 文档</title>
   <meta name="description" content="贯穿 AI CLI 手动配置的最大疑问:进程启动快照、shell 配置文件加载时机、Windows setx 的新窗口规则、IDE 内嵌终端的环境继承——一张图讲透,附五步排查法。" />
-  <link rel="canonical" href="https://keyway.one/blog/why-config-not-applied.html" />
-    <link rel="alternate" hreflang="en" href="https://keyway.one/en/blog/why-config-not-applied.html" />
+  <link rel="canonical" href="https://keyway.one/docs/why-config-not-applied.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/docs/why-config-not-applied.html" />
   <script type="application/ld+json">
-  { "@context": "https://schema.org", "@type": "Article", "headline": "为什么改了配置没生效?AI CLI 配置加载顺序详解", "url": "https://keyway.one/blog/why-config-not-applied.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
+  { "@context": "https://schema.org", "@type": "Article", "headline": "为什么改了配置没生效?AI CLI 配置加载顺序详解", "url": "https://keyway.one/docs/why-config-not-applied.html", "inLanguage": "zh-CN", "datePublished": "2026-11-06", "dateModified": "2026-11-06", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <script type="application/ld+json">
   { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -125,21 +125,16 @@
           <span class="brand">Keyway</span>
         </a>
         <div class="nav-links">
- <a class="nav-main nav-away" href="../#features">功能</a>
-                    <a class="nav-main nav-away" href="../#quickstart">快速开始</a>
-          <a class="nav-main nav-away" href="../#local-first">本地优先</a>
-          <a class="nav-main nav-away" href="../#capabilities">能力</a>
-          <a class="nav-main nav-away" href="../#faq">FAQ</a>
-          <a class="nav-away" href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
-          <button id="themeToggle" type="button" aria-label="切换昼夜模式" style="border:1px solid var(--hair);background:transparent;color:var(--fg-2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-4.77 4.77M19.07 4.93l-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />EN<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/blog/why-config-not-applied.html"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" />English</a><a href="./why-config-not-applied.html" aria-current="page"><img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" />中文</a></div></details>
-          <a class="nav-dl" href="https://github.com/anmutu/keyway/releases">下载</a>
+          <a class="nav-away" href="./">文档</a>
+          <a class="nav-away" href="../download.html">下载</a>
+          <button id="themeToggle" type="button" aria-label="切换昼夜模式" title="切换昼夜模式" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../en/docs/why-config-not-applied.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>English</a><a href="./why-config-not-applied.html" aria-current="page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>中文</a></div></details>
         </div>
       </div>
     </nav>
   <main>
     <h1>为什么"改了配置没生效"?配置加载顺序详解</h1>
-    <p class="meta"><a href="./">博客</a> · 系列 · 第 5 篇 · 2026-11-06 · 约 6 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
+    <p class="meta"><a href="./">文档</a> · 系列 · 第 5 篇 · 2026-11-06 · 约 6 分钟 · <a href="https://github.com/anmutu/keyway">作者</a></p>
 
     <div class="answer"><b>30 秒答案:</b>因为配置和变量的读取都发生在<b>过去</b>——shell 配置文件在<b>窗口打开时</b>执行,环境变量在<b>CLI 进程启动时</b>被快照,配置文件同样<b>只在启动时读一次</b>。你改的是现在,程序看的是它出生那刻的世界。<b>新窗口 + 新进程</b>是万能解。</div>
 
@@ -204,7 +199,7 @@ shell 执行 .zshrc ──► 环境就绪    (这些变化不影响任何已存
           <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
           <a href="../#quickstart">快速开始</a>
           <a href="../guide.html">使用指南</a>
-          <a href="../blog/">博客</a>
+          <a href="../docs/">文档</a>
         </div>
         <div class="footer-col">
           <b>资源</b>
