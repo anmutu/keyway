@@ -313,7 +313,7 @@ Linux .rpm
 
 自定义:填名称、Base URL、API Key,任意中转/自建网关都支持。
 
-以 CoderPlan 为例:预设置顶、端点已预填;点 「获取 API Key」直达 coderplan.ai/dashboard/keys,创建并复制 Key,粘贴即可。
+以 Teapot Router 为例:预设置顶、端点已预填;点 「获取 API Key」直达 teapotrouter.com/zh/dashboard/keys,创建并复制 Key,粘贴即可。
 
 密钥存储:API Key 存入本机 SQLCipher 加密数据库,数据库主密钥由系统钥匙串保管。导出的供应商配置不含 API Key;转发请求时仍需向所选上游发送认证信息。
 

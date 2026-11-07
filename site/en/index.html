@@ -361,6 +361,11 @@
       .footer-brand .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; font-family: "Iowan Old Style", "Palatino Linotype", ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
       .footer-brand p { color: var(--fg-2); font-size: 13.5px; line-height: 1.7; margin: 12px 0 0; }
       .footer-brand .mono, .footer-bar .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--fg-3); letter-spacing: .06em; }
+      .footer-brand .sister { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hair); }
+      .footer-brand .sister-link { display: inline-flex; align-items: center; gap: 7px; color: var(--fg); text-decoration: none; font-weight: 600; font-size: 14px; }
+      .footer-brand .sister-link:hover { color: var(--blue); }
+      .footer-brand .sister-link img { border-radius: 4px; }
+      .footer-brand .sister p { margin: 6px 0 0; font-size: 12.5px; color: var(--fg-3); line-height: 1.6; }
       .footer-col { display: flex; flex-direction: column; gap: 10px; }
       .footer-col b { font-size: 12px; color: var(--fg-3); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
       .footer-col a { color: var(--fg-2); text-decoration: none; font-size: 14px; }
@@ -579,7 +584,6 @@
           <span class="prov"><img src="../icons/qwen.svg" alt="Qwen" />Qwen</span>
           <span class="prov"><img src="../icons/siliconflow.svg" alt="SiliconFlow" />SiliconFlow</span>
           <span class="prov"><img src="../icons/openrouter.svg" alt="OpenRouter" />OpenRouter</span>
-          <a class="prov linked" href="https://coderplan.ai" target="_blank" rel="noreferrer"><img src="../icons/coderplan.svg" alt="CoderPlan" />CoderPlan</a>
           <a class="prov linked" href="https://teapotrouter.com" target="_blank" rel="noreferrer"><img src="../icons/teapotrouter.png" alt="TeapotRouter" />TeapotRouter</a>
           <span class="prov more">+ custom endpoints</span>
         </div>
@@ -666,6 +670,10 @@
           <span class="brand"><img src="../logo.svg" alt="Keyway" width="20" height="20" />Keyway</span>
           <p>The local gateway for AI coding CLIs.<br />Switch providers, route models, trace requests.</p>
           <p class="mono">One key · one way</p>
+          <div class="sister">
+            <a class="sister-link" href="https://teapotrouter.com/" target="_blank" rel="noreferrer"><img src="/logos/teapot.png" alt="Teapot Router" width="18" height="18" />Teapot Router</a>
+            <p>Another project by the same maker — the enterprise gateway for GPT and Claude Code.</p>
+          </div>
         </div>
         <div class="footer-col">
           <b>Product</b>
