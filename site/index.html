@@ -161,8 +161,8 @@
       .hero { padding: 88px 22px 64px; }
       .hero h1 { font-size: 60px; font-weight: 600; letter-spacing: -.015em; line-height: 1.08; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", "Noto Serif CJK SC", serif; }
       .hero h1 .kw-dot { color: var(--fg-3); }
-      .hero .tagline { font-size: 28px; font-weight: 600; margin-top: 12px; letter-spacing: 0; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
-      .hero .sub { font-size: 19px; max-width: 600px; margin: 18px auto 0; }
+      .hero .tagline { font-size: 34px; font-weight: 700; margin-top: 14px; letter-spacing: 0; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
+      .hero .sub { font-size: 18px; max-width: 640px; margin: 16px auto 0; line-height: 1.65; }
       .hero .links { justify-content: center; align-items: center; gap: 26px; margin-top: 26px; }
       .hero-proof { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 22px auto 0; }
       .hero-proof span { border: 1px solid var(--hair); border-radius: 999px; color: var(--fg-2); font-size: 12px; padding: 6px 10px; background: rgba(255,255,255,.76); }
@@ -218,7 +218,7 @@
         .hero { padding-top: 66px; }
         .hero h1 { font-size: 46px; }
         .hero .kw-motto { font-size: 14px; }
-        .hero .tagline { font-size: 24px; }
+        .hero .tagline { font-size: 27px; }
         .hero .sub { font-size: 17px; }
         .hero .links { gap: 14px 18px; }
         .hero .btn { width: 100%; }
@@ -432,27 +432,20 @@
 
     <!-- Hero -->
     <section class="hero container">
-      <h1 id="brandHero" aria-label="Keyway"><span class="kw-seq" aria-hidden="true"><span class="kw" data-kw="key">key</span><span class="kw" data-kw="way">way</span><span class="kw kw-dot" data-kw="dot">.</span><span class="kw kw-one" data-kw="one">one</span></span></h1>
+      <h1 id="brandHero" aria-label="Keyway — AI CLI 的本地网关(local gateway for AI coding CLIs)"><span class="kw-seq" aria-hidden="true"><span class="kw" data-kw="key">key</span><span class="kw" data-kw="way">way</span><span class="kw kw-dot" data-kw="dot">.</span><span class="kw kw-one" data-kw="one">one</span></span></h1>
       <div class="kw-motto" data-i18n="motto">One key · one way —— 一把 Key,一条通路。</div>
       <div class="tagline" data-i18n="tagline">每一次请求,去向清楚。</div>
-      <p class="sub" data-i18n="heroSub">AI CLI 的本地网关。供应商切换、路由与故障转移,一个地方管理;从请求日志看清实际去向。</p>
+      <p class="sub" data-i18n="heroSub">为 <b>Claude Code、Codex、Gemini CLI、OpenCode</b> 等提供<b>供应商切换、模型路由、自动故障转移</b>与<b>请求日志</b> — 不重启会话,看清每一次请求的实际去向。API Key 本机加密,MIT 开源。</p>
       <div class="hero-proof" aria-label="Keyway highlights">
-        <span data-i18n="heroProof1">本地代理优先</span>
+        <span data-i18n="heroProof1">切换无需重启会话</span>
         <span data-i18n="heroProof2">9 个 AI CLI</span>
-        <span data-i18n="heroProof3">本机加密存储 · MIT 开源</span>
+        <span data-i18n="heroProof3">API Key 本机加密 · 免费 · MIT 开源</span>
       </div>
       <div class="links">
-        <a id="primaryDownload" class="btn dl-direct" href="#platform-downloads" data-i18n="freeDl">免费下载</a>
+        <a class="btn" href="./download.html" data-i18n="freeDl">免费下载</a>
         <a class="alink" href="#features" data-i18n="learnMore">进一步了解</a>
       </div>
-      <div class="platform-links" id="platform-downloads" style="scroll-margin-top: 72px;">
-        <a class="alink" data-release-asset="mac-arm" href="https://github.com/anmutu/keyway/releases/download/v0.2.17/Keyway_0.2.17_aarch64.dmg" data-i18n="appleDl">macOS · Apple 芯片</a>
-        <a class="alink" data-release-asset="mac-intel" href="https://github.com/anmutu/keyway/releases/download/v0.2.17/Keyway_0.2.17_x64.dmg" data-i18n="intelDl">macOS · Intel 芯片</a>
-        <a class="alink" data-release-asset="windows" href="https://github.com/anmutu/keyway/releases/download/v0.2.17/Keyway_0.2.17_x64-setup.exe" data-i18n="windowsDl">Windows 版</a>
-        <a class="alink" data-release-asset="appimage" href="https://github.com/anmutu/keyway/releases/download/v0.2.17/Keyway_0.2.17_amd64.AppImage" data-i18n="linuxDl">Linux AppImage</a>
-        <a class="alink" href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer" data-i18n="allDl">全部平台</a>
-      </div>
-      <p class="platform-links" style="margin-top:10px;"><span data-i18n="installOneLiner">macOS 用户免「已损坏」提示,终端一键安装(或更新):</span></p>
+            <p class="platform-links" style="margin-top:10px;"><span data-i18n="installOneLiner">macOS 用户免「已损坏」提示,终端一键安装(或更新):</span></p>
       <p class="install-line"><code id="installCmd">curl -fsSL https://keyway.one/install.sh | sh</code><button id="copyInstallBtn" type="button">Copy</button></p>
       <p class="download-note" data-release-version>最新正式版 v0.2.17 · macOS / Windows / Linux</p>
       <div class="hero-shot">
