@@ -6,7 +6,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const EN_DICT = {
-  navF: "Features", navL: "Local-first", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navSubmit: "Suggest a provider", navQ: "Start", navD: "Download",
+  navF: "Features", navL: "Local-first", navCap: "Capabilities", navFAQ: "FAQ", navG: "Guide", navSubmit: "Suggest a provider", navQ: "Start", navD: "Download", navBlog: "Blog",
   readGuide: "Read the guide", navG2: "Guide",
   tagline: "Know where your requests go.",
   motto: "One key, one way.",

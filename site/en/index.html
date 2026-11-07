@@ -72,14 +72,14 @@
     <style>
       /* ============ Apple.cn 风格:极简、留白、超大标题、亮色 ============ */
       :root {
-        --fg: #1d1d1f;
-        --fg-2: #62626d;
-        --fg-3: #86868b;
-        --blue: #0066cc;
-        --bg: #ffffff;
-        --bg-alt: #f5f5f7;
-        --nav-bg: rgba(251, 251, 253, 0.82);
-        --hair: #d2d2d7;
+        --fg: #1f1e1d;
+        --fg-2: #5d5952;
+        --fg-3: #8f887c;
+        --blue: #c96442;
+        --bg: #faf9f5;
+        --bg-alt: #f0eee6;
+        --nav-bg: rgba(250,249,245,0.88);
+        --hair: #ddd6c6;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html { scroll-behavior: smooth; }
@@ -124,6 +124,7 @@
       }
       .nav-inner a:hover { color: #000; }
       .nav-inner .brand { color: var(--fg); font-weight: 600; }
+      .nav-inner a { font-size: 13.5px; }
       .nav-inner a.nav-dl {
         background: var(--blue); color: #fff; padding: 6px 15px; border-radius: 980px;
         font-weight: 500; transition: background .15s;
@@ -139,8 +140,13 @@
 
       /* 章节通用 */
       section { padding: 92px 0 78px; text-align: center; scroll-margin-top: 56px; }
+      section[data-sec]::before {
+        content: attr(data-sec);
+        display: block; font: 600 11px/1 ui-monospace, "SF Mono", Menlo, monospace;
+        letter-spacing: .18em; color: var(--blue); margin-bottom: 18px;
+      }
       section.alt { background: var(--bg-alt); }
-      h2 { font-size: 48px; font-weight: 600; letter-spacing: -.015em; line-height: 1.08; }
+      h2 { font-size: 46px; font-weight: 600; letter-spacing: -.01em; line-height: 1.12; font-family: ui-serif, Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "Noto Serif CJK SC", serif; }
       .sub { font-size: 21px; color: var(--fg-2); margin-top: 12px; font-weight: 400; }
       .links { margin-top: 18px; display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; }
       .alink {
@@ -153,9 +159,9 @@
 
       /* Hero:居中大标题 + 大图 */
       .hero { padding: 88px 22px 64px; }
-      .hero h1 { font-size: 62px; font-weight: 600; letter-spacing: -.02em; line-height: 1.05; }
+      .hero h1 { font-size: 60px; font-weight: 600; letter-spacing: -.015em; line-height: 1.08; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", "Noto Serif CJK SC", serif; }
       .hero h1 .kw-dot { color: var(--fg-3); }
-      .hero .tagline { font-size: 29px; font-weight: 600; margin-top: 12px; letter-spacing: -.01em; }
+      .hero .tagline { font-size: 28px; font-weight: 600; margin-top: 12px; letter-spacing: 0; font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; }
       .hero .sub { font-size: 19px; max-width: 600px; margin: 18px auto 0; }
       .hero .links { justify-content: center; align-items: center; gap: 26px; margin-top: 26px; }
       .hero-proof { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 22px auto 0; }
@@ -171,7 +177,7 @@
       .btn:hover { background: #0074dd; }
       .hero-shot {
         max-width: 980px; margin: 48px auto 0; border-radius: 18px; overflow: hidden;
-        box-shadow: 0 36px 90px rgba(0,0,0,.2); border: 1px solid var(--hair);
+        box-shadow: 0 30px 70px rgba(63,50,35,.18); border: 1px solid var(--hair);
       }
       .hero-shot img { display: block; width: 100%; }
 
@@ -240,7 +246,7 @@
       .trio p { font-size: 15.5px; color: var(--fg-2); margin-top: 8px; line-height: 1.55; }
 
       /* 本地边界:用一条清晰的请求路径解释产品差异 */
-      .local-first { background: #111113; color: #f5f5f7; }
+      .local-first { background: #211f1c; color: #f5f1e8; }
       .local-first .eyebrow { color: #6fb7ff; }
       .local-first .sub { color: #a1a1a6; max-width: 680px; margin-left: auto; margin-right: auto; }
       .eyebrow { color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
@@ -358,7 +364,20 @@
       footer .container { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--fg-3); }
       footer a { color: #424245; text-decoration: none; }
       footer a:hover { color: var(--blue); text-decoration: underline; }
-    </style>
+  
+      /* 站点页脚(全站统一) */
+      .site-footer { background: var(--bg-alt); border-top: 1px solid var(--hair); padding: 56px 22px 28px; }
+      .footer-grid { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 36px; text-align: left; }
+      .footer-brand .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; font-family: ui-serif, Georgia, "Songti SC", serif; }
+      .footer-brand p { color: var(--fg-2); font-size: 13.5px; line-height: 1.7; margin: 12px 0 0; }
+      .footer-brand .mono, .footer-bar .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--fg-3); letter-spacing: .06em; }
+      .footer-col { display: flex; flex-direction: column; gap: 10px; }
+      .footer-col b { font-size: 12px; color: var(--fg-3); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+      .footer-col a { color: var(--fg-2); text-decoration: none; font-size: 14px; }
+      .footer-col a:hover { color: var(--blue); }
+      .footer-bar { max-width: 980px; margin: 36px auto 0; padding-top: 18px; border-top: 1px solid var(--hair); display: flex; justify-content: space-between; font-size: 12.5px; color: var(--fg-3); }
+      @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+  </style>
   </head>
   <body>
     <nav>
@@ -368,12 +387,7 @@
           <span class="brand">Keyway</span>
         </a>
         <div class="nav-links">
-          <a class="nav-main" href="#features">Features</a>
-          <a class="nav-main" href="#quickstart">Start</a>
-          <a class="nav-main" href="#local-first">Local-first</a>
-          <a class="nav-main" href="#capabilities">Capabilities</a>
-          <a class="nav-main" href="#faq">FAQ</a>
-          <a class="nav-main nav-away" href="../guide.html">Guide</a>
+          <a class="nav-away" href="../guide.html">Guide</a>
           <a class="nav-blog" href="./blog/">Blog</a>
           <a class="nav-main" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
           <a href="../" id="langLink">中文</a>
@@ -414,7 +428,7 @@
     </section>
 
     <!-- 三特性 -->
-    <section class="alt" id="features">
+    <section class="alt" id="features" data-sec="01 · 特性 FEATURES">
       <div class="container">
         <h2>More clarity. Not just switching.</h2>
         <p class="sub">Default providers, connection status and actual requests — clearly distinguished.</p>
@@ -439,7 +453,7 @@
     </section>
 
     <!-- 本地边界 -->
-    <section id="quickstart">
+    <section id="quickstart" data-sec="02 · 快速开始 QUICKSTART">
       <div class="container">
         <h2>Up and running in three steps.</h2>
         <div class="steps">
@@ -467,7 +481,7 @@
     </section>
 
     <!-- 截图 -->
-    <section class="local-first" id="local-first">
+    <section class="local-first" id="local-first" data-sec="03 · 请求路径 REQUEST PATH">
       <div class="container">
         <p class="eyebrow">Local-first · not a hosted relay</p>
         <h2>Know where every request goes.</h2>
@@ -522,7 +536,7 @@
     </section>
 
     <!-- 全能力详细介绍 -->
-    <section id="capabilities">
+    <section id="capabilities" data-sec="04 · 能力 CAPABILITIES">
       <div class="container">
         <h2>Far more than switching.</h2>
         <p class="sub">From key safety to request observability, Keyway is the local gateway for your AI CLIs.</p>
@@ -569,7 +583,7 @@
 
     <!-- 三步 -->
     <!-- 供应商预设一览 -->
-    <section id="providers">
+    <section id="providers" data-sec="05 · 供应商 PROVIDERS">
       <div class="container">
         <h2>Common providers built in — just paste your key.</h2>
         <p class="sub">Presets for official endpoints, popular model services and third-party gateways; any OpenAI / Anthropic / Gemini compatible endpoint works too.</p>
@@ -611,7 +625,7 @@
     </section>
 
     <!-- FAQ -->
-    <section id="faq" class="alt">
+    <section id="faq" data-sec="06 · 常见问题 FAQ" class="alt">
       <div class="container">
         <h2>Frequently asked questions.</h2>
         <div class="faq">
@@ -665,10 +679,35 @@
         <div class="divider"></div>
       </div>
     </div>
-    <footer>
-      <div class="container">
-        <span>Copyright © 2026 Keyway. MIT License.</span>
-        <span><a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../guide.html">Guide</a> · <a href="./blog/">Blog</a> · <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Terms</a></span>
+    <footer class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand"><img src="../logo.svg" alt="Keyway" width="20" height="20" />Keyway</span>
+          <p>AI CLI 的本地网关<br />The local gateway for AI coding CLIs.</p>
+          <p class="mono">One key · one way</p>
+        </div>
+        <div class="footer-col">
+          <b>产品</b>
+          <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">下载</a>
+          <a href="#quickstart">快速开始</a>
+          <a href="../guide.html">使用指南</a>
+          <a href="./blog/">博客</a>
+        </div>
+        <div class="footer-col">
+          <b>资源</b>
+          <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer">Issues</a>
+          <a href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">提交供应商</a>
+        </div>
+        <div class="footer-col">
+          <b>法律</b>
+          <a href="./privacy.html">隐私</a>
+          <a href="./terms.html">条款</a>
+        </div>
+      </div>
+      <div class="footer-bar">
+        <span>© 2026 Keyway · MIT License</span>
+        <span class="mono">127.0.0.1:9527</span>
       </div>
     </footer>
 
