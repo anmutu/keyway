@@ -18,7 +18,7 @@
   ] }
   </script>
   <style>
-    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e; --blue: #d97757; --hair: #e5e5e5; --bg-alt: #f0efeb;  --bg: #fafaf8; --nav-bg: rgba(250,250,248,.9); }
+    :root { --fg: #1a1a1a; --fg-2: #5e5e5e; --fg-3: #8e8e8e; --blue: #d97757; --hair: #e5e5e5; --bg-alt: #f0efeb;  --bg: #faf9f5; --nav-bg: rgba(250,249,245,0.88); }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--fg); line-height:1.78; -webkit-font-smoothing:antialiased; }
     main { max-width:720px; margin:0 auto; padding:56px 22px 90px; }
@@ -102,10 +102,8 @@
       @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
 
       /* 语言下拉(TeapotRouter 式矢量国旗)与主题图标 */
-                  .flag { width: 16px; height: 12px; border-radius: 2px; display: block; object-fit: cover; }
-      html[data-theme="night"] .locale-menu summary { color: rgba(236,231,219,.75); }
-      html[data-theme="night"] .locale-options { background: var(--bg-alt); box-shadow: 0 14px 34px rgba(0,0,0,.4); }
-      #themeToggle svg { display: block; }
+      html[data-theme="night"]
+      html[data-theme="night"]
       /* 站级导航(与其他页面完全一致) */
       nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
       .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
@@ -114,48 +112,18 @@
       .nav-inner .brand { color:var(--fg); font-weight:600; }
       .nav-links { display:flex; gap:18px; align-items:center; }
       @media (max-width:640px) { .nav-links { gap:12px; } }
-                  #themeToggle svg { display:block; }
-      #themeToggle { border:none; background:transparent; color:var(--fg-3); width:32px; height:32px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
-      #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
-      html[data-theme="night"] .ico-sun { display:block; }
+      html[data-theme="night"]
       html[data-theme="night"] nav { background:var(--nav-bg); }
       html[data-theme="night"] .nav-inner a { color:rgba(236,231,219,.75); }
-      html[data-theme="night"] .locale-options { background:var(--bg-alt); }
-      html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
-
-      .locale-menu { position:relative; }
-      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
-      .locale-menu summary::-webkit-details-marker { display:none; }
-      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
-      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
-      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
-      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
-      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
-      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
-      html[data-theme="night"] .locale-options { background:var(--bg-alt); }
-      html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
-      .ico-sun { display: none !important; }
-      html[data-theme="night"] .ico-sun { display: block !important; }
-      html[data-theme="night"] .ico-moon { display: none !important; }
+      html[data-theme="night"]
+      html[data-theme="night"]
+      html[data-theme="night"]
+      html[data-theme="night"]
+      html[data-theme="night"]
+      html[data-theme="night"]
   </style>
 </head>
 <body>
-<nav>
-      <div class="nav-inner">
-        <a href="/en/" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
-          <img src="../../logo.svg" width="18" height="18" alt="Keyway logo" style="border-radius:4px;" />
-          <span class="brand">Keyway</span>
-        </a>
-        <div class="nav-links">
-          <a href="/en/">Home</a>
-          <a href="/en/guide.html">Guide</a>
-          <a href="/en/blog/">Blog</a>
-          <a href="/en/download.html">Download</a>
-          <button id="themeToggle" type="button" aria-label="Toggle theme" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="切换语言 / Switch language"><img class="flag" src="../../flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" /><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="../../blog/claude-code-provider-by-hand.html" lang="zh"><img class="flag" src="../../flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" />中文</a><a href="./claude-code-provider-by-hand.html" lang="en" aria-current="page"><img class="flag" src="../../flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" />English</a></div></details>
-        </div>
-      </div>
-    </nav>
   <main>
     <h1>Claude Code, by hand: settings.json vs environment variables</h1>
     <p class="meta"><a href="./">Blog</a> · Series · Part 3 · 2026-11-06 · ~6 min · <a href="https://github.com/anmutu/keyway">author</a></p>
@@ -291,8 +259,6 @@ Get-ChildItem env: | Where-Object Name -like "ANTHROPIC*"</code></pre>
         });
       })();
     </script>
-<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
-<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
-<script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
+<script src="/shared-header.js"></script>
 </body>
 </html>

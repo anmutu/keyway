@@ -12,14 +12,11 @@
   { "@context": "https://schema.org", "@type": "WebPage", "name": "Download Keyway", "url": "https://keyway.one/download.html", "inLanguage": "zh-CN", "datePublished": "2026-11-07", "dateModified": "2026-11-07", "author": { "@type": "Person", "name": "anmutu", "url": "https://github.com/anmutu" }, "publisher": { "@type": "Organization", "name": "Keyway", "url": "https://keyway.one/", "sameAs": ["https://github.com/anmutu/keyway"] } }
   </script>
   <style>
-    :root { --fg:#1f1e1d; --fg-2:#5d5952; --fg-3:#8f887c; --blue:#c96442; --bg:#faf9f5; --bg-alt:#f0eee6; --nav-bg:rgba(250,249,245,.88); --hair:#ddd6c6; }
+    :root { --fg:#1f1e1d; --fg-2:#5d5952; --fg-3:#8f887c; --blue:#c96442; --bg: #faf9f5; --bg-alt:#f0eee6; --nav-bg: rgba(250,249,245,0.88); --hair:#ddd6c6; }
     html[data-theme="night"] { --fg:#ece7db; --fg-2:#b3aca0; --fg-3:#7d766b; --blue:#d97757; --bg:#211f1c; --bg-alt:#2a2723; --nav-bg:rgba(33,31,28,.9); --hair:rgba(255,255,255,.13); }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.75 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; -webkit-font-smoothing:antialiased; }
     html[data-theme="night"] body { background:var(--bg); }
-            #themeToggle svg { display:block; }
-    #themeToggle { border:none; background:transparent; color:var(--fg-3); width:32px; height:32px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
-    #themeToggle:hover { color:var(--fg); background:var(--bg-alt); }
     nav { position:sticky; top:0; z-index:50; background:var(--nav-bg); backdrop-filter:saturate(180%) blur(20px); height:48px; box-shadow:0 1px 0 var(--hair); }
     .nav-inner { max-width:980px; margin:0 auto; padding:0 22px; height:100%; display:flex; align-items:center; justify-content:space-between; }
     .nav-inner a { color:rgba(31,30,29,.78); text-decoration:none; font-size:13px; }
@@ -58,41 +55,14 @@
     .footer-col a:hover { color:var(--blue); }
     .footer-bar { max-width:980px; margin:36px auto 0; padding-top:18px; border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-size:12.5px; color:var(--fg-3); flex-wrap:wrap; gap:8px; }
     @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }
-  
-      .locale-menu { position:relative; }
-      .locale-menu summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--fg-3); padding:5px 8px; border-radius:6px; transition:color .15s,background .15s; }
-      .locale-menu summary::-webkit-details-marker { display:none; }
-      .locale-menu summary:hover { color:var(--fg); background:var(--bg-alt); }
-      .flag { width:16px; height:12px; border-radius:2px; display:block; object-fit:cover; }
-      .locale-options { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg); border:1px solid var(--hair); border-radius:10px; padding:4px; display:flex; flex-direction:column; min-width:132px; box-shadow:0 12px 32px rgba(40,30,20,.14); z-index:90; }
-      .locale-options a { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:7px; font-size:13.5px; color:var(--fg-2); text-decoration:none; }
-      .locale-options a:hover { background:var(--bg-alt); color:var(--fg); }
-      .locale-options a[aria-current] { color:var(--blue); font-weight:600; }
-      html[data-theme="night"] .locale-options { background:var(--bg-alt); }
-      html[data-theme="night"] .locale-menu summary { color:rgba(236,231,219,.75); }
-      .ico-sun { display: none !important; }
-      html[data-theme="night"] .ico-sun { display: block !important; }
-      html[data-theme="night"] .ico-moon { display: none !important; }
+      html[data-theme="night"]
+      html[data-theme="night"]
+      html[data-theme="night"]
+      html[data-theme="night"]
   </style>
 </head>
 <body>
-    <nav>
-      <div class="nav-inner">
-        <a href="/en/" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
-          <img src="./logo.svg" width="18" height="18" alt="Keyway logo" style="border-radius:4px;" />
-          <span class="brand">Keyway</span>
-        </a>
-        <div class="nav-links">
-          <a href="/en/">Home</a>
-          <a href="/en/guide.html">Guide</a>
-          <a href="/en/blog/">Blog</a>
-          <a href="/en/download.html">Download</a>
-          <button id="themeToggle" type="button" aria-label="Toggle theme" style="border:none;background:transparent;color:var(--fg-3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.34-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
-          <details class="locale-menu" id="langMenu"><summary aria-label="Switch language"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" /><span>EN</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary><div class="locale-options"><a href="/en/download.html" lang="zh"><img class="flag" src="../flags/cn.svg" alt="" width="16" height="12" aria-hidden="true" /></a><a href="./" lang="en" aria-current="page"><img class="flag" src="../flags/gb.svg" alt="" width="16" height="12" aria-hidden="true" />English</a></div></details>
-        </div>
-      </div>
-    </nav>
-  <script>document.addEventListener("click",function(e){var m=document.getElementById("langMenu");if(m&&m.open&&!m.contains(e.target))m.open=false;});</script>
+      <script>document.addEventListener("click",function(e){var m=document.getElementById("langMenu");if(m&&m.open&&!m.contains(e.target))m.open=false;});</script>
 
   <main>
     <h1>Download Keyway</h1>
@@ -151,7 +121,6 @@
       });
     });
   </script>
-<script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
 <script>
 (function() {
   var theme = null;
@@ -169,8 +138,6 @@
   });
 })();
 </script>
-<script>
-(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();
-</script>
+<script src="/shared-header.js"></script>
 </body>
 </html>
