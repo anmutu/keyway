@@ -1,91 +1,148 @@
 <div align="center">
 
+<img src="docs/screenshots/logo.svg" width="92" alt="Keyway logo" />
+
 # Keyway
 
-### AI CLI 的本地网关
+**One key · one way — the local gateway for AI coding CLIs**
 
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](#)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](#installation)
 [![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-orange.svg)](https://tauri.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/anmutu/keyway?style=social)](https://github.com/anmutu/keyway/stargazers)
 [![Latest release](https://img.shields.io/github/v/release/anmutu/keyway?color=blue)](https://github.com/anmutu/keyway/releases/latest)
+[![GitHub stars](https://img.shields.io/github/stars/anmutu/keyway?style=social)](https://github.com/anmutu/keyway/stargazers)
 
-### AI CLI 的本地网关 · The local gateway for AI coding CLIs
+**[English](README.md)** · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-**让 AI CLI 的每一次请求,都有清楚、可控的去向。**
+Switch providers, route models and survive failures for your AI coding CLIs —
+**without restarting sessions**, and with request logs that show exactly where
+every request went. API keys live in an encrypted on-device database.
 
-**English:** Keyway is a free, open-source menu-bar app that manages providers, routing and failover for **Claude Code · Codex · Gemini CLI · OpenCode · OpenClaw** — switch providers without restarting sessions, and see in request logs exactly where every request goes. API keys stay in an encrypted local database. [Website](https://keyway.one/) · [Guide: switch Claude Code providers](https://keyway.one/en/switch-claude-code-provider.html)
+[Website](https://keyway.one/) · [Guide](https://keyway.one/en/guide.html) · [Blog](https://keyway.one/en/blog/) · [Download](https://keyway.one/en/download.html)
 
-为 **Claude Code · Codex · Gemini CLI · OpenCode · OpenClaw** 管理供应商、路由与故障转移,从请求日志查看实际去向。API Key 存储于本机加密数据库。
-
-[特性](#-核心特性) · [快速开始](#-快速开始)
-
-|                  浅色                  |                  深色                  |
-| :-----------------------------------: | :-----------------------------------: |
-| ![浅色](docs/screenshots/app-light.png) | ![深色](docs/screenshots/app-dark.png) |
+| Light | Dark |
+| :---: | :---: |
+| ![Light](docs/screenshots/app-light.png) | ![Dark](docs/screenshots/app-dark.png) |
 
 </div>
 
 ---
 
-## ✨ 核心特性
+## Why
 
-- **🧭 看清请求去向** — 分开显示默认供应商与接管状态;通过日志核对实际供应商、模型、状态码及路由规则
-- **⚡ 通过代理切换** — 已接入本地代理(`127.0.0.1:9527`)的会话,切换默认供应商无需重启;路由规则可能覆盖默认选择
-- **🛟 故障转移与排查** — 可配置备用候选链,对可重试失败尝试备用供应商;日志提供错误信息,不承诺流式响应中途无缝恢复
-- **🔐 本机加密存储** — API Key 存 SQLCipher 加密数据库,数据库主密钥由系统钥匙串保管;导出的供应商配置不含 API Key
-- **📊 转发即计量** — 从上游响应提取 token 用量并记录请求,不为计量额外发起模型请求;统计完整性取决于上游返回的 usage
-- **🌗 浅色 / 深色 / 跟随系统** 三态主题,`⌘N` 新建、`⌘1..5` 快速切换应用
+You use several AI coding CLIs. Each has its own config file, each points at one
+provider, and every experiment means editing configs, exporting env vars and
+restarting terminals. When a request fails you have no idea whether the CLI,
+the provider or the network is to blame.
 
-> **使用边界:** 首次接管 Codex 后需新开一次会话。接管期间应保持 Keyway 运行;关闭窗口可驻留托盘,完全退出会停止代理。需要直连时请先还原 CLI 配置。切换影响后续请求,不会迁移已发出的请求。本地存储不代表离线推理:请求内容与认证信息仍会发送给所选上游。
+Keyway sits between your CLIs and your providers as a **local proxy**. Take over
+a CLI once; after that, switching providers is one keystroke, routing is
+rule-driven, failures fall over to backups, and every request leaves a log line
+with provider, model and status.
 
-## 📦 安装
+## Features
 
-从 [Releases](https://github.com/anmutu/keyway/releases/latest) 下载对应平台安装包;安装包也镜像在 [keyway.one/downloads](https://keyway.one/downloads/)(国内更稳)。
+- **🧭 See where requests actually go** — default provider and takeover status are shown separately; request logs record the real provider, model, status code and matched routing rule for every request.
+- **⚡ Switch without restarting** — sessions already routed through the local proxy (`127.0.0.1:9527`) pick up provider changes on the next request. `⌘⇧K` opens the quick-switch panel from anywhere.
+- **🔀 Model routing** — keep specific models on specific providers (match by *contains* or *starts with*), automatically send long contexts to a designated provider, and split deep-think vs. background-lite traffic into different channels.
+- **🛟 Automatic failover** — configure a candidate chain per CLI group; retryable connection errors, 429 and 5xx move on to the next provider. Fallback responses carry an `x-keyway-fallback` header.
+- **🔐 Encrypted on-device storage** — API keys are stored in a SQLCipher database whose master key lives in the OS keychain. Exported provider configs never contain keys.
+- **📊 Usage & logs** — token usage is extracted from upstream responses (no extra model calls); the Usage page aggregates by CLI and provider, Logs keeps the last 100 requests.
+- **🧩 Unified MCP & Skills management** — define MCP servers once and have them written into Claude Code and Codex configs; keep Skills in a local vault and sync them in one click. Manually configured entries are never touched.
+- **🧰 Profiles & portable config** — save provider sets as profiles (work / personal / testing), export a JSON backup (keys excluded) via the system save dialog, and share setups: imports merge by name.
 
-**macOS 推荐一键安装**(curl 下载不经浏览器,不触发 Gatekeeper「已损坏」提示):
+## Supported CLIs
 
-```bash
-curl -fsSL https://keyway.one/install.sh | sh
-```
+Claude Code · Codex · Gemini CLI · OpenCode · OpenClaw · Crush · Droid · Qwen Code
 
-Homebrew 用户:
+Any OpenAI-, Anthropic- or Gemini-compatible endpoint can be added as a custom
+provider. Per-provider toggles adapt protocol differences (e.g. bridging Codex
+`/v1/responses` requests to `/v1/chat/completions` for chat-only providers).
 
-```bash
-brew install --cask --no-quarantine anmutu/tap/keyway
-```
+## Installation
 
-> **macOS 首次打开**:安装包未做 Apple 公证(个人开源项目)。若提示「无法验证开发者」——在 Finder 里**右键点 Keyway.app → 打开 → 再点「打开」**;若提示**「已损坏」**(浏览器下载常见),在终端执行 `xattr -dr com.apple.quarantine /Applications/Keyway.app` 后再启动——应用本身完好,只是被 Gatekeeper 误标。
-> **Windows**:SmartScreen 提示时选「仍要运行」。
+| Method | Command / link |
+|---|---|
+| **Installer** | Download from the [latest release](https://github.com/anmutu/keyway/releases/latest) — macOS (Apple Silicon & Intel), Windows, Linux |
+| **One-liner** (macOS) | `curl -fsSL https://keyway.one/install.sh \| sh` |
+| **Homebrew** (macOS) | `brew install --cask --no-quarantine keyway` *(tap: `anmutu/homebrew-tap`)* |
 
-## 🚀 快速开始
+> **macOS first launch:** installers are not notarized (personal open-source
+> project). If Gatekeeper complains, right-click `Keyway.app` → **Open** →
+> **Open** — once is enough. The `curl` and Homebrew methods skip this.
+> **Windows:** choose *More info → Run anyway* on the SmartScreen prompt.
+
+## Quick start
+
+1. **Add a provider** — pick a preset or enter a Base URL + API key + model name. A reachability test is one click.
+2. **Take over a CLI** — one click backs up the CLI's original config (encrypted, local) and points it at `127.0.0.1:9527`.
+3. **Verify** — send a request from the CLI and check the log line: provider, model, status. `http://127.0.0.1:9527/healthz` reports the current provider per CLI group.
+
+**Restore anytime** — the Restore button puts the CLI's original config back. First Codex takeover needs one fresh session; sessions already on the proxy never need restarting again.
+
+## Boundaries (read this once)
+
+- Switching affects **subsequent** requests; in-flight requests are not migrated.
+- Local storage is not local inference: request content and authentication still go to the provider you select.
+- Keep Keyway running while CLIs are taken over (closing the window can keep it in the tray); fully quitting stops the proxy.
+
+## Documentation
+
+| Doc | Contents |
+|---|---|
+| [Website guide](https://keyway.one/en/guide.html) | Full walkthrough: setup, takeover, verification, troubleshooting |
+| [Product notes](docs/guide/README.md) | What problem it solves / core concepts / 5-minute setup / FAQ |
+| [Claude Code](docs/guide/claude-code.md) | Takeover, switching, coexisting with official subscriptions |
+| [Codex](docs/guide/codex.md) | Full troubleshooting |
+| [Gemini CLI](docs/guide/gemini.md) | Connecting Gemini-format providers |
+| [GLM](docs/guide/providers/glm.md) / [Kimi](docs/guide/providers/kimi.md) | Anthropic-compatible endpoints |
+
+Blog posts with hands-on, tool-free configurations live at
+[keyway.one/blog](https://keyway.one/blog/).
+
+## Keyboard shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `⌘⇧K` / `Ctrl+Shift+K` | Quick-switch panel (↑↓ select, Enter switch, Esc dismiss) |
+| `⌘N` | New provider |
+| `⌘1..5` | Jump to a CLI group |
+| `⌘⇧M` / `⌘⇧S` | MCP / Skills management |
+
+## Roadmap
+
+- **Done** — takeover & restore, config import, routing & failover, logs & usage, MCP/Skills management.
+- **In progress** — compatibility regression across real CLIs and packaged builds, front-end test coverage.
+- **Exploring** — per-project cost attribution, cloud sync, team config sharing (*not* a delivery promise).
+
+Details in [docs/design.md](docs/design.md).
+
+## Development
 
 ```bash
 pnpm install
-pnpm tauri dev     # 开发(首次会请求钥匙串授权)
-pnpm tauri build   # 构建
+pnpm tauri dev     # development (asks for keychain access on first run)
+pnpm tauri build   # production build
 ```
 
-环境要求:Node 18+ / pnpm / Rust 1.85+ / Xcode CLT(macOS)。
+Requires Node 18+, pnpm, Rust 1.85+ and Xcode Command Line Tools (macOS).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## 📖 使用文档
+## Contributors
 
-| 文档 | 内容 |
-|---|---|
-| [产品说明](docs/guide/README.md) | 解决什么问题 / 核心特点 / 5 分钟上手 / FAQ |
-| [Claude Code 指南](docs/guide/claude-code.md) | 接管、切换、官方订阅共存 |
-| [Codex 指南](docs/guide/codex.md) | 完整故障排查 |
-| [Gemini CLI 指南](docs/guide/gemini.md) | Gemini 格式供应商接入 |
-| [GLM 接入](docs/guide/providers/glm.md) / [Kimi 接入](docs/guide/providers/kimi.md) / [CoderPlan 接入](docs/guide/providers/coderplan.md) | Anthropic 兼容端点接法 |
+Thanks to everyone who improves Keyway!
 
-## 🗺️ 路线图
+<a href="https://github.com/anmutu/keyway/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=anmutu/keyway&max=24" alt="Contributors" />
+</a>
 
-- **现有实现**:接管与还原、配置导入、路由与故障转移、日志与用量、MCP/Skills 管理。
-- **待完善**:真实 CLI 与打包应用的兼容性回归、前端自动化测试覆盖。
-- **未来探索**:项目/会话成本归因、云同步、团队配置共享(不代表已实现或交付承诺)。
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-详见 [docs/design.md](docs/design.md)。
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=anmutu/keyway&type=Date)](https://star-history.com/#anmutu/keyway&Date)
 
 ## License
 
-MIT
+[MIT](LICENSE) — free forever. Keyway is a local tool: it ships no telemetry,
+and this repository is the entire product.
