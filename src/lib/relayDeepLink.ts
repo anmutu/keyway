@@ -99,12 +99,12 @@ export function relayEndpointForApp(request: RelayConnectRequest): string {
   return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
 }
 
-/** create_provider merges equal names, so use a distinct name for each import. */
-export function relayFormState(existingNames: string[], apiKey: string, sourceName: string) {
+/** create_provider merges equal names, so suggest a distinct name for each import. */
+export function suggestRelayName(existingNames: string[], sourceName: string) {
   const names = new Set(existingNames.map((name) => name.trim().toLowerCase()));
   let name = sourceName;
   for (let suffix = 2; names.has(name.toLowerCase()); suffix += 1) {
     name = `${sourceName} (${suffix})`;
   }
-  return { name, canSave: apiKey.trim().length > 0, nameChanged: name !== sourceName };
+  return { name, adjusted: name !== sourceName };
 }

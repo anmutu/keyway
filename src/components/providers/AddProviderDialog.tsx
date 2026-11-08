@@ -22,7 +22,7 @@ import {
 } from "@/data/providerPresets";
 import { loadPresetOrder, savePresetOrder } from "@/lib/appPrefs";
 import { cn } from "@/lib/utils";
-import { isValidRelayBase, relayEndpointForApp, relayFormState } from "@/lib/relayDeepLink";
+import { isValidRelayBase, relayEndpointForApp, suggestRelayName } from "@/lib/relayDeepLink";
 import type { AppType, Provider } from "@/types";
 
 const PROVIDER_SUBMISSION_URL =
@@ -136,7 +136,7 @@ export function AddProviderDialog({
   const pick = (p: ProviderPreset | null, nameSeed?: string) => {
     setPreset(p);
     setStep("form");
-    setName(p?.requiresBaseUrl ? relayFormState(existingNames, "", t("relay.defaultName")).name : p?.name ?? nameSeed ?? "");
+    setName(p?.requiresBaseUrl ? suggestRelayName(existingNames, t("relay.defaultName")).name : p?.name ?? nameSeed ?? "");
     setBaseUrl(p?.baseUrl ?? "");
     setApiKey("");
     setUrlError(null);
@@ -206,7 +206,7 @@ export function AddProviderDialog({
           setRelayDuplicate(true);
           setRelayConfirmed(false);
           setExistingNames(all.map((provider) => provider.name));
-          setName(relayFormState(all.map((provider) => provider.name), apiKey, t("relay.defaultName")).name);
+          setName(suggestRelayName(all.map((provider) => provider.name), t("relay.defaultName")).name);
           return;
         }
       }

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ProviderIcon } from "@/components/ProviderIcon";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { AppType } from "@/types";
@@ -35,7 +36,7 @@ const DEMO_TAKEOVER_STATUSES: TakeoverStatus[] = [
   { app: "openclaw", supported: true, config_exists: false, active: false, effective: false, failover: false, external_owner: null },
 ];
 
-/** 接管管理:把各 CLI 的 live 配置指向本地代理(可随时还原) */
+/** 接管管理:把各 CLI 的 live 配置指向本地代理(可随时取消接管、还原原始配置) */
 export function TakeoverDialog({
   open,
   initialApp = "claude",
@@ -56,6 +57,10 @@ export function TakeoverDialog({
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+  // 各分组当前默认供应商名:行内展示"经 Keyway 路由至 X",区分切换与接管两个概念
+  const [currentNames, setCurrentNames] = useState<Record<string, string | null>>({});
+  // 取消接管前需二次确认(会写回 live 配置,脱离 Keyway)
+  const [confirmRestoreApp, setConfirmRestoreApp] = useState<AppType | null>(null);
   const [shell, setShell] = useState<"posix" | "powershell">(() => /Windows/i.test(navigator.userAgent) ? "powershell" : "posix");
   const [manualApp, setManualApp] = useState<AppType>(initialApp);
   const requestId = useRef(0);
@@ -82,10 +87,24 @@ export function TakeoverDialog({
     try {
       if (IS_DEMO) {
         setList((current) => current.length > 0 ? current : DEMO_TAKEOVER_STATUSES.map((status) => ({ ...status })));
+        setCurrentNames((current) => Object.keys(current).length > 0 ? current : { claude: "CoderPlan" });
         return;
       }
       const statuses = await invoke<TakeoverStatus[]>("takeover_status");
-      if (currentRequest === requestId.current) setList(statuses.filter((status) => status.supported));
+      if (currentRequest === requestId.current) {
+        const shown = statuses.filter((status) => status.supported);
+        setList(shown);
+        // 并行拉取各分组当前默认供应商,失败按未知处理(不阻塞状态展示)
+        const entries = await Promise.all(shown.map(async (status) => {
+          try {
+            const provider = await invoke<{ name: string } | null>("get_current_provider", { appType: status.app });
+            return [status.app, provider?.name ?? null] as const;
+          } catch {
+            return [status.app, null] as const;
+          }
+        }));
+        if (currentRequest === requestId.current) setCurrentNames(Object.fromEntries(entries));
+      }
     } catch (error) {
       if (currentRequest !== requestId.current) return;
       setList([]);
@@ -136,6 +155,15 @@ export function TakeoverDialog({
   const act = async (app: AppType, restore: boolean) => {
     if (mutationPending.current || loading) return;
     if (list.find((status) => status.app === app)?.external_owner) return;
+    // 取消接管会写回 live 配置,先经确认弹窗说明影响
+    if (restore && !IS_DEMO) {
+      setConfirmRestoreApp(app);
+      return;
+    }
+    await run(app, restore);
+  };
+
+  const run = async (app: AppType, restore: boolean) => {
     mutationPending.current = true;
     setBusy(app);
     try {
@@ -161,224 +189,244 @@ export function TakeoverDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => {
-      if (!mutationPending.current) onOpenChange(nextOpen);
-    }}>
-      <DialogContent
-        closeDisabled={busy !== null}
-        className="grid-cols-1 sm:max-w-[560px] max-h-[85vh] overflow-y-auto"
-        onOpenAutoFocus={() => {
-          returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-        }}
-        onCloseAutoFocus={(event) => {
-          if (returnFocusRef.current?.isConnected) {
-            event.preventDefault();
-            returnFocusRef.current.focus();
-          }
-        }}
-      >
-        <DialogHeader>
-          <DialogTitle>{t(gatewayDetails ? "gw.detailsTitle" : "takeover.title")}</DialogTitle>
-          <DialogDescription>
-            {t("takeover.desc")}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={(nextOpen) => {
+        if (!mutationPending.current) onOpenChange(nextOpen);
+      }}>
+        <DialogContent
+          closeDisabled={busy !== null}
+          className="grid-cols-1 sm:max-w-[560px] max-h-[85vh] overflow-y-auto"
+          onOpenAutoFocus={() => {
+            returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          }}
+          onCloseAutoFocus={(event) => {
+            if (returnFocusRef.current?.isConnected) {
+              event.preventDefault();
+              returnFocusRef.current.focus();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{t(gatewayDetails ? "gw.detailsTitle" : "takeover.title")}</DialogTitle>
+            <DialogDescription>
+              {t("takeover.desc")}
+            </DialogDescription>
+          </DialogHeader>
 
-        {open && gatewayDetails && <div className="min-w-0" inert={busy !== null}>{gatewayDetails}</div>}
+          {open && gatewayDetails && <div className="min-w-0" inert={busy !== null}>{gatewayDetails}</div>}
 
-        <div className="flex gap-2.5 rounded-lg border border-amber-500/25 bg-amber-500/5 p-2.5 text-xs leading-relaxed text-muted-foreground">
-          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-          <div className="space-y-1">
-            <p>{t("takeover.sessionHint")}</p>
-            <p>{t("takeover.dependencyHint")}</p>
-          </div>
-        </div>
-
-        <div className="grid min-w-0 grid-cols-1 gap-3">
-          {list.some((status) => status.external_owner) && (
-            <div role="alert" className="flex gap-2.5 rounded-lg border border-amber-500/35 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300">
-              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-              <div className="space-y-1">
-                <p className="font-medium">{t("takeover.externalOwnerBanner")}</p>
-                <p>{t("takeover.externalOwnerHint")}</p>
-              </div>
+          <div className="flex gap-2.5 rounded-lg border border-amber-500/25 bg-amber-500/5 p-2.5 text-xs leading-relaxed text-muted-foreground">
+            <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div className="space-y-1">
+              <p>{t("takeover.sessionHint")}</p>
+              <p>{t("takeover.dependencyHint")}</p>
             </div>
-          )}
-          {list.map((s) => (
-            <div
-              key={s.app}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 bg-card"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <ProviderIcon icon={s.app} size={18} />
-                <div className="min-w-0">
-                  <div className="text-sm font-medium">
-                    {t(`app.${s.app}`)}
-                  </div>
-                  <div
-                    className={cn(
-                      "text-xs flex items-center gap-1",
-                      s.external_owner
-                        ? "text-amber-600 dark:text-amber-400"
-                        : s.active && s.effective
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : s.active && !s.effective
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-muted-foreground",
-                    )}
-                  >
-                    {s.external_owner && (
-                      <>
-                        <TriangleAlert className="w-3 h-3" />
-                        <span title={t("takeover.externalOwnerHint")}>{t("takeover.externalOwner")}</span>
-                      </>
-                    )}
-                    {!s.external_owner && s.active && s.effective && (
-                      <>
-                        <ShieldCheck className="w-3 h-3" /> {t("takeover.active")}
-                      </>
-                    )}
-                    {!s.external_owner && s.active && !s.effective && (
-                      <>
-                        <TriangleAlert className="w-3 h-3" />
-                        <span title={t("takeover.overridden")}>{t("takeover.driftShort")}</span>
-                      </>
-                    )}
-                    {!s.external_owner && !s.active && (
-                      <>
-                        <ShieldOff className="w-3 h-3" />
-                        {s.config_exists ? t("takeover.inactive") : t("takeover.noConfig")}
-                      </>
-                    )}
-                  </div>
+          </div>
+
+          <div className="grid min-w-0 grid-cols-1 gap-3">
+            {list.some((status) => status.external_owner) && (
+              <div role="alert" className="flex gap-2.5 rounded-lg border border-amber-500/35 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300">
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="space-y-1">
+                  <p className="font-medium">{t("takeover.externalOwnerBanner")}</p>
+                  <p>{t("takeover.externalOwnerHint")}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5" title={t("fo.label")}>
-                  <span className="text-xs text-muted-foreground hidden sm:inline">{t("fo.label")}</span>
-                  <Switch
-                    aria-label={t("takeover.failoverFor", { name: t(`app.${s.app}`) })}
-                    checked={s.failover}
-                    disabled={busy !== null || loading || Boolean(s.external_owner)}
-                    onCheckedChange={(v) => void toggleFailover(s.app, v)}
-                  />
+            )}
+            {list.map((s) => (
+              <div
+                key={s.app}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 bg-card"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <ProviderIcon icon={s.app} size={18} />
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">
+                      {t(`app.${s.app}`)}
+                    </div>
+                    <div
+                      className={cn(
+                        "text-xs flex items-center gap-1",
+                        s.external_owner
+                          ? "text-amber-600 dark:text-amber-400"
+                          : s.active && s.effective
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : s.active && !s.effective
+                              ? "text-amber-600 dark:text-amber-400"
+                              : "text-muted-foreground",
+                      )}
+                    >
+                      {s.external_owner && (
+                        <>
+                          <TriangleAlert className="w-3 h-3" />
+                          <span title={t("takeover.externalOwnerHint")}>{t("takeover.externalOwner")}</span>
+                        </>
+                      )}
+                      {!s.external_owner && s.active && s.effective && (
+                        <>
+                          <ShieldCheck className="w-3 h-3" /> {t("takeover.active")}
+                        </>
+                      )}
+                      {!s.external_owner && s.active && !s.effective && (
+                        <>
+                          <TriangleAlert className="w-3 h-3" />
+                          <span title={t("takeover.overridden")}>{t("takeover.driftShort")}</span>
+                        </>
+                      )}
+                      {!s.external_owner && !s.active && (
+                        <>
+                          <ShieldOff className="w-3 h-3" />
+                          {s.config_exists ? t("takeover.inactive") : t("takeover.noConfig")}
+                        </>
+                      )}
+                    </div>
+                    {s.active && s.effective && currentNames[s.app] && (
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {t("takeover.routingVia", { name: currentNames[s.app]! })}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {s.external_owner ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled
-                    title={t("takeover.externalOwnerHint")}
-                  >
-                    {t("takeover.externalOwnerShort")}
-                  </Button>
-                ) : s.active && s.effective ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy !== null || loading}
-                    onClick={() => void act(s.app, true)}
-                  >
-                    {busy === s.app ? "…" : t("takeover.restore")}
-                  </Button>
-                ) : s.active && !s.effective ? (
-                  /* 被外部覆盖:主操作是重新夺回,还原为次选 */
-                  <>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5" title={t("fo.label")}>
+                    <span className="text-xs text-muted-foreground hidden sm:inline">{t("fo.label")}</span>
+                    <Switch
+                      aria-label={t("takeover.failoverFor", { name: t(`app.${s.app}`) })}
+                      checked={s.failover}
+                      disabled={busy !== null || loading || Boolean(s.external_owner)}
+                      onCheckedChange={(v) => void toggleFailover(s.app, v)}
+                    />
+                  </div>
+                  {s.external_owner ? (
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="outline"
+                      disabled
+                      title={t("takeover.externalOwnerHint")}
+                    >
+                      {t("takeover.externalOwnerShort")}
+                    </Button>
+                  ) : s.active && s.effective ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
                       disabled={busy !== null || loading}
                       onClick={() => void act(s.app, true)}
                     >
                       {busy === s.app ? "…" : t("takeover.restore")}
                     </Button>
+                  ) : s.active && !s.effective ? (
+                    /* 被外部覆盖:主操作是重新夺回,取消接管为次选 */
+                    <>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy !== null || loading}
+                        onClick={() => void act(s.app, true)}
+                      >
+                        {busy === s.app ? "…" : t("takeover.restore")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={busy !== null || loading}
+                        onClick={() => void act(s.app, false)}
+                      >
+                        {busy === s.app ? "…" : t("takeover.retake")}
+                      </Button>
+                    </>
+                  ) : (
                     <Button
                       size="sm"
                       disabled={busy !== null || loading}
                       onClick={() => void act(s.app, false)}
                     >
-                      {busy === s.app ? "…" : t("takeover.retake")}
+                      {busy === s.app ? "…" : t("takeover.apply")}
                     </Button>
-                  </>
-                ) : (
-                  <Button
-                    size="sm"
-                    disabled={busy !== null || loading}
-                    onClick={() => void act(s.app, false)}
-                  >
-                    {busy === s.app ? "…" : t("takeover.apply")}
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-          {loadFailed && (
-            <div className="space-y-2 rounded-lg border border-border p-3 text-sm" role="alert">
-              <p>{t("takeover.loadFailed")}</p>
-              <Button size="sm" variant="outline" disabled={busy !== null || loading} onClick={() => void refresh()}>{t("takeover.retry")}</Button>
-            </div>
-          )}
-          {list.length === 0 && !loadFailed && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              {t(loading ? "common.loading" : "takeover.empty")}
-            </p>
-          )}
+            ))}
+            {loadFailed && (
+              <div className="space-y-2 rounded-lg border border-border p-3 text-sm" role="alert">
+                <p>{t("takeover.loadFailed")}</p>
+                <Button size="sm" variant="outline" disabled={busy !== null || loading} onClick={() => void refresh()}>{t("takeover.retry")}</Button>
+              </div>
+            )}
+            {list.length === 0 && !loadFailed && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                {t(loading ? "common.loading" : "takeover.empty")}
+              </p>
+            )}
 
-          {/* 其他 CLI 手动接入:一键复制环境变量 */}
-          <div className="rounded-xl border border-dashed border-border p-3">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-muted-foreground">
-                {t("takeover.manualTitle")}
-              </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 px-2 text-xs"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(snippet);
-                    setCopied(true);
-                    if (copyTimer.current) clearTimeout(copyTimer.current);
-                    copyTimer.current = setTimeout(() => setCopied(false), 1500);
-                  } catch {
-                    onError(String(t("takeover.copyFail")));
-                  }
-                }}
-              >
-                {copied ? (
-                  <><Check className="w-3.5 h-3.5 mr-1" />{t("takeover.copied")}</>
-                ) : (
-                  <><Copy className="w-3.5 h-3.5 mr-1" />{t("takeover.copyEnv")}</>
-                )}
-              </Button>
+            {/* 其他 CLI 手动接入:一键复制环境变量 */}
+            <div className="rounded-xl border border-dashed border-border p-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t("takeover.manualTitle")}
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 text-xs"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(snippet);
+                      setCopied(true);
+                      if (copyTimer.current) clearTimeout(copyTimer.current);
+                      copyTimer.current = setTimeout(() => setCopied(false), 1500);
+                    } catch {
+                      onError(String(t("takeover.copyFail")));
+                    }
+                  }}
+                >
+                  {copied ? (
+                    <><Check className="w-3.5 h-3.5 mr-1" />{t("takeover.copied")}</>
+                  ) : (
+                    <><Copy className="w-3.5 h-3.5 mr-1" />{t("takeover.copyEnv")}</>
+                  )}
+                </Button>
+              </div>
+              <label className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                {t("takeover.manualGroup")}
+                <select value={manualApp} onChange={(event) => {
+                  setManualApp(event.target.value as AppType);
+                  setCopied(false);
+                }} className="rounded-md border border-border bg-background px-2 py-1 text-foreground">
+                  {ALL_APPS.map((app) => <option key={app} value={app}>{t(`app.${app}`)}</option>)}
+                </select>
+              </label>
+              <p className="mb-2 break-all font-mono text-xs text-muted-foreground">{baseUrl}</p>
+              <label className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                {t("takeover.shell")}
+                <select value={shell} onChange={(event) => {
+                  setShell(event.target.value as "posix" | "powershell");
+                  setCopied(false);
+                }} className="rounded-md border border-border bg-background px-2 py-1 text-foreground">
+                  <option value="posix">Bash / Zsh</option>
+                  <option value="powershell">PowerShell</option>
+                </select>
+              </label>
+              <p className="mb-2 text-xs leading-relaxed text-muted-foreground">{t("takeover.manualHint")}</p>
+              <pre className="text-[11px] leading-relaxed text-muted-foreground overflow-x-auto">
+                <code>{snippet}</code>
+              </pre>
             </div>
-            <label className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              {t("takeover.manualGroup")}
-              <select value={manualApp} onChange={(event) => {
-                setManualApp(event.target.value as AppType);
-                setCopied(false);
-              }} className="rounded-md border border-border bg-background px-2 py-1 text-foreground">
-                {ALL_APPS.map((app) => <option key={app} value={app}>{t(`app.${app}`)}</option>)}
-              </select>
-            </label>
-            <p className="mb-2 break-all font-mono text-xs text-muted-foreground">{baseUrl}</p>
-            <label className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              {t("takeover.shell")}
-              <select value={shell} onChange={(event) => {
-                setShell(event.target.value as "posix" | "powershell");
-                setCopied(false);
-              }} className="rounded-md border border-border bg-background px-2 py-1 text-foreground">
-                <option value="posix">Bash / Zsh</option>
-                <option value="powershell">PowerShell</option>
-              </select>
-            </label>
-            <p className="mb-2 text-xs leading-relaxed text-muted-foreground">{t("takeover.manualHint")}</p>
-            <pre className="text-[11px] leading-relaxed text-muted-foreground overflow-x-auto">
-              <code>{snippet}</code>
-            </pre>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        isOpen={confirmRestoreApp !== null}
+        title={t("takeover.restoreTitle", { name: confirmRestoreApp ? t(`app.${confirmRestoreApp}`) : "" })}
+        message={t("takeover.restoreMsg", { name: confirmRestoreApp ? t(`app.${confirmRestoreApp}`) : "" })}
+        confirmText={t("takeover.restore")}
+        onConfirm={() => {
+          const app = confirmRestoreApp;
+          setConfirmRestoreApp(null);
+          if (app) void run(app, true);
+        }}
+        onCancel={() => setConfirmRestoreApp(null)}
+      />
+    </>
   );
 }

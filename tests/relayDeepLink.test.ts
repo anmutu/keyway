@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isValidRelayHandoff, isValidRelayModel, parseRelayDeepLink, relayEndpointForApp, relayFormState } from "../src/lib/relayDeepLink.ts";
+import { isValidRelayHandoff, isValidRelayModel, parseRelayDeepLink, relayEndpointForApp, suggestRelayName } from "../src/lib/relayDeepLink.ts";
 
 test("accepts only a public relay base and supported CLI", () => {
   assert.deepEqual(
@@ -114,19 +114,19 @@ test("uses the OpenAI v1 endpoint for Codex and the root for Anthropic CLIs", ()
   assert.equal(relayEndpointForApp({ baseUrl: "https://relay.example", app: "openclaw" }), "https://relay.example");
 });
 
-test("form state requires a pasted key and chooses a fresh name", () => {
-  assert.deepEqual(relayFormState(["Teapot Router", "Teapot Router (2)"], "  ", "Teapot Router"), {
-    name: "Teapot Router (3)", canSave: false, nameChanged: true,
+test("name suggestion picks a fresh, conflict-free name", () => {
+  assert.deepEqual(suggestRelayName(["Teapot Router", "Teapot Router (2)"], "Teapot Router"), {
+    name: "Teapot Router (3)", adjusted: true,
   });
-  assert.deepEqual(relayFormState(["teapot router"], "sk-secret", "Teapot Router"), {
-    name: "Teapot Router (2)", canSave: true, nameChanged: true,
+  assert.deepEqual(suggestRelayName(["teapot router"], "Teapot Router"), {
+    name: "Teapot Router (2)", adjusted: true,
   });
-  assert.deepEqual(relayFormState([], "sk-secret", "Teapot Router"), {
-    name: "Teapot Router", canSave: true, nameChanged: false,
+  assert.deepEqual(suggestRelayName([], "Teapot Router"), {
+    name: "Teapot Router", adjusted: false,
   });
   // Any gateway can brand its own import; the name always comes from the link.
-  assert.deepEqual(relayFormState([], "sk-secret", "Acme Relay"), {
-    name: "Acme Relay", canSave: true, nameChanged: false,
+  assert.deepEqual(suggestRelayName([], "Acme Relay"), {
+    name: "Acme Relay", adjusted: false,
   });
 });
 
