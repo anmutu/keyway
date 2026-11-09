@@ -41,6 +41,15 @@ type Filter = "all" | AppType;
 
 const APPS: AppType[] = ["claude", "codex", "gemini"];
 
+/** 浏览器演示模式(?demo=1):mock 扫描结果,便于官网/文档截图 */
+const IS_DEMO = new URLSearchParams(location.search).has("demo");
+const DEMO_ITEMS: CcSwitchProvider[] = [
+  { source_id: "d1", app_type: "claude", name: "TeapotRouter", base_url: "https://teapotrouter.com", has_key: true, is_current: true, importable: true, reason: null },
+  { source_id: "d2", app_type: "claude", name: "CoderPlan", base_url: "https://api.coderplan.ai", has_key: true, is_current: false, importable: true, reason: null },
+  { source_id: "d3", app_type: "claude", name: "GLM 官方", base_url: "https://open.bigmodel.cn/api/anthropic", has_key: true, is_current: false, importable: true, reason: null },
+  { source_id: "d4", app_type: "claude", name: "旧中转站", base_url: "http://127.0.0.1:8080", has_key: true, is_current: false, importable: false, reason: "local_proxy" },
+];
+
 function safeUrl(value: string): string {
   try {
     const url = new URL(value);
@@ -91,6 +100,11 @@ export function CcSwitchImportDialog({
     setScanError(null);
     setResult(null);
     try {
+      if (IS_DEMO) {
+        setItems(DEMO_ITEMS);
+        setSelected(selectionForFilter(DEMO_ITEMS, selectionFilter));
+        return;
+      }
       const found = await invoke<CcSwitchProvider[]>("scan_cc_switch_providers");
       setItems(found);
       setSelected(selectionForFilter(found, selectionFilter));
@@ -156,7 +170,16 @@ export function CcSwitchImportDialog({
     if (requests.length === 0 || importing) return;
     setImporting(true);
     try {
-      const importedResult = await invoke<ImportResult>("import_cc_switch_providers", { requests });
+      let importedResult: ImportResult;
+      if (IS_DEMO) {
+        const byId = new Map(DEMO_ITEMS.map((item) => [item.source_id, item]));
+        importedResult = {
+          imported: requests.map((r) => ({ source_id: r.source_id, app_type: r.app_type, name: byId.get(r.source_id)?.name ?? r.source_id })),
+          skipped: [],
+        };
+      } else {
+        importedResult = await invoke<ImportResult>("import_cc_switch_providers", { requests });
+      }
       setResult(importedResult);
       if (importedResult.imported.length > 0) {
         const apps = [...new Set(importedResult.imported.map((item) => item.app_type))];
@@ -256,7 +279,7 @@ export function CcSwitchImportDialog({
                     )}>
                       {checked && <Check className="h-3 w-3" />}
                     </span>
-                    <ProviderIcon icon={item.app_type} size={20} />
+                    <ProviderIcon icon={item.app_type} name={item.name} size={20} />
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-1.5">
                         <span className="truncate text-sm font-medium">{item.name}</span>

@@ -54,13 +54,6 @@ const openaiCompatible: ProviderPreset[] = [
     models: ["gpt-5.5", "gpt-5.4-mini", "deepseek-v4-pro", "minimax-m2.5"],
   },
   {
-    name: "TheRouter",
-    baseUrl: "https://therouter.ai/v1",
-    category: "aggregator",
-    websiteUrl: "https://therouter.ai",
-    apiKeyUrl: "https://therouter.ai/user/settings",
-  },
-  {
     name: "DeepSeek",
     icon: "deepseek",
     baseUrl: "https://api.deepseek.com",
@@ -104,13 +97,6 @@ const anthropicCompatible: ProviderPreset[] = [
     websiteUrl: "https://coderplan.ai",
     apiKeyUrl: "https://coderplan.ai/dashboard/keys",
     models: ["claude-sonnet-5", "gpt-5.5", "deepseek-v4-pro", "minimax-m2.5"],
-  },
-  {
-    name: "TheRouter",
-    baseUrl: "https://therouter.ai",
-    category: "aggregator",
-    websiteUrl: "https://therouter.ai",
-    apiKeyUrl: "https://therouter.ai/user/settings",
   },
   {
     name: "Claude 官方",

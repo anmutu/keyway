@@ -119,9 +119,9 @@ const DEMO_PROVIDERS: Provider[] = [
   {
     id: "demo-2",
     app_type: "claude",
-    name: "OpenAI",
-    base_url: "https://api.openai.com",
-    endpoints: { openai: "https://api.openai.com" },
+    name: "TeapotRouter",
+    base_url: "https://teapotrouter.com",
+    endpoints: { anthropic: "https://teapotrouter.com", openai: "https://teapotrouter.com/v1" },
     keychain_id: "demo-2",
     models: [],
     is_current: false,
@@ -148,8 +148,11 @@ const DEMO_PROVIDERS: Provider[] = [
 
 function demoProvidersFor(app: AppType): Provider[] {
   const protocol = APP_PROTOCOL[app];
+  // 截图演示:「官方登录」跟随界面语言,避免英文截图混入中文名
+  const en = document.documentElement.lang === "en";
   return DEMO_PROVIDERS.map((provider) => ({
     ...provider,
+    name: provider.id === "demo-3" && en ? "Official login" : provider.name,
     app_type: app,
     endpoints: {
       [protocol]: provider.endpoints[protocol] ?? provider.base_url,
@@ -457,11 +460,11 @@ function App() {
     // 演示模式:不走 IPC,直接展示 mock 数据
     if (IS_DEMO) {
       setProviders(demoProvidersFor(app));
-      setChain(["CoderPlan", "OpenAI"]);
+      setChain(["CoderPlan", "TeapotRouter"]);
       setHasCache(true);
       setUsageMap({
         "demo-1": { requests: 128, input_tokens: 412_000, output_tokens: 1_260_000 },
-        "demo-2": { requests: 36, input_tokens: 98_000, output_tokens: 210_000 },
+        "demo-2": { requests: 64, input_tokens: 156_000, output_tokens: 380_000 },
       });
       return;
     }
