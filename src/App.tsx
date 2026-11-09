@@ -21,7 +21,8 @@ import { ToastStack, type ToastItem, type ToastType } from "@/components/Toast";
 import { AboutDialog } from "@/components/AboutDialog";
 import { QuickSwitchPanel } from "@/components/QuickSwitchPanel";
 import { OnboardingDialog, hasOnboarded } from "@/components/OnboardingDialog";
-import { GuidedTour, hasTourDone } from "@/components/GuidedTour";
+import { GuidedTour } from "@/components/GuidedTour";
+import { WelcomeDialog, hasWelcomeDone, markWelcomeDone } from "@/components/WelcomeDialog";
 import { TakeoverDialog } from "@/components/TakeoverDialog";
 import { CcSwitchImportDialog } from "@/components/CcSwitchImportDialog";
 import { Button } from "@/components/ui/button";
@@ -524,13 +525,19 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCache]);
 
-  // 升级用户补播导览:走过首启向导但从未看过界面导览(导览晚于向导上线,
-  // 老用户没有任何入口触达)→ 自动播一次,关掉即记录、不再打扰
+  // 升级用户欢迎卡:任务导向(一句介绍 + 添加/一键导入两条路),替代自动播导览——
+  // 界面导览留给底部链接和菜单,想细看的人自己点。任何关闭方式都写标记,只弹一次
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
   useEffect(() => {
+    // ?welcome 强制打开:预览/官网截图用
+    if (new URLSearchParams(location.search).has("welcome")) {
+      setWelcomeOpen(true);
+      return;
+    }
     if (IS_DEMO) return;
-    // 新装用户走首启向导,向导结束会自行接播导览,这里不抢
-    if (!hasOnboarded() || hasTourDone()) return;
-    startTour();
+    // 新装用户走首启向导(onDone 时一并标记欢迎卡),这里不抢
+    if (!hasOnboarded() || hasWelcomeDone()) return;
+    setWelcomeOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1369,6 +1376,13 @@ function App() {
       <ToastStack items={toasts} onDismiss={dismissToast} />
 
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+      <WelcomeDialog
+        open={welcomeOpen}
+        onOpenChange={setWelcomeOpen}
+        onAdd={() => setIsAddOpen(true)}
+        onImport={openCcSwitchImport}
+        onTour={startTour}
+      />
 
       <CcSwitchImportDialog
         open={ccSwitchImportOpen}
@@ -1425,6 +1439,7 @@ function App() {
         providersCount={providers.length}
         onDone={() => {
           void refresh(activeApp);
+          markWelcomeDone();
           startTour();
         }}
       />
