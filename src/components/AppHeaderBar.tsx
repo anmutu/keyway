@@ -31,6 +31,7 @@ export function AppHeaderBar({
   onTakeover,
   onGuide,
   onTour,
+  onWelcome,
   isMac,
 }: {
   position: "top" | "bottom";
@@ -47,6 +48,8 @@ export function AppHeaderBar({
   onGuide: () => void;
   /** 重看界面导览 */
   onTour: () => void;
+  /** 重看欢迎卡(添加/导入双入口) */
+  onWelcome: () => void;
   isMac: boolean;
 }) {
   const { t } = useI18n();
@@ -117,6 +120,7 @@ export function AppHeaderBar({
           onViewChange={onViewChange}
           onGuide={onGuide}
           onTour={onTour}
+          onWelcome={onWelcome}
           mode="toolbar"
           position={position}
         />

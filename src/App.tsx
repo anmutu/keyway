@@ -899,6 +899,7 @@ function App() {
           onAbout={() => setAboutOpen(true)}
           onGuide={() => setGuideOpen(true)}
           onTour={startTour}
+          onWelcome={() => setWelcomeOpen(true)}
           onAdd={() => setIsAddOpen(true)}
           onQuickSwitch={() => setQuickOpen(true)}
           isMac={isMac}
@@ -921,6 +922,7 @@ function App() {
           onTakeover={() => setTakeoverOpen(true)}
           onGuide={() => setGuideOpen(true)}
           onTour={startTour}
+          onWelcome={() => setWelcomeOpen(true)}
           isMac={isMac}
         />
       )}
@@ -1347,6 +1349,7 @@ function App() {
           onAbout={() => setAboutOpen(true)}
           onGuide={() => setGuideOpen(true)}
           onTour={startTour}
+          onWelcome={() => setWelcomeOpen(true)}
           onAdd={() => setIsAddOpen(true)}
           onQuickSwitch={() => setQuickOpen(true)}
           isMac={isMac}
@@ -1369,6 +1372,7 @@ function App() {
           onTakeover={() => setTakeoverOpen(true)}
           onGuide={() => setGuideOpen(true)}
           onTour={startTour}
+          onWelcome={() => setWelcomeOpen(true)}
           isMac={isMac}
         />
       )}

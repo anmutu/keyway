@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { BarChart3, CircleHelp, Compass, MoreHorizontal, Plug, Settings, Sparkles } from "lucide-react";
+import { BarChart3, CircleHelp, Compass, ListPlus, MoreHorizontal, Plug, Settings, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ export function AdvancedNavMenu({
   onViewChange,
   onGuide,
   onTour,
+  onWelcome,
   mode,
   edge = "left",
   position = "top",
@@ -22,6 +23,8 @@ export function AdvancedNavMenu({
   onGuide: () => void;
   /** 重看界面导览 */
   onTour: () => void;
+  /** 重看欢迎卡(添加/导入双入口) */
+  onWelcome: () => void;
   mode: "rail" | "toolbar";
   edge?: "left" | "right";
   position?: "top" | "bottom";
@@ -111,6 +114,7 @@ export function AdvancedNavMenu({
           <MenuItem active={currentView === "skills"} onClick={() => navigate("skills")} icon={<Sparkles />} label={t("sk.title")} />
           <MenuItem active={currentView === "settings"} onClick={() => navigate("settings")} icon={<Settings />} label={t("common.settings")} />
           <DropdownMenu.Separator className="my-1 border-t border-border" />
+          <MenuItem onClick={() => { setOpen(false); onWelcome(); }} icon={<ListPlus />} label={t("welcome.open")} />
           <MenuItem onClick={() => { setOpen(false); onTour(); }} icon={<Compass />} label={t("tour.open")} />
           <MenuItem onClick={() => { setOpen(false); onGuide(); }} icon={<CircleHelp />} label={t("guide.open")} />
         </DropdownMenu.Content>

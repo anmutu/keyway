@@ -50,6 +50,8 @@ interface SidebarProps {
   onGuide: () => void;
   /** 重看界面导览 */
   onTour: () => void;
+  /** 重看欢迎卡(添加/导入双入口) */
+  onWelcome: () => void;
   /** 添加供应商(⌘N),入口放在 CLI 分组标题行 */
   onAdd: () => void;
   onQuickSwitch: () => void;
@@ -134,6 +136,7 @@ export function Sidebar({
   onAbout,
   onGuide,
   onTour,
+  onWelcome,
   onAdd,
   onQuickSwitch,
   isMac,
@@ -235,6 +238,7 @@ export function Sidebar({
           onViewChange={onViewChange}
           onGuide={onGuide}
           onTour={onTour}
+          onWelcome={onWelcome}
           mode="rail"
           edge={edge}
         />
