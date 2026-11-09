@@ -32,9 +32,10 @@
     pre { background:var(--bg-alt); border:1px solid var(--hair); border-radius:10px; padding:16px 18px; overflow-x:auto; font-size:13.5px; line-height:1.6; }
     pre code { background:none; padding:0; }
     .install-line { display:flex; gap:10px; align-items:center; margin:14px 0; flex-wrap:wrap; }
-    .install-line code { background:var(--bg-alt); border:1px solid var(--hair); padding:8px 14px; border-radius:8px; font-size:13.5px; }
+    .install-line code { background:var(--bg-alt); border:1px solid var(--hair); padding:8px 14px; border-radius:8px; font-size:13.5px; overflow-wrap:anywhere; }
     .install-line button { border:1px solid var(--hair); background:transparent; color:var(--fg-2); padding:8px 18px; border-radius:8px; font-size:13px; cursor:pointer; }
     .install-line button:hover { border-color:var(--blue); color:var(--blue); }
+    .install-line button.copied { border-color:var(--blue); color:var(--blue); }
     table { width:100%; border-collapse:collapse; font-size:14px; margin:14px 0 20px; }
     th { text-align:left; padding:8px 10px; border-bottom:2px solid var(--hair); font-weight:600; }
     td { padding:8px 10px; border-bottom:1px solid var(--hair); color:var(--fg-2); }
@@ -88,10 +89,10 @@
 
     <h2>macOS one-line install (recommended)</h2>
     <p>Runs in Terminal — auto-detects chip, downloads and installs without Gatekeeper prompts:</p>
-    <div class="install-line"><code>curl -fsSL https://keyway.one/install.sh | sh</code><button id="copyCmd" type="button">Copy</button></div>
+    <div class="install-line"><code>curl -fsSL https://keyway.one/install.sh | sh</code><button type="button" data-copy>Copy</button></div>
 
     <h2>Homebrew</h2>
-    <pre><code>brew install --cask --no-quarantine anmutu/tap/keyway</code></pre>
+    <div class="install-line"><code>brew install --cask --no-quarantine anmutu/tap/keyway</code><button type="button" data-copy>Copy</button></div>
 
     <h2>Direct downloads</h2>
     <table>
@@ -108,11 +109,12 @@
 
     <h2>First launch on macOS</h2>
     <p>The app is not notarized (personal open-source project). If prompted "cannot verify developer" — right-click Keyway.app → Open; if prompted<b>"damaged"</b>, run in Terminal:</p>
-    <pre><code>xattr -dr com.apple.quarantine /Applications/Keyway.app</code></pre>
+    <div class="install-line"><code>xattr -dr com.apple.quarantine /Applications/Keyway.app</code><button type="button" data-copy>Copy</button></div>
     <p>The app is fine — Gatekeeper false positive. See <a href="/en/blog/">Blog</a>.
 
     <h2>In-app auto-update</h2>
-    <p>Keyway has a built-in updater — new versions are offered automatically. Homebrew users can also run <code>brew upgrade --cask keyway</code>.</p>
+    <p>Keyway has a built-in updater — new versions are offered automatically. Homebrew users can also upgrade manually:</p>
+    <div class="install-line"><code>brew upgrade --cask keyway</code><button type="button" data-copy>Copy</button></div>
   </main>
 
   <footer class="site-footer">
@@ -127,7 +129,8 @@
       <div class="footer-col"><b>Legal</b><a href="./privacy.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>Privacy</a><a href="./terms.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Terms</a></div>
         <div class="footer-col footer-more">
           <b>More</b>
-          <a class="tp" href="https://teapotrouter.com/" target="_blank" rel="noreferrer"><img src="/logos/teapot.png" alt="Teapot Router" width="16" height="16" />Teapot Router</a>
+          <a class="tp" href="https://coderplan.ai?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=footer" target="_blank" rel="noreferrer"><img src="/icons/coderplan.svg" alt="CoderPlan" width="16" height="16" />CoderPlan</a>
+          <a class="tp" href="https://teapotrouter.com?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=footer" target="_blank" rel="noreferrer"><img src="/logos/teapot.png" alt="Teapot Router" width="16" height="16" />Teapot Router</a>
         </div>
     </div>
     <div class="footer-bar"><span>© 2026 Keyway · MIT License</span><span class="mono">127.0.0.1:9527</span></div>
@@ -135,25 +138,19 @@
 
   <script src="./release-sync.js"></script>
   <script>
-    document.getElementById("copyCmd").addEventListener("click", function () {
-      var cmd = this.previousElementSibling;
-      var b = this;
-      navigator.clipboard.writeText(cmd.textContent.trim()).then(function () {
-        b.textContent = "✓ Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1600);
+    document.querySelectorAll(".install-line button[data-copy]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var code = b.closest(".install-line").querySelector("code");
+        if (!code || !navigator.clipboard) return;
+        navigator.clipboard.writeText(code.textContent.trim()).then(function () {
+          b.textContent = "✓ Copied"; b.classList.add("copied");
+          clearTimeout(b._t);
+          b._t = setTimeout(function () { b.textContent = "Copy"; b.classList.remove("copied"); }, 1600);
+        });
       });
     });
   </script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
-<script>
-(function() {
-  var theme = null;
-  document.addEventListener("DOMContentLoaded", function() {
-    if (!btn) return;
-    btn.addEventListener("click", function() {
-    });
-  });
-})();
-</script>
 <script>
 (function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();
 </script>

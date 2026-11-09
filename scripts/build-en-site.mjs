@@ -52,7 +52,12 @@ const EN_DICT = {
   c9t: "Onboarding + tray", c9d: "A three-step wizard: pick CLIs, add providers, take over in one click. Lives in the menu bar for instant switching.",
   qsTitle: "Up and running in three steps.",
   qsGuide: "Step-by-step guide", qsSubmit: "Suggest a provider",
-  s1t: "Add a provider.", s1d: "Or import from existing CLI configs. GLM, Kimi, official, any relay.",
+  s1t: "Add a provider.", s1d: "Or import from existing CLI configs or another switcher in one click. GLM, Kimi, official, any relay.",
+  qsShotCap: "Add a provider — presets ready to go, or migrate from another switcher in one click",
+  migSrc: "Already in <b>another switcher</b>",
+  migDst: "<b>Keyway</b> provider pool",
+  migBadge: "✓ 2 providers migrated · source configs untouched",
+  migCap: "One-click migration: bring providers over from another switcher — just select and import",
   s2t: "One-click takeover.", s2d: "Originals backed up, restorable anytime.",
   s3t: "Switch in a tap.", s3d: "Send a new request, then check its actual provider and response status in the logs.",
   pvTitle: "Two looks. Same excellence.",
@@ -140,6 +145,7 @@ html = html.replace(/<details class="locale-menu"[^>]*>[\s\S]*?<\/details>/, (m)
 // 英文页使用英文界面截图(正文相对路径;og/twitter/schema 在下方模板插入后统一替换)
 html = html.replace(/app-light\.png/g, "app-light-en.png");
 html = html.replace(/app-dark\.png/g, "app-dark-en.png");
+html = html.replace(/add-dialog\.png/g, "add-dialog-en.png");
 
 
 // ===== 导航、页脚与零散中文 → 英文(无 data-i18n 的硬编码文本) =====
@@ -163,6 +169,7 @@ const NAV_FOOTER = [
   ['>产品</b>', '>Product</b>'],
   ['>资源</b>', '>Resources</b>'],
   ['>法律</b>', '>Legal</b>'],
+  ['>相关产品</b>', '>More</b>'],
   // 页脚链接
   ['>快速开始</a>', '>Quick Start</a>'],
   ['>隐私</a>', '>Privacy</a>'],
@@ -180,6 +187,9 @@ const NAV_FOOTER = [
 for (const [zh, en] of NAV_FOOTER) {
   html = html.split(zh).join(en);
 }
+
+// pv-note 行尾中文句号 → 英文句点(替换后残留的「。」)
+html = html.split('Submit a provider</a>。').join('Submit a provider</a>.');
 
 // heroSub 含 <b> 标签,通用正则匹配不到,特殊处理
 html = html.replace(
@@ -252,7 +262,7 @@ const enLd = `    <script type="application/ld+json">
       "name": "Keyway",
       "operatingSystem": "macOS, Windows, Linux",
       "applicationCategory": "DeveloperApplication",
-      "softwareVersion": "0.2.16",
+      "softwareVersion": "0.2.19",
       "downloadUrl": "https://github.com/anmutu/keyway/releases",
       "screenshot": "https://keyway.one/app-light.png",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -292,7 +302,7 @@ writeFileSync(resolve(outDir, "index.html"), html);
 const checks = {
   "data-i18n": /data-i18n=/.test(html),
   "zh-CN html lang": /<html lang="zh-CN">/.test(html),
-  "./ asset paths": new RegExp('(?:src|href)="\\.\\/(?!privacy\\.html|terms\\.html|blog\\/)').test(html),
+  "./ asset paths": new RegExp('(?:src|href)="\\.\\/(?!privacy\\.html|terms\\.html|blog\\/|download\\.html|guide\\.html)').test(html),
 };
 const canonicalCount = (html.match(/<link rel="canonical"/g) || []).length;
 const zhLdCount = (html.match(/的开源本地网关|无需重启会话切换供应商/g) || []).length;

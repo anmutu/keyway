@@ -216,18 +216,6 @@
         h2 { font-size: 38px; }
       }
 
-      /* 截图窗口栏(macOS 信号灯) */
-      .win-bar { position: relative; display: flex; align-items: center; gap: 8px; padding: 11px 14px;
-        background: var(--bg-alt); border-bottom: 1px solid var(--hair); }
-      .win-bar i { width: 12px; height: 12px; border-radius: 50%; }
-      .win-bar i:nth-child(1) { background: #ff5f57; }
-      .win-bar i:nth-child(2) { background: #febc2e; }
-      .win-bar i:nth-child(3) { background: #28c840; }
-      .win-bar span { position: absolute; left: 0; right: 0; text-align: center;
-        font-size: 12.5px; font-weight: 500; color: var(--fg-3); letter-spacing: .02em; }
-      .win-bar.dark { background: #232326; border-bottom-color: rgba(255,255,255,.09); }
-      .win-bar.dark span { color: #98989d; }
-
       /* 三特性(Apple 排版式,无卡片) */
       .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 56px; text-align: center; }
       @media (max-width: 760px) { .trio { grid-template-columns: 1fr; gap: 44px; } }
@@ -305,15 +293,76 @@
       .step h3 { font-size: 21px; font-weight: 600; margin-top: 12px; }
       .step p { font-size: 15px; color: var(--fg-2); margin-top: 6px; }
 
-      /* 截图双联 */
+      /* 第 1 步实拍:添加供应商对话框(含外部管理器导入) */
+      .qs-shot { margin: 48px auto 0; max-width: 720px; }
+      .qs-shot img { display: block; width: 100%; border-radius: 16px; border: 1px solid var(--hair);
+        box-shadow: 0 24px 56px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.06); }
+      .qs-shot figcaption { font-size: 13px; color: var(--fg-3); margin-top: 14px; text-align: center; letter-spacing: .04em; }
+
+      /* 一键迁移动图演示(外部管理器 → Keyway,纯 CSS 循环) */
+      .mig { margin: 40px auto 0; max-width: 560px; background: #232329; border: 1px solid rgba(255,255,255,.09);
+        border-radius: 14px; padding: 26px 28px 24px; box-shadow: 0 32px 80px rgba(0,0,0,.32); }
+      .mig-stage { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+      .mig-label { display: block; font-size: 11px; letter-spacing: .08em; color: #8e8e93; margin-bottom: 10px; }
+      .mig-label b { color: #c7c7cc; font-weight: 600; }
+      .mig-ghost, .mig-slot { height: 52px; border-radius: 10px; }
+      .mig-ghost { border: 1px dashed rgba(255,255,255,.16); }
+      .mig-ghost + .mig-ghost { margin-top: 12px; }
+      .mig-slot { display: flex; align-items: center; gap: 9px; padding: 0 14px; font-size: 13.5px; color: #e8e8ea;
+        border: 1px dashed rgba(255,255,255,.16); opacity: .45; transition: none; }
+      .mig-slot + .mig-slot { margin-top: 12px; }
+      .mig-slot .mig-check { width: 17px; height: 17px; border-radius: 50%; background: #30d158; color: #101012;
+        font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; opacity: 0; }
+      .mig-fly { position: absolute; left: 0; width: calc(50% - 12px); height: 52px; border-radius: 10px;
+        background: #33333b; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 10px 26px rgba(0,0,0,.35);
+        display: flex; align-items: center; gap: 9px; padding: 0 14px; font-size: 13.5px; color: #f0f0f2; }
+      .mig-fly.c1 { top: 26px; } .mig-fly.c2 { top: 90px; }
+      .mig-ico { width: 16px; height: 16px; border-radius: 4px; flex: none; }
+      .mig-ico-img { object-fit: cover; display: block; }
+      .mig-ico.cp { background: #1e1e2e; border: 1px solid #45475a; position: relative; }
+      .mig-ico.cp::after { content: "$"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        font: 700 9px ui-monospace,Menlo,monospace; color: #cba6f7; }
+      .mig-badge { margin-top: 18px; text-align: center; font-size: 12.5px; color: #30d158; opacity: 0; }
+      @media (prefers-reduced-motion: no-preference) {
+        .mig-fly.c1 { animation: migFly1 7s ease-in-out infinite; }
+        .mig-fly.c2 { animation: migFly2 7s ease-in-out infinite; }
+        .mig-slot.s1 { animation: migSlot1 7s ease infinite; }
+        .mig-slot.s2 { animation: migSlot2 7s ease infinite; }
+        .mig-slot.s1 .mig-check { animation: migChk1 7s ease infinite; }
+        .mig-slot.s2 .mig-check { animation: migChk2 7s ease infinite; }
+        .mig-badge { animation: migBadge 7s ease infinite; }
+      }
+      @keyframes migFly1 { 0%,10% { transform: none; opacity: 1; } 20% { transform: translateX(calc(100% + 24px)); opacity: 1; }
+        24%,92% { transform: translateX(calc(100% + 24px)); opacity: 0; } 96%,100% { transform: none; opacity: 1; } }
+      @keyframes migFly2 { 0%,30% { transform: none; opacity: 1; } 40% { transform: translateX(calc(100% + 24px)); opacity: 1; }
+        44%,92% { transform: translateX(calc(100% + 24px)); opacity: 0; } 96%,100% { transform: none; opacity: 1; } }
+      @keyframes migSlot1 { 0%,18% { opacity: .45; border-color: rgba(255,255,255,.16); border-style: dashed; }
+        22%,90% { opacity: 1; border-color: rgba(48,209,88,.5); border-style: solid; } 96%,100% { opacity: .45; border-color: rgba(255,255,255,.16); border-style: dashed; } }
+      @keyframes migSlot2 { 0%,38% { opacity: .45; border-color: rgba(255,255,255,.16); border-style: dashed; }
+        42%,90% { opacity: 1; border-color: rgba(48,209,88,.5); border-style: solid; } 96%,100% { opacity: .45; border-color: rgba(255,255,255,.16); border-style: dashed; } }
+      @keyframes migChk1 { 0%,20% { opacity: 0; } 26%,90% { opacity: 1; } 96%,100% { opacity: 0; } }
+      @keyframes migChk2 { 0%,40% { opacity: 0; } 46%,90% { opacity: 1; } 96%,100% { opacity: 0; } }
+      @keyframes migBadge { 0%,46% { opacity: 0; } 52%,88% { opacity: 1; } 96%,100% { opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) {
+        .mig-fly { display: none; }
+        .mig-slot { opacity: 1; border-color: rgba(48,209,88,.5); border-style: solid; }
+        .mig-slot .mig-check { opacity: 1; }
+        .mig-badge { opacity: 1; }
+      }
+      @media (max-width: 560px) { .mig { padding: 20px 16px; } }
+
+      /* 截图双联:图片自带圆角边框,说明文字独立在下方 */
+      .qs-shot img, .shot img { cursor: zoom-in; }
+      .lb { position: fixed; inset: 0; z-index: 300; background: rgba(20,18,15,.87); display: flex; align-items: center; justify-content: center; padding: 28px; cursor: zoom-out; }
+      .lb img { max-width: 94vw; max-height: 92vh; border-radius: 10px; box-shadow: 0 30px 90px rgba(0,0,0,.5); }
       .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 56px; }
       @media (max-width: 720px) { .shots { grid-template-columns: 1fr; gap: 28px; } }
-      .shot { margin: 0; border-radius: 18px; overflow: hidden; border: 1px solid var(--hair);
-        background: var(--bg-alt); box-shadow: 0 24px 56px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.06);
+      .shot { margin: 0; }
+      .shot img { display: block; width: 100%; border-radius: 16px; border: 1px solid var(--hair);
+        box-shadow: 0 24px 56px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.06);
         transition: transform .25s ease, box-shadow .25s ease; }
-      .shot:hover { transform: translateY(-4px); box-shadow: 0 32px 68px rgba(0,0,0,.2), 0 4px 12px rgba(0,0,0,.08); }
-      .shot img { display: block; width: 100%; }
-      .shot figcaption { font-size: 13.5px; color: var(--fg-3); padding: 13px 0 15px; text-align: center; letter-spacing: .04em; }
+      .shot:hover img { transform: translateY(-4px); box-shadow: 0 32px 68px rgba(0,0,0,.2), 0 4px 12px rgba(0,0,0,.08); }
+      .shot figcaption { font-size: 13px; color: var(--fg-3); margin-top: 14px; text-align: center; letter-spacing: .04em; }
 
       /* 对比:Apple spec 风格线表 */
       .table-wrap { max-width: 700px; margin: 0 auto; }
@@ -406,7 +455,6 @@
         <a class="alink" href="#features">Learn more</a>
       </div>
                               <div class="hero-shot">
-        <div class="win-bar"><i></i><i></i><i></i><span>Keyway</span></div>
         <img src="../app-light-en.png" alt="Keyway" />
       </div>
     </section>
@@ -444,7 +492,7 @@
           <div class="step">
             <div class="n">1</div>
             <h3>Add a provider.</h3>
-            <p>Or import from existing CLI configs. GLM, Kimi, official, any relay.</p>
+            <p>Or import from existing CLI configs or another switcher in one click. GLM, Kimi, official, any relay.</p>
           </div>
           <div class="step">
             <div class="n">2</div>
@@ -457,6 +505,28 @@
             <p>Send a new request, then check its actual provider and response status in the logs.</p>
           </div>
         </div>
+        <figure class="qs-shot">
+          <img src="../add-dialog-en.png" alt="添加供应商" loading="lazy" />
+          <figcaption>Add a provider — presets ready to go, or migrate from another switcher in one click</figcaption>
+        </figure>
+        <div class="mig" role="img" aria-label="一键迁移演示">
+          <div class="mig-stage">
+            <div class="mig-col">
+              <span class="mig-label"><b>外部管理器</b> 里已有的</span>
+              <div class="mig-ghost"></div>
+              <div class="mig-ghost"></div>
+            </div>
+            <div class="mig-col">
+              <span class="mig-label"><b>Keyway</b> 供应商池</span>
+              <div class="mig-slot s1"><span class="mig-check">✓</span>TeapotRouter</div>
+              <div class="mig-slot s2"><span class="mig-check">✓</span>CoderPlan</div>
+            </div>
+            <div class="mig-fly c1"><img class="mig-ico mig-ico-img" src="../icons/teapotrouter.png" alt="" width="16" height="16" />TeapotRouter</div>
+            <div class="mig-fly c2"><i class="mig-ico cp"></i>CoderPlan</div>
+          </div>
+          <div class="mig-badge">✓ 2 providers migrated · source configs untouched</div>
+        </div>
+        <p class="qs-shot figcaption" style="margin-top:14px;">One-click migration: bring providers over from another switcher — just select and import</p>
         <div class="links" style="margin-top:36px;">
           <a class="alink" href="./guide.html">Step-by-step guide</a>
           <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
@@ -581,7 +651,8 @@
           <span class="prov"><img src="../icons/qwen.svg" alt="Qwen" />Qwen</span>
           <span class="prov"><img src="../icons/siliconflow.svg" alt="SiliconFlow" />SiliconFlow</span>
           <span class="prov"><img src="../icons/openrouter.svg" alt="OpenRouter" />OpenRouter</span>
-          <a class="prov linked" href="https://teapotrouter.com" target="_blank" rel="noreferrer"><img src="../icons/teapotrouter.png" alt="TeapotRouter" />TeapotRouter</a>
+          <a class="prov linked" href="https://coderplan.ai?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=provider-wall" target="_blank" rel="noreferrer"><img src="../icons/coderplan.svg" alt="CoderPlan" />CoderPlan</a>
+          <a class="prov linked" href="https://teapotrouter.com?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=provider-wall" target="_blank" rel="noreferrer"><img src="../icons/teapotrouter.png" alt="TeapotRouter" />TeapotRouter</a>
           <span class="prov more">+ custom endpoints</span>
         </div>
         <p class="pv-note">Want your service listed?<a href="https://github.com/anmutu/keyway/issues" target="_blank" rel="noreferrer">Submit a provider</a>.</p>
@@ -593,12 +664,10 @@
         <h2>Two looks. Same excellence.</h2>
         <div class="shots">
           <figure class="shot">
-            <div class="win-bar"><i></i><i></i><i></i><span>Keyway</span></div>
             <img src="../app-light-en.png" alt="light" loading="lazy" />
             <figcaption>Light</figcaption>
           </figure>
           <figure class="shot">
-            <div class="win-bar dark"><i></i><i></i><i></i><span>Keyway</span></div>
             <img src="../app-dark-en.png" alt="dark" loading="lazy" />
             <figcaption>Dark</figcaption>
           </figure>
@@ -688,7 +757,8 @@
         </div>
         <div class="footer-col footer-more">
           <b>More</b>
-          <a class="tp" href="https://teapotrouter.com/" target="_blank" rel="noreferrer"><img src="/logos/teapot.png" alt="Teapot Router" width="16" height="16" />Teapot Router</a>
+          <a class="tp" href="https://coderplan.ai?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=footer" target="_blank" rel="noreferrer"><img src="/icons/coderplan.svg" alt="CoderPlan" width="16" height="16" />CoderPlan</a>
+          <a class="tp" href="https://teapotrouter.com?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=footer" target="_blank" rel="noreferrer"><img src="/logos/teapot.png" alt="Teapot Router" width="16" height="16" />Teapot Router</a>
         </div>
       </div>
       <div class="footer-bar">
@@ -701,7 +771,7 @@
       // 滚动入场:区块内容淡入上移(Apple 式克制,仅一次)
       (function () {
         var els = document.querySelectorAll(
-          "section:not(.hero) h2, section:not(.hero) .sub, .trio > div, .cap, .step, .qs-demo, .shots, .table-wrap, .faq, section .links"
+          "section:not(.hero) h2, section:not(.hero) .sub, .trio > div, .cap, .step, .qs-shot, .mig, .qs-demo, .shots, .table-wrap, .faq, section .links"
         );
         els.forEach(function (el) { el.classList.add("reveal"); });
         if (!("IntersectionObserver" in window)) {
@@ -982,6 +1052,28 @@
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false;})});</script>
 <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
 <script>(function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();</script>
+<script>
+// 配图灯箱:点击放大,Esc / 点背景关闭
+(function () {
+  function open(imgEl) {
+    var ov = document.createElement("div");
+    ov.className = "lb"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", imgEl.alt || "截图放大");
+    var big = document.createElement("img");
+    big.src = imgEl.currentSrc || imgEl.src; big.alt = imgEl.alt || "";
+    ov.appendChild(big);
+    function close() { ov.remove(); document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    ov.addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    document.body.appendChild(ov);
+  }
+  document.addEventListener("click", function (e) {
+    var img = e.target.closest(".qs-shot img, .shot img");
+    if (img) open(img);
+  });
+})();
+</script>
 <script src="/shared-header.js?v=6"></script>
 </body>
 </html>

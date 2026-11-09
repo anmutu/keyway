@@ -111,6 +111,19 @@
       .tip b { color: var(--fg); }
       .tip.blue { background: rgba(217,119,87,.07); }
 
+      /* 实拍配图 */
+      .g-shot img { cursor: zoom-in; }
+      .lb { position: fixed; inset: 0; z-index: 300; background: rgba(20,18,15,.87); display: flex; align-items: center; justify-content: center; padding: 28px; cursor: zoom-out; }
+      .lb img { max-width: 94vw; max-height: 92vh; border-radius: 10px; box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+      .g-tpr { display: inline-block; vertical-align: -3px; margin-right: 6px; border-radius: 4px; }
+      .g-shot { margin: 26px 0 0; }
+      .g-shot img { display: block; width: 100%; border-radius: 14px; border: 1px solid var(--hair);
+        box-shadow: 0 20px 48px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.05); }
+      .g-shot figcaption, .g-shot-cap { font-size: 13px; color: var(--fg-3); margin-top: 12px; text-align: center; letter-spacing: .03em; }
+      .g-shot-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 26px; }
+      .g-shot-pair .g-shot { margin: 0; }
+      @media (max-width: 680px) { .g-shot-pair { grid-template-columns: 1fr; gap: 16px; } }
+
       /* 终端 */
       .terminal { margin-top: 24px; background: #1d1d20; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.22); }
       .term-bar { display: flex; gap: 7px; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
@@ -120,6 +133,8 @@
       .dim { color: #6e6e73; } .blue { color: #5ac8fa; } .green { color: #30d158; } .violet { color: #bf5af2; } .yellow { color: #ffd60a; }
 
       /* CTA + footer */
+      .colophon { max-width: 760px; margin: 0 auto; padding: 0 22px 34px; font-size: 12.5px; line-height: 1.8; color: var(--fg-3); }
+      .colophon a { color: var(--fg-3); text-decoration: underline; text-underline-offset: 2px; }
       .cta { text-align: center; padding: 90px 0 80px; background: var(--bg-alt); }
       .cta h2 { font-size: 36px; font-weight: 600; letter-spacing: -.015em; }
       .cta .sub { font-size: 18px; color: var(--fg-2); margin-top: 10px; }
@@ -181,8 +196,6 @@
 
     <main class="container">
 
-      <div class="tip" data-i18n="gVersionNote"><b>先核对版本:</b>本页下载按钮会跟随 GitHub 最新正式版;官网内容可能先于安装包更新,请以安装包对应的 <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">发布说明</a> 为准。浏览官网不会安装或接管本机 CLI,示意画面也不代表真实请求。<b>最后更新:2026-11-06</b> · 维护者:<a href="https://github.com/anmutu" target="_blank" rel="noreferrer">anmutu</a></div>
-
       <div class="tip blue" id="tldr">
         <b>30 秒速览:</b>
         <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:15px;">
@@ -231,8 +244,17 @@
           <li data-i18n="gS2l1"><b>预设直选</b>:内置常见供应商与中转站,填入 API Key 即可用。</li>
           <li data-i18n="gS2l2"><b>从现有配置导入</b>:已在 CLI 里配过?一键导入,不用重新填。</li>
           <li data-i18n="gS2l3"><b>自定义</b>:填名称、Base URL、API Key,任意中转/自建网关都支持。</li>
-          <li data-i18n="gS2l4"><b>以 Teapot Router 为例</b>:预设置顶、端点已预填;点 <b>「获取 API Key」</b>直达 <a href="https://teapotrouter.com/zh/dashboard/keys" target="_blank" rel="noreferrer">teapotrouter.com/zh/dashboard/keys</a>,创建并复制 Key,粘贴即可。</li>
+          <li data-i18n="gS2l4"><img class="g-tpr" src="./icons/teapotrouter.png" alt="Teapot Router" width="16" height="16" /><b>以 Teapot Router 为例</b>:预设置顶、端点已预填;点 <b>「获取 API Key」</b>直达 <a href="https://teapotrouter.com/zh/dashboard/keys?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=guide" target="_blank" rel="noreferrer">teapotrouter.com/zh/dashboard/keys</a>,创建并复制 Key,粘贴即可。</li>
         </ul>
+        <figure class="g-shot">
+          <img data-i18n-img="add-dialog" src="./add-dialog.png" alt="添加供应商对话框" loading="lazy" />
+          <figcaption data-i18n="gFigAdd">添加供应商:预设直选、自定义、外部管理器迁移都在这一个入口</figcaption>
+        </figure>
+        <div class="g-shot-pair">
+          <figure class="g-shot"><img data-i18n-img="import-list" src="./import-list.png" alt="从外部管理器导入" loading="lazy" /></figure>
+          <figure class="g-shot"><img data-i18n-img="import-done" src="./import-done.png" alt="导入完成" loading="lazy" /></figure>
+        </div>
+        <p class="g-shot-cap" data-i18n="gFigImport"><b>从别的切换工具迁过来:</b>扫描 → 勾选 → 导入完成,原配置只读不动</p>
         <div class="tip" data-i18n="gTip2"><b>密钥存储</b>:API Key 存入本机 SQLCipher 加密数据库,数据库主密钥由系统钥匙串保管。导出的供应商配置不含 API Key;转发请求时仍需向所选上游发送认证信息。</div>
         <p style="margin-top:18px;" data-i18n="gS2p2">添加完成后,可点击供应商卡片上的 <b>测速按钮</b> 检查连通性与延迟,再决定用谁。</p>
         <h3 data-i18n="gFieldsTitle">这些字段怎么填?</h3>
@@ -299,6 +321,10 @@
             <div data-i18n="gSwitchExample4">若实际去向不是 B,检查命中的路由规则与故障转移配置</div>
           </div>
         </div>
+        <figure class="g-shot">
+          <img data-i18n-img="logs" src="./logs.png" alt="请求日志" loading="lazy" />
+          <figcaption data-i18n="gFigLogs">请求日志:实际供应商、模型、状态码与 token 逐条可查</figcaption>
+        </figure>
       </section>
 
       <section class="step" id="first-request">
@@ -364,6 +390,8 @@
 
     </main>
 
+    <p class="colophon" data-i18n="gVersionNote">先核对版本:本页下载按钮会跟随 GitHub 最新正式版;官网内容可能先于安装包更新,请以安装包对应的 <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">发布说明</a> 为准。浏览官网不会安装或接管本机 CLI,示意画面也不代表真实请求。最后更新:2026-11-06 · 维护者:<a href="https://github.com/anmutu" target="_blank" rel="noreferrer">anmutu</a></p>
+
     <section class="cta">
       <div class="container">
         <h2 data-i18n="gCtaH2">准备好开始了吗?</h2>
@@ -399,8 +427,9 @@
           <a href="./terms.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>条款</a>
         </div>
         <div class="footer-col footer-more">
-          <b>更多产品</b>
-          <a class="tp" href="https://teapotrouter.com/" target="_blank" rel="noreferrer"><img src="/logos/teapot.png" alt="Teapot Router" width="16" height="16" />Teapot Router</a>
+          <b>相关产品</b>
+          <a class="tp" href="https://coderplan.ai?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=footer" target="_blank" rel="noreferrer"><img src="/icons/coderplan.svg" alt="CoderPlan" width="16" height="16" />CoderPlan</a>
+          <a class="tp" href="https://teapotrouter.com?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=footer" target="_blank" rel="noreferrer"><img src="/logos/teapot.png" alt="Teapot Router" width="16" height="16" />Teapot Router</a>
         </div>
       </div>
       <div class="footer-bar">
@@ -417,11 +446,14 @@
           gSub: "Verify your first request step by step, then learn switching, routing, backups and troubleshooting.",
           gTocVerify: "Walkthrough: verify your first request",
           gTocRestore: "Restore, quit and migrate",
-          gVersionNote: '<b>Check your version:</b> These download buttons follow the latest stable GitHub release. Website updates may precede installers; check the <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">release notes</a> for your installer. Browsing this site does not install or take over a CLI. Illustrations are not real requests.',
+          gVersionNote: 'Check your version: these download buttons follow the latest stable GitHub release. Website updates may precede installers; check the <a href="https://github.com/anmutu/keyway/releases" target="_blank" rel="noreferrer">release notes</a> for your installer. Browsing this site does not install or take over a CLI. Illustrations are not real requests. Last updated 2026-11-06 · maintained by <a href="https://github.com/anmutu" target="_blank" rel="noreferrer">anmutu</a>',
           gPrereqCli: '<b>Prepare your CLI:</b> Install your AI CLI separately and confirm it starts in a terminal. Keyway manages where its requests go.',
           gPrereqKey: '<b>Prepare a provider:</b> Obtain an API key, API Base URL and supported model names. Do not assume a web chat subscription includes API credits; check provider account permissions.',
           gPrereqSafe: '<b>Protect existing settings:</b> Save a separate copy of CLI configuration before first takeover. Avoid multiple switching tools rewriting the same file. Start with one CLI.',
           gFieldsTitle: 'What goes in each field?',
+          gFigAdd: 'Add a provider — presets, custom endpoints and migration from another switcher, all in one place',
+          gFigImport: '<b>Coming from another switcher:</b> scan → select → imported. Source configs are read-only',
+          gFigLogs: 'Request logs — actual provider, model, status code and tokens, entry by entry',
           gFieldName: '<b>Name:</b> Use a recognizable name such as Primary or Backup. Before editing, check whether other CLI groups share the provider.',
           gFieldUrl: '<b>Endpoint:</b> Use the API Base URL from provider documentation, not a website, dashboard or complete <code>/chat/completions</code> URL. Choose the actual protocol. <code>https://api.example.com/v1</code> is a placeholder, not a working service.',
           gFieldKey: '<b>API key:</b> Paste the provider key and keep it out of tickets and screenshots. Leaving it blank when editing preserves the existing key. Re-enter keys after migrating configuration.',
@@ -473,7 +505,7 @@
           gS2l1: "Presets: common providers and relays built in — just paste an API key.",
           gS2l2: "Import from existing configs: already configured a CLI? Import in one click, no retyping.",
           gS2l3: "Custom: name, Base URL and API Key — any relay or self-hosted gateway works.",
-          gS2l4: 'Example — Teapot Router: preset pinned at top with the endpoint prefilled; click “Get API Key” to open <a href="https://teapotrouter.com/en/dashboard/keys" target="_blank" rel="noreferrer">teapotrouter.com/en/dashboard/keys</a>, create and copy a key, then paste it back.',
+          gS2l4: '<img class="g-tpr" src="./icons/teapotrouter.png" alt="Teapot Router" width="16" height="16" /><b>Example — Teapot Router</b>: preset pinned at top with the endpoint prefilled; click “Get API Key” to open <a href="https://teapotrouter.com/en/dashboard/keys?utm_source=keyway&amp;utm_medium=referral&amp;utm_campaign=guide" target="_blank" rel="noreferrer">teapotrouter.com/en/dashboard/keys</a>, create and copy a key, then paste it back.',
           gTip2: "Key storage: API keys live in a local SQLCipher-encrypted database; its master key is held in the system keychain. Provider configuration exports exclude API keys. Authentication is still sent to the selected upstream when forwarding requests.",
           gS2p2: "After adding, hit the test button on a provider card to check reachability and latency before committing.",
           gS3k: "Takeover", gS3h2: "One-click CLI takeover",
@@ -532,6 +564,11 @@
             var v = dict[k] !== undefined ? dict[k] : zhOrig[k];
             if (v !== undefined) el.innerHTML = v;
           });
+          // 配图跟随语言:./x.png ↔ ./x-en.png
+          document.querySelectorAll("[data-i18n-img]").forEach(function (img) {
+            var base = img.getAttribute("data-i18n-img");
+            img.src = lang === "en" ? "./" + base + "-en.png" : "./" + base + ".png";
+          });
           root.setAttribute("lang", lang === "en" ? "en" : "zh-CN");
           document.title = lang === "en" ? "Keyway Detailed Guide — setup, takeover, verification and troubleshooting" : zhTitle;
           toggle.textContent = lang === "en" ? "中文" : "EN";
@@ -548,16 +585,28 @@
     </script>
     <script src="./release-sync.js"></script>
   <script>document.addEventListener("click",function(e){document.querySelectorAll("details.locale-menu").forEach(function(d){if(d.open&&!d.contains(e.target))d.open=false})});</script>
-<script>
-(function() {
-  var theme = null;
-  document.addEventListener("DOMContentLoaded", function() {
-    if (!btn) return;
-    btn.addEventListener("click", function() {
-    });
-  });
-})();
-</script>
+  <script>
+    // 配图灯箱:点击放大,Esc / 点背景关闭
+    (function () {
+      function open(imgEl) {
+        var ov = document.createElement("div");
+        ov.className = "lb"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", imgEl.alt || "截图放大");
+        var big = document.createElement("img");
+        big.src = imgEl.currentSrc || imgEl.src; big.alt = imgEl.alt || "";
+        ov.appendChild(big);
+        function close() { ov.remove(); document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; }
+        function onKey(e) { if (e.key === "Escape") close(); }
+        ov.addEventListener("click", close);
+        document.addEventListener("keydown", onKey);
+        document.body.style.overflow = "hidden";
+        document.body.appendChild(ov);
+      }
+      document.addEventListener("click", function (e) {
+        var img = e.target.closest(".g-shot img");
+        if (img) open(img);
+      });
+    })();
+  </script>
 <script>
 (function(){var d=new Date().getDay();var m=["sun","mon","tue","wed","thu","fri","sat"];var daily="/logos/logo-"+m[d]+".svg";document.querySelectorAll("img[src*=\"logo.svg\"]").forEach(function(img){var orig=img.src;img.src=daily;img.onerror=function(){img.onerror=null;img.src=orig;};});})();
 </script>
