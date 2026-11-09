@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ArrowLeft, ExternalLink, Plus, Search } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, Plus, Search } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,8 @@ interface AddProviderDialogProps {
   appId: AppType;
   onCreated: (provider: Provider, fromRelay?: boolean) => void;
   onError: (msg: string) => void;
+  /** 跳转到外部管理器迁移对话框(添加流程之外的另一条进货路径) */
+  onImportFromExternal: () => void;
 }
 
 /** 校验接口地址:必须是合法 http(s) URL */
@@ -59,6 +61,7 @@ export function AddProviderDialog({
   appId,
   onCreated,
   onError,
+  onImportFromExternal,
 }: AddProviderDialogProps) {
   const { t } = useI18n();
   const [preset, setPreset] = useState<ProviderPreset | null>(null);
@@ -333,6 +336,23 @@ export function AddProviderDialog({
               >
                 <Plus className="w-4 h-4 mr-2" />
                 {t("preset.customItem")}
+              </button>
+              {/* 迁移入口:工具栏按钮之外的常驻路径,空列表场景之外也能发现 */}
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenChange(false);
+                  onImportFromExternal();
+                }}
+                className="flex items-start gap-2 rounded-md border border-dashed px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <Download className="mt-0.5 w-4 h-4 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block font-medium">{t("ccSwitch.open")}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t("ccSwitch.importHint")}
+                  </span>
+                </span>
               </button>
               <a
                 href={PROVIDER_SUBMISSION_URL}

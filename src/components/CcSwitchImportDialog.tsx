@@ -15,6 +15,7 @@ import {
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { cn } from "@/lib/utils";
 import { ccSwitchItemKey, selectionForFilter } from "@/lib/ccSwitchImport";
+import { humanizeError } from "@/lib/errors";
 
 interface CcSwitchProvider {
   source_id: string;
@@ -211,7 +212,7 @@ export function CcSwitchImportDialog({
         {scanError ? (
           <div className="rounded-xl border border-border bg-muted/40 p-4 text-sm">
             <p className="font-medium">{t("ccSwitch.notFound")}</p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{scanError}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{humanizeError(scanError, t)}</p>
           </div>
         ) : loading ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{t("ccSwitch.scanning")}</p>

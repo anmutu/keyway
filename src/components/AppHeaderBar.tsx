@@ -30,6 +30,7 @@ export function AppHeaderBar({
   proxyAddr,
   onTakeover,
   onGuide,
+  onTour,
   isMac,
 }: {
   position: "top" | "bottom";
@@ -44,6 +45,8 @@ export function AppHeaderBar({
   proxyAddr: string;
   onTakeover: () => void;
   onGuide: () => void;
+  /** 重看界面导览 */
+  onTour: () => void;
   isMac: boolean;
 }) {
   const { t } = useI18n();
@@ -54,7 +57,8 @@ export function AppHeaderBar({
         "shrink-0 z-50 flex min-h-14 w-full flex-wrap items-center gap-x-3 gap-y-1 bg-background/80 py-1 backdrop-blur-md sm:h-14 sm:flex-nowrap sm:py-0",
         position === "top" ? "border-b border-border" : "border-t border-border",
       )}
-      data-tauri-drag-region
+      // deep:横栏空白处整条可拖动;按钮等交互元素由 Tauri 拖动脚本自动豁免
+      data-tauri-drag-region="deep"
     >
       <div
         className={cn(
@@ -63,14 +67,16 @@ export function AppHeaderBar({
         )}
         data-tauri-no-drag
       >
-        <AppSwitcher
-          activeApp={currentView === "providers" ? activeApp : null}
-          apps={apps}
-          onSwitch={(app) => {
-            onSwitchApp(app);
-            onViewChange("providers");
-          }}
-        />
+        <div data-tour="cli-nav" className="min-w-0">
+          <AppSwitcher
+            activeApp={currentView === "providers" ? activeApp : null}
+            apps={apps}
+            onSwitch={(app) => {
+              onSwitchApp(app);
+              onViewChange("providers");
+            }}
+          />
+        </div>
         <Button
           variant="outline"
           size="icon"
@@ -78,6 +84,7 @@ export function AppHeaderBar({
           title={t("common.add")}
           aria-label={t("common.add")}
           onClick={onAdd}
+          data-tour="add-provider"
         >
           <Plus className="w-4 h-4" />
         </Button>
@@ -88,6 +95,7 @@ export function AppHeaderBar({
           title={`${t("qs.open")} (⌘⇧K)`}
           aria-label={t("qs.open")}
           onClick={onQuickSwitch}
+          data-tour="quick-switch"
         >
           <Search className="w-4 h-4" />
         </Button>
@@ -100,6 +108,7 @@ export function AppHeaderBar({
           title={t("logs.title")}
           aria-label={t("logs.title")}
           onClick={() => onViewChange("logs")}
+          data-tour="logs"
         >
           <ScrollText className="w-4 h-4" />
         </Button>
@@ -107,12 +116,14 @@ export function AppHeaderBar({
           currentView={currentView}
           onViewChange={onViewChange}
           onGuide={onGuide}
+          onTour={onTour}
           mode="toolbar"
           position={position}
         />
         <button
           type="button"
           onClick={onTakeover}
+          data-tour="proxy-status"
           className={cn(
             "inline-flex h-8 shrink-0 items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             proxyOk === true

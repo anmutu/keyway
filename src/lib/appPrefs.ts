@@ -32,6 +32,16 @@ export const ALL_APPS: AppType[] = [
 /** 默认显示的分组(扩充组默认隐藏,可在设置中开启) */
 export const DEFAULT_APPS: AppType[] = ALL_APPS.slice(0, 5);
 
+export function isAppVisibilityLocked(apps: AppType[], app: AppType): boolean {
+  return apps.includes(app) && apps.length <= 1;
+}
+
+export function setAppVisibility(apps: AppType[], app: AppType, visible: boolean): AppType[] {
+  if (visible) return apps.includes(app) ? apps : [...apps, app];
+  if (apps.length <= 1) return apps;
+  return apps.filter((candidate) => candidate !== app);
+}
+
 export function loadLayout(): LayoutMode {
   try {
     let v = localStorage.getItem(LAYOUT_KEY) as LayoutMode | null;

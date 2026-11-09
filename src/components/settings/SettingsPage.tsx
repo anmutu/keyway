@@ -34,7 +34,7 @@ import { useTheme, type Theme } from "@/components/theme-provider";
 import { useI18n, type LocaleSetting } from "@/i18n";
 import { FlagCN, FlagGB, GlobeAuto } from "@/components/LanguageBadges";
 import { cn } from "@/lib/utils";
-import { ALL_APPS, type LayoutMode } from "@/lib/appPrefs";
+import { ALL_APPS, isAppVisibilityLocked, setAppVisibility, type LayoutMode } from "@/lib/appPrefs";
 import type { AppType } from "@/types";
 
 interface AppSettings {
@@ -188,14 +188,7 @@ export function SettingsPage({
     onAppsChange(next);
   };
   const toggleApp = (app: AppType, visible: boolean) => {
-    if (visible) {
-      // 恢复显示:插回默认顺序位置
-      const next = ALL_APPS.filter((a) => a === app || apps.includes(a));
-      onAppsChange(next);
-    } else {
-      if (apps.length <= 1) return; // 至少保留一个分组
-      onAppsChange(apps.filter((a) => a !== app));
-    }
+    onAppsChange(setAppVisibility(apps, app, visible));
   };
 
   const layoutOptions: { value: LayoutMode; label: string; icon: typeof PanelLeft }[] = [
@@ -385,7 +378,7 @@ export function SettingsPage({
                       <Switch
                         checked={visible}
                         onCheckedChange={(v) => toggleApp(app, v)}
-                        disabled={!visible && apps.length <= 1}
+                        disabled={isAppVisibilityLocked(apps, app)}
                       />
                     </div>
                   </div>

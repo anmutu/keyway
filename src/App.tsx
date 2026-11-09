@@ -21,11 +21,13 @@ import { ToastStack, type ToastItem, type ToastType } from "@/components/Toast";
 import { AboutDialog } from "@/components/AboutDialog";
 import { QuickSwitchPanel } from "@/components/QuickSwitchPanel";
 import { OnboardingDialog, hasOnboarded } from "@/components/OnboardingDialog";
+import { GuidedTour } from "@/components/GuidedTour";
 import { TakeoverDialog } from "@/components/TakeoverDialog";
 import { CcSwitchImportDialog } from "@/components/CcSwitchImportDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
+import { humanizeError } from "@/lib/errors";
 import {
   loadLayout,
   saveLayout,
@@ -68,27 +70,6 @@ const SkillsPage = lazy(async () => {
 
 function getInitialApp(): AppType {
   return loadLastApp() ?? "claude";
-}
-
-/** 把底层错误串转成人话 */
-type TFunc = ReturnType<typeof useI18n>["t"];
-function humanizeError(raw: string, t: TFunc): string {
-  const msg = raw.replace(/^Error:\s*/i, "");
-  const m = msg.toLowerCase();
-  if (m.includes("未找到 cc switch 数据库") || m.includes("cc switch database")) return t("err.ccSwitchDb");
-  if (m.includes("cc switch") || m.includes("cc-switch")) return t("err.ccSwitchOwner");
-  if (msg.includes("keychain")) return t("err.keychain");
-  if (msg.includes("数据库") || msg.includes("database")) return t("err.db");
-  if (msg.includes("invoke") || msg.includes("ipc")) return t("err.ipc");
-  // 常见 HTTP/网络错误:给出可操作的下一步,而不是裸状态码
-  if (/\b401\b|unauthorized/.test(m)) return t("err.401");
-  if (/\b403\b|forbidden/.test(m)) return t("err.403");
-  if (/\b404\b|not found/.test(m)) return t("err.404");
-  if (/\b429\b|rate.?limit|quota/.test(m)) return t("err.429");
-  if (/timeout|timed out/.test(m)) return t("err.timeout");
-  if (/dns|resolve|refused|unreachable|network/.test(m)) return t("err.network");
-  if (/certificate|tls|ssl/.test(m)) return t("err.tls");
-  return t("err.fallback", { msg: msg.length > 120 ? `${msg.slice(0, 120)}…` : msg });
 }
 
 /** 骨架卡片:列表加载时占位,避免布局抖动 */
@@ -352,6 +333,12 @@ function App() {
   const [ccSwitchImportOpen, setCcSwitchImportOpen] = useState(false);
   // 首启向导:零供应商且未看过向导时触发
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+  // 界面导览:目标都在主界面,启动前先回到 providers 视图
+  const startTour = () => {
+    setCurrentView("providers");
+    setTourOpen(true);
+  };
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [proxyOk, setProxyOk] = useState<boolean | null>(null);
   const [proxyAddr, setProxyAddr] = useState("");
@@ -623,7 +610,7 @@ function App() {
       // 对话框/浮层打开时让 Radix 自己关,不劫持跳页;输入框聚焦时也忽略
       if (e.key === "Escape") {
         if (e.defaultPrevented) return;
-        if (document.querySelector("[data-state=open], [data-qs-panel]")) return;
+        if (document.querySelector("[data-state=open], [data-qs-panel], [data-tour-panel]")) return;
         const el = document.activeElement;
         if (el instanceof HTMLElement && el.isContentEditable) return;
         if (
@@ -891,6 +878,7 @@ function App() {
           onTakeover={() => setTakeoverOpen(true)}
           onAbout={() => setAboutOpen(true)}
           onGuide={() => setGuideOpen(true)}
+          onTour={startTour}
           onAdd={() => setIsAddOpen(true)}
           onQuickSwitch={() => setQuickOpen(true)}
           isMac={isMac}
@@ -912,6 +900,7 @@ function App() {
           proxyAddr={proxyAddr}
           onTakeover={() => setTakeoverOpen(true)}
           onGuide={() => setGuideOpen(true)}
+          onTour={startTour}
           isMac={isMac}
         />
       )}
@@ -926,6 +915,8 @@ function App() {
           // 右侧/底部布局:macOS 红绿灯悬于主区左上,顶部避让
           (layout === "right" || layout === "bottom") && isMac && "pt-7",
         )}
+        // 裸属性:仅主区自身空白(内容列两侧的边距)可拖;
+        // 不用 deep——内容区有卡片拖拽排序/文本选择,deep 会与其冲突
         data-tauri-drag-region
       >
         <Suspense fallback={<PageFallback />}>
@@ -1334,6 +1325,7 @@ function App() {
           onTakeover={() => setTakeoverOpen(true)}
           onAbout={() => setAboutOpen(true)}
           onGuide={() => setGuideOpen(true)}
+          onTour={startTour}
           onAdd={() => setIsAddOpen(true)}
           onQuickSwitch={() => setQuickOpen(true)}
           isMac={isMac}
@@ -1355,6 +1347,7 @@ function App() {
           proxyAddr={proxyAddr}
           onTakeover={() => setTakeoverOpen(true)}
           onGuide={() => setGuideOpen(true)}
+          onTour={startTour}
           isMac={isMac}
         />
       )}
@@ -1418,9 +1411,11 @@ function App() {
         providersCount={providers.length}
         onDone={() => {
           void refresh(activeApp);
-          setGuideOpen(true);
+          startTour();
         }}
       />
+
+      {tourOpen && <GuidedTour onClose={() => setTourOpen(false)} />}
 
       <TakeoverDialog
         open={takeoverOpen}
@@ -1468,9 +1463,20 @@ function App() {
           syncTray();
           await refresh(activeApp);
           focusProvider(created.id);
-          if (fromRelay) setRelaySavedApp(activeApp);
+          if (fromRelay) {
+            setRelaySavedApp(activeApp);
+          } else if (
+            providers.length === 0 &&
+            takeoverMap[activeApp]?.effective !== true
+          ) {
+            // 首个供应商 + 该分组未接管:用户最容易卡在"加完不知道怎么生效",
+            // 直接带到接管面板完成最后一步
+            toast("success", t("tour.nudgeTakeover", { app: t(`app.${activeApp}`) }));
+            window.setTimeout(() => setTakeoverOpen(true), 500);
+          }
         }}
         onError={(msg) => toast("error", humanizeError(msg, t))}
+        onImportFromExternal={openCcSwitchImport}
       />
 
       <RelayConnectDialog

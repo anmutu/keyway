@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { BarChart3, CircleHelp, MoreHorizontal, Plug, Settings, Sparkles } from "lucide-react";
+import { BarChart3, CircleHelp, Compass, MoreHorizontal, Plug, Settings, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ export function AdvancedNavMenu({
   currentView,
   onViewChange,
   onGuide,
+  onTour,
   mode,
   edge = "left",
   position = "top",
@@ -19,6 +20,8 @@ export function AdvancedNavMenu({
   currentView: View;
   onViewChange: (view: View) => void;
   onGuide: () => void;
+  /** 重看界面导览 */
+  onTour: () => void;
   mode: "rail" | "toolbar";
   edge?: "left" | "right";
   position?: "top" | "bottom";
@@ -66,7 +69,7 @@ export function AdvancedNavMenu({
 
   return (
     <DropdownMenu.Root open={open} onOpenChange={setOpen} modal={false}>
-      <div className={cn("relative", mode === "rail" && "group w-full shrink-0")}>
+      <div className={cn("relative", mode === "rail" && "group w-full shrink-0")} data-tour="advanced-menu">
         <DropdownMenu.Trigger ref={triggerRef} asChild>{trigger}</DropdownMenu.Trigger>
         {mode === "rail" && !open && (
           <span
@@ -108,6 +111,7 @@ export function AdvancedNavMenu({
           <MenuItem active={currentView === "skills"} onClick={() => navigate("skills")} icon={<Sparkles />} label={t("sk.title")} />
           <MenuItem active={currentView === "settings"} onClick={() => navigate("settings")} icon={<Settings />} label={t("common.settings")} />
           <DropdownMenu.Separator className="my-1 border-t border-border" />
+          <MenuItem onClick={() => { setOpen(false); onTour(); }} icon={<Compass />} label={t("tour.open")} />
           <MenuItem onClick={() => { setOpen(false); onGuide(); }} icon={<CircleHelp />} label={t("guide.open")} />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

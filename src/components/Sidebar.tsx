@@ -46,6 +46,8 @@ interface SidebarProps {
   onTakeover: () => void;
   onAbout: () => void;
   onGuide: () => void;
+  /** 重看界面导览 */
+  onTour: () => void;
   /** 添加供应商(⌘N),入口放在 CLI 分组标题行 */
   onAdd: () => void;
   onQuickSwitch: () => void;
@@ -62,6 +64,7 @@ function RailItem({
   label,
   edge = "left",
   highlight = false,
+  tour,
   children,
 }: {
   active: boolean;
@@ -70,10 +73,12 @@ function RailItem({
   label?: string;
   edge?: "left" | "right";
   highlight?: boolean;
+  /** 界面导览锚点(GuidedTour 按此定位高亮) */
+  tour?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative group w-full shrink-0">
+    <div className="relative group w-full shrink-0" data-tour={tour}>
       <button
         type="button"
         onClick={onClick}
@@ -126,6 +131,7 @@ export function Sidebar({
   onTakeover,
   onAbout,
   onGuide,
+  onTour,
   onAdd,
   onQuickSwitch,
   isMac,
@@ -145,7 +151,9 @@ export function Sidebar({
         "shrink-0 w-14 sm:w-[80px] lg:w-[176px] h-full flex flex-col items-center lg:items-stretch bg-muted select-none",
         edge === "right" ? "border-l border-border" : "border-r border-border",
       )}
-      data-tauri-drag-region
+      // deep:整个子树可拖动窗口;Tauri 拖动脚本会自动豁免按钮等可交互元素,
+      // 裸属性只对"直接按在本元素上"生效,而侧栏内部被子元素铺满
+      data-tauri-drag-region="deep"
     >
       {/* 品牌:macOS Overlay 红绿灯占据左上,向下避让 */}
       <div className={cn("flex flex-col items-center gap-0.5 pb-2 shrink-0 lg:flex-row lg:items-center lg:gap-2 lg:px-4", isMac ? "pt-10 lg:pt-10" : "pt-3")} data-tauri-no-drag>
@@ -168,6 +176,7 @@ export function Sidebar({
           title={`${t("common.add")} (⌘N)`}
           label={t("common.add")}
           edge={edge}
+          tour="add-provider"
         >
           <Plus className="w-[18px] h-[18px]" />
         </RailItem>
@@ -177,6 +186,7 @@ export function Sidebar({
           title={`${t("qs.open")} (⌘⇧K)`}
           label={t("qs.open")}
           edge={edge}
+          tour="quick-switch"
         >
           <Search className="w-[18px] h-[18px]" />
         </RailItem>
@@ -184,22 +194,24 @@ export function Sidebar({
         <span className="hidden sm:block px-1 pb-0.5 text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/50 lg:px-4 lg:text-left">
           {t("sidebar.section.cli")}
         </span>
-        {apps.map((app) => (
-          <RailItem
-            key={app}
-            active={currentView === "providers" && activeApp === app}
-            onClick={() => switchApp(app)}
-            title={`${appDisplayName[app]}(⌘${apps.indexOf(app) + 1})`}
-            label={appDisplayName[app]}
-            edge={edge}
-          >
-            <ProviderIcon
-              icon={appIconName[app]}
-              name={appDisplayName[app]}
-              size={18}
-            />
-          </RailItem>
-        ))}
+        <div data-tour="cli-nav" className="flex flex-col gap-1 w-full">
+          {apps.map((app) => (
+            <RailItem
+              key={app}
+              active={currentView === "providers" && activeApp === app}
+              onClick={() => switchApp(app)}
+              title={`${appDisplayName[app]}(⌘${apps.indexOf(app) + 1})`}
+              label={appDisplayName[app]}
+              edge={edge}
+            >
+              <ProviderIcon
+                icon={appIconName[app]}
+                name={appDisplayName[app]}
+                size={18}
+              />
+            </RailItem>
+          ))}
+        </div>
       </nav>
 
       <div className="my-3 mx-3 w-auto self-stretch border-t border-border shrink-0" />
@@ -212,13 +224,15 @@ export function Sidebar({
           title={t("logs.title")}
           label={t("logs.title")}
           edge={edge}
-          >
+          tour="logs"
+        >
           <ScrollText className="w-[18px] h-[18px]" />
         </RailItem>
         <AdvancedNavMenu
           currentView={currentView}
           onViewChange={onViewChange}
           onGuide={onGuide}
+          onTour={onTour}
           mode="rail"
           edge={edge}
         />
@@ -231,7 +245,7 @@ export function Sidebar({
         className="flex flex-col items-center gap-1 pb-3 w-full shrink-0"
         data-tauri-no-drag
       >
-        <div className="relative group">
+        <div className="relative group" data-tour="proxy-status">
           <button
             type="button"
             onClick={onTakeover}
