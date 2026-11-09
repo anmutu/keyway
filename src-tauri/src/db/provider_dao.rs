@@ -332,12 +332,10 @@ fn current_successor(tx: &rusqlite::Transaction<'_>, app: &str) -> Result<Option
     let protocol = crate::types::AppType::from_str(app)
         .unwrap_or(crate::types::AppType::Claude)
         .protocol();
-    Ok(candidates
-        .into_iter()
-        .find(|p| {
-            (p.has_key || p.meta_has_key == Some(true) || with_key.contains(&p.id))
-                && (p.endpoint(protocol).is_some() || !p.base_url.trim().is_empty())
-        }))
+    Ok(candidates.into_iter().find(|p| {
+        (p.has_key || p.meta_has_key == Some(true) || with_key.contains(&p.id))
+            && (p.endpoint(protocol).is_some() || !p.base_url.trim().is_empty())
+    }))
 }
 
 /// 更新供应商名称。
@@ -512,7 +510,10 @@ mod delete_tests {
         let b = create(&pool, input("B", None)).unwrap();
         let c = create(&pool, input("C", Some("key-c"))).unwrap();
         reorder(&pool, &[a.id.clone(), b.id.clone(), c.id.clone()]).unwrap();
-        assert_eq!(get_current(&pool, AppType::Claude).unwrap().unwrap().name, "A");
+        assert_eq!(
+            get_current(&pool, AppType::Claude).unwrap().unwrap().name,
+            "A"
+        );
 
         delete(&pool, &a.id).unwrap();
 
