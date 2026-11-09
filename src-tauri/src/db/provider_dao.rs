@@ -264,16 +264,80 @@ pub fn set_current(pool: &Pool, id: &str, app: AppType) -> Result<()> {
     Ok(())
 }
 
+/// 删除供应商。若它是某分组的当前供应商,同分组内自动顶替:
+/// 按 sort_index 顺序取下一个「有 Key 且有可用端点」的供应商(判定与故障转移
+/// 候选链一致),避免长跑 CLI 因指针悬空收到一片 502;无可顶替者才悬空。
 pub fn delete(pool: &Pool, id: &str) -> Result<()> {
     let mut conn = get_conn(pool)?;
     let tx = conn.transaction()?;
+    let mut stmt = tx.prepare("SELECT app_type FROM current_map WHERE provider_id = ?1")?;
+    let current_apps: Vec<String> = stmt
+        .query_map(params![id], |r| r.get(0))?
+        .filter_map(|r| r.ok())
+        .collect();
+    drop(stmt);
     tx.execute("DELETE FROM providers WHERE id = ?1", params![id])?;
     tx.execute(
         "DELETE FROM current_map WHERE provider_id = ?1",
         params![id],
     )?;
+    for app in current_apps {
+        match current_successor(&tx, &app)? {
+            Some(successor) => {
+                tx.execute(
+                    "INSERT OR REPLACE INTO current_map (app_type, provider_id) VALUES (?1, ?2)",
+                    params![app, successor.id],
+                )?;
+                tracing::info!(
+                    app = %app,
+                    deleted = %id,
+                    successor = %successor.id,
+                    "删除了当前供应商,同分组自动顶替"
+                );
+            }
+            None => tracing::warn!(app = %app, "删除当前供应商后无可顶替者,分组当前供应商悬空"),
+        }
+    }
     tx.commit()?;
     Ok(())
+}
+
+/// 在删除事务内选出 app 分组的顶替者:有 Key(api_keys 行或 meta 标记)且
+/// 有端点,按 sort_index, created_at 排序取第一个。
+fn current_successor(tx: &rusqlite::Transaction<'_>, app: &str) -> Result<Option<Provider>> {
+    let mut stmt = tx.prepare(&format!(
+        "SELECT {PROVIDER_COLS}
+         FROM providers WHERE app_type = ?1
+         ORDER BY sort_index, created_at"
+    ))?;
+    let candidates: Vec<Provider> = stmt
+        .query_map(params![app], row_to_provider)?
+        .filter_map(|r| r.ok())
+        .collect();
+    drop(stmt);
+    if candidates.is_empty() {
+        return Ok(None);
+    }
+    let ids: Vec<String> = candidates.iter().map(|p| p.id.clone()).collect();
+    let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+    let mut key_stmt = tx.prepare(&format!(
+        "SELECT provider_id FROM api_keys WHERE provider_id IN ({placeholders})"
+    ))?;
+    let with_key: std::collections::HashSet<String> = key_stmt
+        .query_map(rusqlite::params_from_iter(ids.iter()), |r| {
+            r.get::<_, String>(0)
+        })?
+        .filter_map(|r| r.ok())
+        .collect();
+    let protocol = crate::types::AppType::from_str(app)
+        .unwrap_or(crate::types::AppType::Claude)
+        .protocol();
+    Ok(candidates
+        .into_iter()
+        .find(|p| {
+            (p.has_key || p.meta_has_key == Some(true) || with_key.contains(&p.id))
+                && (p.endpoint(protocol).is_some() || !p.base_url.trim().is_empty())
+        }))
 }
 
 /// 更新供应商名称。
@@ -413,4 +477,96 @@ pub fn set_models(pool: &Pool, id: &str, models: &[String]) -> Result<()> {
         return Err(anyhow!("供应商不存在: {id}"));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod delete_tests {
+    use super::*;
+    use crate::services::provider::create;
+    use crate::types::ProviderInput;
+    use std::path::PathBuf;
+
+    fn test_pool(tag: &str) -> (Pool, PathBuf) {
+        let directory =
+            std::env::temp_dir().join(format!("keyway_dao_{tag}_{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("keyway.db");
+        let pool = crate::db::init_pool(&path, &"0".repeat(64)).unwrap();
+        (pool, directory)
+    }
+
+    fn input(name: &str, key: Option<&str>) -> ProviderInput {
+        ProviderInput {
+            app_type: AppType::Claude,
+            name: name.into(),
+            base_url: format!("https://{name}.example/v1"),
+            models: vec![],
+            api_key: key.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn deleting_current_promotes_next_keyed_provider() {
+        let (pool, directory) = test_pool("promote_keyed");
+        let a = create(&pool, input("A", Some("key-a"))).unwrap();
+        let b = create(&pool, input("B", None)).unwrap();
+        let c = create(&pool, input("C", Some("key-c"))).unwrap();
+        reorder(&pool, &[a.id.clone(), b.id.clone(), c.id.clone()]).unwrap();
+        assert_eq!(get_current(&pool, AppType::Claude).unwrap().unwrap().name, "A");
+
+        delete(&pool, &a.id).unwrap();
+
+        // B 排序在前但没有 Key,顶替者必须是有 Key 的 C
+        let current = get_current(&pool, AppType::Claude).unwrap().unwrap();
+        assert_eq!(current.name, "C");
+
+        drop(pool);
+        let _ = std::fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn deleting_current_without_keyed_successor_leaves_current_empty() {
+        let (pool, directory) = test_pool("promote_none");
+        let a = create(&pool, input("A", Some("key-a"))).unwrap();
+        let b = create(&pool, input("B", None)).unwrap();
+        reorder(&pool, &[a.id.clone(), b.id.clone()]).unwrap();
+
+        delete(&pool, &a.id).unwrap();
+
+        // 唯一候选 B 没有 Key,宁可直接悬空也不路由到注定失败的供应商
+        assert!(get_current(&pool, AppType::Claude).unwrap().is_none());
+
+        drop(pool);
+        let _ = std::fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn deleting_non_current_keeps_current() {
+        let (pool, directory) = test_pool("keep_current");
+        let a = create(&pool, input("A", Some("key-a"))).unwrap();
+        let b = create(&pool, input("B", Some("key-b"))).unwrap();
+        reorder(&pool, &[a.id.clone(), b.id.clone()]).unwrap();
+
+        delete(&pool, &b.id).unwrap();
+
+        let current = get_current(&pool, AppType::Claude).unwrap().unwrap();
+        assert_eq!(current.name, "A");
+
+        drop(pool);
+        let _ = std::fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn deleting_last_provider_clears_current() {
+        let (pool, directory) = test_pool("last");
+        let a = create(&pool, input("A", Some("key-a"))).unwrap();
+
+        delete(&pool, &a.id).unwrap();
+
+        assert!(get_current(&pool, AppType::Claude).unwrap().is_none());
+        assert!(list_all(&pool).unwrap().is_empty());
+
+        drop(pool);
+        let _ = std::fs::remove_dir_all(directory);
+    }
 }

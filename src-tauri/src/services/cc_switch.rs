@@ -595,7 +595,10 @@ fn already_imported(pool: &Pool, source: &SourceProvider, base_url: &str) -> Res
     let expected = normalized_url(base_url);
     let protocol = source.app_type.protocol();
     let source_name = source.name.trim();
-    let variant_prefix = format!("{source_name} (外部管理器 ");
+    let variant_prefixes = [
+        format!("{source_name} (外部管理器 "),
+        format!("{source_name} (CC Switch "),
+    ];
     for provider in crate::db::provider_dao::list_all(pool)? {
         if provider.app_type != source.app_type {
             continue;
@@ -611,7 +614,11 @@ fn already_imported(pool: &Pool, source: &SourceProvider, base_url: &str) -> Res
         if provider.name.trim().eq_ignore_ascii_case(source_name) {
             return Ok(true);
         }
-        if provider.name.starts_with(&variant_prefix) && provider.name.ends_with(')') {
+        if variant_prefixes
+            .iter()
+            .any(|prefix| provider.name.starts_with(prefix))
+            && provider.name.ends_with(')')
+        {
             return Ok(true);
         }
     }
@@ -988,6 +995,63 @@ mod tests {
         assert_eq!(found.len(), 1);
         assert!(!found[0].importable);
         assert_eq!(found[0].reason, Some(ImportBlockReason::Duplicate));
+
+        drop(pool);
+        let _ = std::fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn legacy_import_name_remains_duplicate_without_replacing_key() {
+        let (pool, directory) = keyway_db("legacy_duplicate");
+        let source_path = source_db(
+            &directory,
+            &[(
+                "source-a",
+                "claude",
+                "A",
+                r#"{"env":{"ANTHROPIC_BASE_URL":"https://a.example/v1/","ANTHROPIC_API_KEY":"new-key"}}"#,
+                1,
+            )],
+        );
+        provider::create(
+            &pool,
+            ProviderInput {
+                app_type: AppType::Claude,
+                name: "A (CC Switch 2)".into(),
+                base_url: "https://a.example/v1".into(),
+                models: vec![],
+                api_key: Some("old-key".into()),
+            },
+        )
+        .unwrap();
+
+        let found = discover_from(&pool, &source_path).unwrap();
+        assert_eq!(found.len(), 1);
+        assert!(!found[0].importable);
+        assert_eq!(found[0].reason, Some(ImportBlockReason::Duplicate));
+
+        for _ in 0..2 {
+            let result = import_selected_from(
+                &pool,
+                &source_path,
+                &[ImportRequest {
+                    source_id: "source-a".into(),
+                    app_type: AppType::Claude,
+                }],
+            )
+            .unwrap();
+            assert!(result.imported.is_empty());
+            assert_eq!(result.skipped, vec!["A"]);
+        }
+        let providers = crate::db::provider_dao::list_all(&pool).unwrap();
+        assert_eq!(providers.len(), 1);
+        assert_eq!(providers[0].name, "A (CC Switch 2)");
+        assert_eq!(
+            crate::db::api_key_dao::get(&pool, &providers[0].id)
+                .unwrap()
+                .as_deref(),
+            Some("old-key")
+        );
 
         drop(pool);
         let _ = std::fs::remove_dir_all(directory);
