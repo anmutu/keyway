@@ -17,11 +17,13 @@ interface TourStep {
   descKey: DictKey;
 }
 
-// 步骤顺序 = 使用链路:添加供应商 → 一键接管 → 日志验证,再日常操作与界面分区。
-// 用户最容易卡在"加完供应商不知道怎么接管",接管步必须讲透。
+// 步骤顺序 = 使用链路:添加/迁移供应商 → 一键接管 → 日志验证,再日常操作与界面分区。
+// 用户最容易卡在"加完供应商不知道怎么接管",接管步必须讲透;
+// 迁移步在导入按钮不存在时(如 demo)由 goTo 自动跳过。
 const STEPS: TourStep[] = [
   { target: null, titleKey: "tour.welcomeTitle", descKey: "tour.welcomeDesc" },
   { target: '[data-tour="add-provider"]', titleKey: "tour.stepAddTitle", descKey: "tour.stepAddDesc" },
+  { target: '[data-tour="import-external"]', titleKey: "tour.stepImportTitle", descKey: "tour.stepImportDesc" },
   { target: '[data-tour="proxy-status"]', titleKey: "tour.stepTakeoverTitle", descKey: "tour.stepTakeoverDesc" },
   { target: '[data-tour="logs"]', titleKey: "tour.stepLogsTitle", descKey: "tour.stepLogsDesc" },
   { target: '[data-tour="quick-switch"]', titleKey: "tour.stepQuickTitle", descKey: "tour.stepQuickDesc" },

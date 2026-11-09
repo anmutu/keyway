@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
 import { ScrollText, Plus, Search } from "lucide-react";
 import { AdvancedNavMenu } from "@/components/AdvancedNavMenu";
 import { ProviderIcon } from "@/components/ProviderIcon";
@@ -285,7 +287,24 @@ export function Sidebar({
           </span>
         </div>
         <ModeToggle />
+        <SidebarVersion />
       </div>
     </aside>
+  );
+}
+
+/** 底部常驻版本号:排查"装的是哪版"不用翻 About;demo 模式不渲染,官网截图不绑定版本号 */
+function SidebarVersion() {
+  const [v, setV] = useState("");
+  useEffect(() => {
+    getVersion()
+      .then(setV)
+      .catch(() => setV(""));
+  }, []);
+  if (!v || new URLSearchParams(location.search).has("demo")) return null;
+  return (
+    <span className="select-none text-[9px] leading-none tracking-wide text-muted-foreground/50">
+      v{v}
+    </span>
   );
 }

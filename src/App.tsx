@@ -21,7 +21,7 @@ import { ToastStack, type ToastItem, type ToastType } from "@/components/Toast";
 import { AboutDialog } from "@/components/AboutDialog";
 import { QuickSwitchPanel } from "@/components/QuickSwitchPanel";
 import { OnboardingDialog, hasOnboarded } from "@/components/OnboardingDialog";
-import { GuidedTour } from "@/components/GuidedTour";
+import { GuidedTour, hasTourDone } from "@/components/GuidedTour";
 import { TakeoverDialog } from "@/components/TakeoverDialog";
 import { CcSwitchImportDialog } from "@/components/CcSwitchImportDialog";
 import { Button } from "@/components/ui/button";
@@ -524,6 +524,16 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCache]);
 
+  // 升级用户补播导览:走过首启向导但从未看过界面导览(导览晚于向导上线,
+  // 老用户没有任何入口触达)→ 自动播一次,关掉即记录、不再打扰
+  useEffect(() => {
+    if (IS_DEMO) return;
+    // 新装用户走首启向导,向导结束会自行接播导览,这里不抢
+    if (!hasOnboarded() || hasTourDone()) return;
+    startTour();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 代理状态:常显于 header(卖点可见性)
   useEffect(() => {
     if (IS_DEMO) {
@@ -998,6 +1008,7 @@ function App() {
                       variant="outline"
                       aria-label={t("ccSwitch.open")}
                       onClick={openCcSwitchImport}
+                      data-tour="import-external"
                     >
                       <Download className="h-4 w-4" />
                       <span className="hidden md:inline">{t("ccSwitch.open")}</span>
