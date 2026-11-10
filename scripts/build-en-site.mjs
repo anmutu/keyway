@@ -56,7 +56,7 @@ const EN_DICT = {
   qsShotCap: "Add a provider — presets ready to go, or migrate from another switcher in one click",
   migSrc: "Already in <b>another switcher</b>",
   migDst: "<b>Keyway</b> provider pool",
-  migBadge: "✓ 2 providers migrated · source configs untouched",
+  migBadge: "✓ 3 providers migrated · source configs untouched",
   migCap: "One-click migration: bring providers over from another switcher — just select and import",
   s2t: "One-click takeover.", s2d: "Originals backed up, restorable anytime.",
   s3t: "Switch in a tap.", s3d: "Send a new request, then check its actual provider and response status in the logs.",
@@ -127,6 +127,20 @@ html = html.replace(/(<a[^>]*href="\.\.\/"[^>]*>)(Home|Keyway)/g, '$1'.replace('
 // 页脚的 Guide 链接也要修正
 html = html.split('href="../guide.html"').join('href="./guide.html"');
 html = html.split('href="../download.html"').join('href="./download.html"');
+
+// 接入教程/供应商接入指南:EN 版在 /en/ 根,不在 /en/guides/
+html = html.split('href="../guides/integrate-keyway.html"').join('href="./integrate-keyway.html"');
+html = html.split('href="../guides/provider-integration.html"').join('href="./provider-integration.html"');
+html = html.split('>一键接入教程</a>').join('>Add-to-Keyway button</a>');
+html = html.split('>供应商接入文档</a>').join('>Provider integration</a>');
+
+// 一键迁移演示区(非 data-i18n 的静态文案;migSrc/migDst 含嵌套 <b>,通用正则吃不到,需整段替换)
+html = html.split('aria-label="一键迁移演示"').join('aria-label="One-click migration demo"');
+html = html.split('<span class="mig-label"><b>外部管理器</b> 里已有的</span>').join('<span class="mig-label">Already in <b>another switcher</b></span>');
+html = html.split('<span class="mig-label"><b>Keyway</b> 供应商池</span>').join('<span class="mig-label"><b>Keyway</b> provider pool</span>');
+html = html.split('✓</span>Claude 官方</div>').join('✓</span>Claude Official</div>');
+html = html.split('src="../icons/claude.svg" alt="" width="16" height="16" />Claude 官方</div>').join('src="../icons/claude.svg" alt="" width="16" height="16" />Claude Official</div>');
+html = html.split('<p class="mig-cta">正在用其他切换工具?扫描本机,勾选即迁,原配置只读不动 —— <a href="../guide.html#add">看迁移步骤</a></p>').join('<p class="mig-cta">Coming from another switcher? Scan this machine, pick what to migrate — originals stay untouched — <a href="./guide.html#add">see the migration steps</a></p>');
 
 
 // 语言下拉:整个 <details> 块从中文版换为英文版
@@ -302,7 +316,7 @@ writeFileSync(resolve(outDir, "index.html"), html);
 const checks = {
   "data-i18n": /data-i18n=/.test(html),
   "zh-CN html lang": /<html lang="zh-CN">/.test(html),
-  "./ asset paths": new RegExp('(?:src|href)="\\.\\/(?!privacy\\.html|terms\\.html|blog\\/|download\\.html|guide\\.html)').test(html),
+  "./ asset paths": new RegExp('(?:src|href)="\\.\\/(?!privacy\\.html|terms\\.html|blog\\/|download\\.html|guide\\.html|integrate-keyway\\.html|provider-integration\\.html)').test(html),
 };
 const canonicalCount = (html.match(/<link rel="canonical"/g) || []).length;
 const zhLdCount = (html.match(/的开源本地网关|无需重启会话切换供应商/g) || []).length;

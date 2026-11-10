@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>供应商接入指南 — 让 Keyway 用户一键用上你的服务</title>
+    <meta
+      name="description"
+      content="面向 AI API 供应商与网关服务的 Keyway 接入文档:兼容端点即可手动接入;申请预设收录进入添加列表;用 keyway:// 深链按钮让用户免复制粘贴一键添加。收录流程、审核标准与链接规范全在这页。"
+    />
+    <meta name="keywords" content="keyway 供应商接入, keyway provider integration, claude code 供应商, api 供应商 收录, keyway 深链, keyway://connect/relay, 第三方供应商 接入" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Keyway" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" content="https://keyway.one/guides/provider-integration.html" />
+    <meta property="og:title" content="供应商接入指南 — 让 Keyway 用户一键用上你的服务" />
+    <meta property="og:description" content="兼容端点、预设收录、深链一键接入:三种由浅入深的接入方式,收录规则与 keyway:// 链接规范。" />
+    <meta property="og:image" content="https://keyway.one/app-light.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="供应商接入指南 — 让 Keyway 用户一键用上你的服务" />
+    <meta name="twitter:description" content="兼容端点、预设收录、深链一键接入:三种由浅入深的接入方式,收录规则与 keyway:// 链接规范。" />
+    <meta name="twitter:image" content="https://keyway.one/app-light.png" />
+    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <link rel="canonical" href="https://keyway.one/guides/provider-integration.html" />
+    <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/guides/provider-integration.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/provider-integration.html" />
+    <link rel="alternate" hreflang="x-default" href="https://keyway.one/en/provider-integration.html" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "收录要收费吗?", "acceptedAnswer": { "@type": "Answer", "text": "不收费。模型厂商官方端点,以及运营满 3 个月、有公开文档与定价的优质第三方服务,都免费收录。另有明示角标的赞助位,但不收录不等于不可用——用户始终可以用自定义供应商手动接入。" } },
+        { "@type": "Question", "name": "收录后多久生效?", "acceptedAnswer": { "@type": "Answer", "text": "审核通过后随 Keyway 的下一次版本发布生效,已安装用户通过自动更新获得,无需重新下载。" } },
+        { "@type": "Question", "name": "深链按钮和预设收录冲突吗?", "acceptedAnswer": { "@type": "Answer", "text": "不冲突,建议两者都做:预设收录解决的是被发现和被信任,深链按钮解决的是从你的控制台一键完成配置。" } },
+        { "@type": "Question", "name": "深链里可以带上用户的 API Key 吗?", "acceptedAnswer": { "@type": "Answer", "text": "不可以。深链只承载公开连接信息,任何情况下都不得包含 API Key、账号或机密。Key 由用户在 Keyway 内粘贴,或通过短时一次性的 handoff 授权码完成。" } }
+      ]
+    }
+    </script>
+    <style>
+      :root { --fg: #1d1d1f; --fg-2: #62626d; --fg-3: #86868b; --blue: #0066cc; --bg: #fff; --bg-alt: #f5f5f7; --hair: #d2d2d7; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; color: var(--fg); background: var(--bg); font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 22px; }
+      nav { position: sticky; top: 0; z-index: 50; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+      .nav-inner { max-width: 720px; margin: 0 auto; padding: 10px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+      .nav-inner a { color: var(--fg-2); text-decoration: none; }
+      .nav-inner a:hover { color: #000; }
+      .brand { color: var(--fg); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+      .brand img { border-radius: 4px; }
+      header { padding: 56px 0 8px; }
+      .eyebrow { color: var(--blue); font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+      h1 { font-size: 36px; line-height: 1.15; letter-spacing: -.015em; margin: 10px 0 14px; font-weight: 700; }
+      .meta { color: var(--fg-3); font-size: 14px; }
+      article { padding: 26px 0 40px; }
+      h2 { font-size: 25px; margin: 44px 0 12px; letter-spacing: -.01em; scroll-margin-top: 64px; }
+      h3 { font-size: 19px; margin: 28px 0 8px; }
+      p { margin: 12px 0; color: var(--fg); }
+      ul, ol { margin: 12px 0 12px 22px; }
+      li { margin: 6px 0; }
+      a { color: var(--blue); }
+      code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; background: var(--bg-alt); padding: 2px 6px; border-radius: 6px; }
+      pre { background: #1d1d1f; color: #f5f5f7; border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 14px 0; font-size: 13.5px; line-height: 1.6; }
+      pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+      .note { background: var(--bg-alt); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 15px; color: var(--fg-2); }
+      table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+      th { color: var(--fg-3); font-weight: 600; white-space: nowrap; }
+      .cta { background: var(--bg-alt); border-radius: 16px; padding: 28px; text-align: center; margin: 48px 0 8px; }
+      .cta h2 { margin-top: 0; }
+      .btn { display: inline-block; background: var(--blue); color: #fff; text-decoration: none; padding: 11px 24px; border-radius: 980px; font-weight: 500; margin: 8px 6px 0; }
+      .btn:hover { background: #c25f3f; }
+      .btn.ghost { background: none; color: var(--blue); border: 1px solid var(--hair); }
+      details { border-bottom: 1px solid var(--hair); padding: 14px 0; }
+      summary { font-weight: 600; cursor: pointer; font-size: 17px; }
+      details p { color: var(--fg-2); font-size: 15.5px; }
+      footer { border-top: 1px solid var(--hair); margin-top: 40px; padding: 22px 0 44px; color: var(--fg-3); font-size: 13.5px; }
+      footer a { color: var(--fg-2); }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <a class="brand" href="../index.html"><img src="../logo.svg" width="18" height="18" alt="Keyway logo" />Keyway</a>
+        <span>
+          <a href="../index.html">主页</a> · <a href="../guide.html">使用指南</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../en/provider-integration.html">English</a>
+        </span>
+      </div>
+    </nav>
+    <div class="wrap">
+      <header>
+        <p class="eyebrow">Keyway 文档 · 面向供应商</p>
+        <h1>把你的服务接进 Keyway</h1>
+        <p class="meta">2026-11 发布 · 适用于 AI API 供应商、聚合网关与模型服务</p>
+      </header>
+      <article>
+        <p><a href="../index.html">Keyway</a> 是开源(MIT)的 AI CLI 本地网关,macOS / Windows / Linux 桌面端。用户在 Claude Code、Codex、Gemini CLI、OpenCode 等 9 个 CLI 里管理供应商、切换、配置故障转移。对你的服务来说,接入 Keyway 意味着出现在这些用户的「添加供应商」列表里——配好名称和地址,一次点击就完成。</p>
+        <p>接入由浅入深有三层,做到第几层由你决定:</p>
+
+        <h2 id="levels">三层接入,由浅入深</h2>
+        <table>
+          <tr><th>层级</th><th>用户侧体验</th><th>你要做的事</th></tr>
+          <tr><td>兼容端点</td><td>用「自定义供应商」手动填地址接入</td><td>提供 OpenAI 或 Anthropic 兼容端点——仅此而已</td></tr>
+          <tr><td>预设收录</td><td>在列表里直接点你的名字,地址自动填好,还能一键跳你的控制台取 Key</td><td>提交收录申请,通过审核后随版本更新内置</td></tr>
+          <tr><td>一键接入按钮</td><td>在你的控制台点「添加到 Keyway」,Keyway 弹出预填好的确认框,只填 API Key</td><td>在页面放一个 <code>keyway://</code> 深链按钮</td></tr>
+        </table>
+
+        <h2 id="preset">申请预设收录</h2>
+        <p>收录是<strong>公开的代码贡献</strong>,不是远程配置下发:预设列表写在 Keyway 的开源仓库里,Keyway 不会从你的服务器读取预设、不远程执行代码、不接收用户的 API Key。流程四步:</p>
+        <ol>
+          <li>通过 <a href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">收录申请表单</a> 提交官网、公开 API 文档、Base URL、协议与模型等公开信息;</li>
+          <li>维护者核对官方文档、端点安全性、协议兼容性与实际连通性;</li>
+          <li>通过审核的内容整理为 <a href="https://github.com/anmutu/keyway/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer">预设 PR</a>(你也可以直接提);</li>
+          <li>PR 合并后,下一次版本发布把预设带给所有用户,已装用户自动更新获得。</li>
+        </ol>
+        <h3>审核标准</h3>
+        <ul>
+          <li><strong>官方端点</strong>:模型厂商自己的 API,免费收录;</li>
+          <li><strong>第三方与聚合服务</strong>:运营满 3 个月、有公开文档与定价、无重大安全或停运事故,免费收录;</li>
+          <li><strong>赞助位</strong>:付费收录,条目带明示的「赞助」角标,不做隐性推广;取 Key 链接必须是干净的控制台地址,不允许 <code>?aff=</code> 之类的推广参数;质量底线不因赞助放宽,端点不可用即下架。</li>
+        </ul>
+        <div class="note">红线:提交内容不得包含 API Key、账号密码、用户数据或推广参数。预设里的取 Key 入口必须是你官方控制台的干净地址。</div>
+
+        <h2 id="deeplink">「添加到 Keyway」按钮(深链)</h2>
+        <p>Keyway 注册了 <code>keyway://</code> 协议。用户已安装 Keyway 时,点击你页面上的按钮,Keyway 会弹出确认框——<strong>端点、名称都已预填,用户只需粘贴 API Key</strong>。没有装 Keyway 的用户,建议把链接的兜底跳转指向 <a href="../download.html">下载页</a>。<strong>手把手教程(含未安装兜底 JS、放置位置与测试方法)见<a href="./integrate-keyway.html">《在你的平台接入 Keyway:一个按钮的事》</a></strong>。</p>
+        <p>链接格式:</p>
+        <pre><code>keyway://connect/relay?v=1&amp;base=https%3A%2F%2Fapi.example.com&amp;app=claude&amp;name=Example</code></pre>
+        <table>
+          <tr><th>参数</th><th>必填</th><th>说明</th></tr>
+          <tr><td><code>v</code></td><td>是</td><td>固定为 <code>1</code></td></tr>
+          <tr><td><code>base</code></td><td>是</td><td>你的接口根地址,URL 编码;必须是 HTTPS,不带用户名密码、查询参数或锚点。OpenAI 兼容端点填根地址即可,Codex 场景 Keyway 会自动补 <code>/v1</code></td></tr>
+          <tr><td><code>app</code></td><td>是</td><td>目标 CLI:<code>claude</code> / <code>codex</code> / <code>opencode</code> / <code>openclaw</code>,多 CLI 就放多个按钮</td></tr>
+          <tr><td><code>name</code></td><td>否</td><td>预填的显示名,40 字符以内</td></tr>
+          <tr><td><code>model</code></td><td>否</td><td>预选的模型 ID</td></tr>
+          <tr><td><code>handoff</code></td><td>否</td><td>短时一次性授权码,用于免复制粘贴的 Key 交接,高级集成,建议先通过 Issue 对齐</td></tr>
+        </table>
+        <p>放到你的控制台或文档页:</p>
+        <pre><code>&lt;a href="keyway://connect/relay?v=1&amp;amp;base=https%3A%2F%2Fapi.example.com&amp;amp;app=claude&amp;amp;name=Example"&gt;
+  添加到 Keyway
+&lt;/a&gt;</code></pre>
+        <div class="note">安全红线:深链只承载<strong>公开连接信息</strong>。任何情况下不要把 API Key、账号或其他机密拼进链接——Key 由用户在 Keyway 内粘贴,或走短时一次性的 handoff 授权。</div>
+
+        <h2 id="recommend">推荐给你的用户(拿走即用)</h2>
+        <p>被收录后,最有效的曝光往往不在 Keyway 里,而在你自己的接入文档里——一句话把 Keyway 列为推荐客户端,用户少抄一次地址,你多一条获客路径。三样东西直接复制:</p>
+
+        <h3>文档文案模板</h3>
+        <p>放进你的「客户端接入」或「Claude Code 使用」文档页:</p>
+        <pre><code>### 在 Claude Code 里使用本服务
+
+推荐使用开源客户端 Keyway(macOS / Windows / Linux):
+添加供应商时选择本服务,粘贴 API Key 即完成,无需手改配置文件;
+之后可在多个供应商之间一键切换,已运行的会话不用重启。
+
+下载:https://keyway.one</code></pre>
+
+        <h3>深链按钮 HTML</h3>
+        <p>把 <code>base</code> 换成你的端点、<code>name</code> 换成你的品牌名即可(参数说明见上文):</p>
+        <pre><code>&lt;a href="keyway://connect/relay?v=1&amp;amp;base=https%3A%2F%2Fapi.你的域名.com&amp;amp;app=claude&amp;amp;name=你的品牌名"&gt;
+  添加到 Keyway
+&lt;/a&gt;</code></pre>
+
+        <h3>品牌素材</h3>
+        <ul>
+          <li>Logo:<a href="https://keyway.one/logo.svg">logo.svg</a> — 深色背景上使用时请加白色圆角衬底</li>
+          <li>名称统一写作 <strong>Keyway</strong>(首字母大写);链接一律指向 <code>https://keyway.one</code>,不要带查询参数</li>
+        </ul>
+        <div class="note">页面上线后,回到你的收录申请 Issue 附上链接;核对无误即可列入下文「已接入案例」。</div>
+
+        <h2 id="case">已接入案例</h2>
+        <p><a href="https://teapotrouter.com" target="_blank" rel="noreferrer">TeapotRouter</a> 完整走通了预设收录:预设列表展示其标准网关地址 <code>https://api.teapotrouter.com</code>,并提供一键跳转控制台取 Key。说明:TeapotRouter 与 Keyway 为同一作者,是首个全链路接入示例;收录顺序与赞助位规则对所有供应商一致。</p>
+
+        <h2 id="faq">常见问题</h2>
+        <details>
+          <summary>收录要收费吗?</summary>
+          <p>不收费。官方端点、以及运营满 3 个月且有公开文档定价的优质第三方服务都免费收录。赞助位是额外的明示推广位,不买不影响收录。</p>
+        </details>
+        <details>
+          <summary>收录后多久生效?</summary>
+          <p>审核通过后随下一次版本发布生效;已安装用户通过自动更新获得,无需重新下载。</p>
+        </details>
+        <details>
+          <summary>深链按钮和预设收录冲突吗?</summary>
+          <p>不冲突,建议都做:预设解决「被发现与被信任」,深链解决「从你的控制台一步完成配置」。</p>
+        </details>
+        <details>
+          <summary>用户添加后,Keyway 会对我的端点做什么?</summary>
+          <p>用户主动点「测试连通」时,Keyway 会发一条最小请求验证可用性与延迟;平时只是把用户请求按配置转发。Keyway 不读取你的服务器配置,也不向你的服务器上报数据。</p>
+        </details>
+
+        <div class="cta">
+          <h2>让 Keyway 用户一步用上你的服务</h2>
+          <p>提交公开信息,审核通过即随版本内置;深链按钮随时可以先行上线。</p>
+          <a class="btn" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">提交收录申请</a>
+          <a class="btn ghost" href="https://github.com/anmutu/keyway/discussions" target="_blank" rel="noreferrer">先聊聊</a>
+        </div>
+      </article>
+      <footer>
+        <p>Keyway 是 MIT 开源项目,与 Anthropic、OpenAI、Google 无关联。Claude Code 为 Anthropic 产品。</p>
+        <p><a href="../index.html">主页</a> · <a href="../guide.html">详细使用指南</a> · <a href="../en/provider-integration.html">English version</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

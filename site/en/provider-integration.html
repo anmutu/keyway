@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Provider Integration Guide — get your service into Keyway</title>
+    <meta
+      name="description"
+      content="Integration docs for AI API providers and gateways: a compatible endpoint works out of the box; apply to be listed as a preset; add a keyway:// deep-link button so users connect in one click. Listing rules, review criteria and the link spec, all on one page."
+    />
+    <meta name="keywords" content="keyway provider integration, keyway preset submission, claude code provider, api gateway integration, keyway://connect/relay, third-party provider listing" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Keyway" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:url" content="https://keyway.one/en/provider-integration.html" />
+    <meta property="og:title" content="Provider Integration Guide — get your service into Keyway" />
+    <meta property="og:description" content="Compatible endpoint, preset listing, and a one-click deep-link button: three levels of integration, listing rules and the keyway:// link spec." />
+    <meta property="og:image" content="https://keyway.one/app-light-en.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Provider Integration Guide — get your service into Keyway" />
+    <meta name="twitter:description" content="Compatible endpoint, preset listing, and a one-click deep-link button: three levels of integration, listing rules and the keyway:// link spec." />
+    <meta name="twitter:image" content="https://keyway.one/app-light-en.png" />
+    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <link rel="canonical" href="https://keyway.one/en/provider-integration.html" />
+    <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/guides/provider-integration.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/provider-integration.html" />
+    <link rel="alternate" hreflang="x-default" href="https://keyway.one/en/provider-integration.html" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Does listing cost anything?", "acceptedAnswer": { "@type": "Answer", "text": "No. Official model-vendor endpoints, and third-party services that have operated for at least 3 months with public docs and pricing, are listed for free. There is a clearly labelled sponsored slot as a separate option; declining it does not affect usability — users can always connect via a custom provider." } },
+        { "@type": "Question", "name": "How long until a listing goes live?", "acceptedAnswer": { "@type": "Answer", "text": "After review, the preset ships with the next Keyway release. Existing users receive it through automatic updates." } },
+        { "@type": "Question", "name": "Does the deep-link button conflict with preset listing?", "acceptedAnswer": { "@type": "Answer", "text": "No — do both. The preset handles discovery and trust inside Keyway; the deep-link button handles one-click setup from your own console." } },
+        { "@type": "Question", "name": "Can the deep link carry the user's API key?", "acceptedAnswer": { "@type": "Answer", "text": "Never. Deep links carry public connection information only. Keys are pasted by the user inside Keyway, or exchanged via a short-lived, single-use handoff grant." } }
+      ]
+    }
+    </script>
+    <style>
+      :root { --fg: #1d1d1f; --fg-2: #62626d; --fg-3: #86868b; --blue: #0066cc; --bg: #fff; --bg-alt: #f5f5f7; --hair: #d2d2d7; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; color: var(--fg); background: var(--bg); font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 22px; }
+      nav { position: sticky; top: 0; z-index: 50; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+      .nav-inner { max-width: 720px; margin: 0 auto; padding: 10px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+      .nav-inner a { color: var(--fg-2); text-decoration: none; }
+      .nav-inner a:hover { color: #000; }
+      .brand { color: var(--fg); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+      .brand img { border-radius: 4px; }
+      header { padding: 56px 0 8px; }
+      .eyebrow { color: var(--blue); font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+      h1 { font-size: 36px; line-height: 1.15; letter-spacing: -.015em; margin: 10px 0 14px; font-weight: 700; }
+      .meta { color: var(--fg-3); font-size: 14px; }
+      article { padding: 26px 0 40px; }
+      h2 { font-size: 25px; margin: 44px 0 12px; letter-spacing: -.01em; scroll-margin-top: 64px; }
+      h3 { font-size: 19px; margin: 28px 0 8px; }
+      p { margin: 12px 0; color: var(--fg); }
+      ul, ol { margin: 12px 0 12px 22px; }
+      li { margin: 6px 0; }
+      a { color: var(--blue); }
+      code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; background: var(--bg-alt); padding: 2px 6px; border-radius: 6px; }
+      pre { background: #1d1d1f; color: #f5f5f7; border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 14px 0; font-size: 13.5px; line-height: 1.6; }
+      pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+      .note { background: var(--bg-alt); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 15px; color: var(--fg-2); }
+      table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+      th { color: var(--fg-3); font-weight: 600; white-space: nowrap; }
+      .cta { background: var(--bg-alt); border-radius: 16px; padding: 28px; text-align: center; margin: 48px 0 8px; }
+      .cta h2 { margin-top: 0; }
+      .btn { display: inline-block; background: var(--blue); color: #fff; text-decoration: none; padding: 11px 24px; border-radius: 980px; font-weight: 500; margin: 8px 6px 0; }
+      .btn:hover { background: #c25f3f; }
+      .btn.ghost { background: none; color: var(--blue); border: 1px solid var(--hair); }
+      details { border-bottom: 1px solid var(--hair); padding: 14px 0; }
+      summary { font-weight: 600; cursor: pointer; font-size: 17px; }
+      details p { color: var(--fg-2); font-size: 15.5px; }
+      footer { border-top: 1px solid var(--hair); margin-top: 40px; padding: 22px 0 44px; color: var(--fg-3); font-size: 13.5px; }
+      footer a { color: var(--fg-2); }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <a class="brand" href="./index.html"><img src="../logo.svg" width="18" height="18" alt="Keyway logo" />Keyway</a>
+        <span>
+          <a href="./index.html">Home</a> · <a href="./guide.html">Guide</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../guides/provider-integration.html">中文版</a>
+        </span>
+      </div>
+    </nav>
+    <div class="wrap">
+      <header>
+        <p class="eyebrow">Keyway docs · for providers</p>
+        <h1>Get your service into Keyway</h1>
+        <p class="meta">Published 2026-11 · For AI API providers, aggregators and model services</p>
+      </header>
+      <article>
+        <p><a href="./index.html">Keyway</a> is an open-source (MIT) local gateway for AI coding CLIs on macOS, Windows and Linux. Users manage providers, switch between them, and set up failover across Claude Code, Codex, Gemini CLI, OpenCode and nine CLIs in total. For your service, being in Keyway means appearing in the "Add provider" list — name and endpoint pre-filled, one click to configure.</p>
+        <p>There are three levels of integration, from shallow to deep:</p>
+
+        <h2 id="levels">Three levels, shallow to deep</h2>
+        <table>
+          <tr><th>Level</th><th>User experience</th><th>What you do</th></tr>
+          <tr><td>Compatible endpoint</td><td>Connects manually as a custom provider</td><td>Offer an OpenAI- or Anthropic-compatible endpoint — that's all</td></tr>
+          <tr><td>Preset listing</td><td>Picks your name from the list; endpoint pre-filled, with a one-click jump to your console for a key</td><td>Submit a listing request; ships with the next release after review</td></tr>
+          <tr><td>One-click button</td><td>Clicks "Add to Keyway" in your console; Keyway opens pre-filled, user pastes only the API key</td><td>Put a <code>keyway://</code> deep-link button on your page</td></tr>
+        </table>
+
+        <h2 id="preset">Apply for a preset listing</h2>
+        <p>A listing is a <strong>public code contribution</strong>, not remote configuration: presets live in Keyway's open repository. Keyway never reads presets from your servers, never executes remote code, and never receives users' API keys. Four steps:</p>
+        <ol>
+          <li>Submit public info — website, public API docs, base URL, protocol and models — via the <a href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">listing request form</a>;</li>
+          <li>A maintainer verifies the docs, endpoint safety, protocol compatibility and live connectivity;</li>
+          <li>Approved entries become a <a href="https://github.com/anmutu/keyway/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer">preset PR</a> (you may open it yourself);</li>
+          <li>Once merged, the next release ships the preset to every user; installed users get it via auto-update.</li>
+        </ol>
+        <h3>Review criteria</h3>
+        <ul>
+          <li><strong>Official endpoints</strong>: model vendors' own APIs — listed free;</li>
+          <li><strong>Third-party and aggregator services</strong>: operating for 3+ months, public docs and pricing, no major security or abandonment incidents — listed free;</li>
+          <li><strong>Sponsored slot</strong>: paid, with a clearly labelled badge — no stealth promotion. The key-console link must be a clean official URL without <code>?aff=</code>-style tracking; quality bars do not relax for sponsors, and an unusable endpoint gets delisted.</li>
+        </ul>
+        <div class="note">Hard lines: submissions must not contain API keys, credentials, user data or promo parameters. The key URL in a preset must be your official console address, clean.</div>
+
+        <h2 id="deeplink">The "Add to Keyway" button (deep link)</h2>
+        <p>Keyway registers the <code>keyway://</code> scheme. When a user with Keyway installed clicks the button on your page, Keyway opens a confirmation dialog — <strong>endpoint and display name pre-filled; the user only pastes an API key</strong>. For users without Keyway, point the fallback link at the <a href="./download.html">download page</a>. <strong>For a hands-on walkthrough (fallback JS, placement advice and testing), see <a href="./integrate-keyway.html">"Integrate Keyway into your platform: it's one button"</a></strong>.</p>
+        <p>Link format:</p>
+        <pre><code>keyway://connect/relay?v=1&amp;base=https%3A%2F%2Fapi.example.com&amp;app=claude&amp;name=Example</code></pre>
+        <table>
+          <tr><th>Param</th><th>Required</th><th>Description</th></tr>
+          <tr><td><code>v</code></td><td>yes</td><td>Fixed: <code>1</code></td></tr>
+          <tr><td><code>base</code></td><td>yes</td><td>Your API root, URL-encoded; must be HTTPS with no userinfo, query string or fragment. For OpenAI-compatible endpoints supply the root — Keyway appends <code>/v1</code> for Codex</td></tr>
+          <tr><td><code>app</code></td><td>yes</td><td>Target CLI: <code>claude</code> / <code>codex</code> / <code>opencode</code> / <code>openclaw</code> — one button per CLI if you serve several</td></tr>
+          <tr><td><code>name</code></td><td>no</td><td>Pre-filled display name, up to 40 characters</td></tr>
+          <tr><td><code>model</code></td><td>no</td><td>Pre-selected model ID</td></tr>
+          <tr><td><code>handoff</code></td><td>no</td><td>Short-lived, single-use grant for copy-free key exchange. Advanced — align with us over an issue first</td></tr>
+        </table>
+        <p>Drop it into your console or docs page:</p>
+        <pre><code>&lt;a href="keyway://connect/relay?v=1&amp;amp;base=https%3A%2F%2Fapi.example.com&amp;amp;app=claude&amp;amp;name=Example"&gt;
+  Add to Keyway
+&lt;/a&gt;</code></pre>
+        <div class="note">Security line: deep links carry <strong>public connection info only</strong>. Never put API keys, accounts or secrets into the link — keys are pasted by the user inside Keyway, or exchanged via a short-lived, single-use handoff grant.</div>
+
+        <h2 id="recommend">Recommend us to your users (copy-paste ready)</h2>
+        <p>Once listed, your most effective exposure is often inside your own docs — one line naming Keyway as a recommended client means users copy one fewer URL, and you gain an acquisition path. Three things to copy directly:</p>
+
+        <h3>Docs snippet</h3>
+        <p>Drop this into your "client setup" or "Using with Claude Code" page:</p>
+        <pre><code>### Using this service with Claude Code
+
+We recommend the open-source client Keyway (macOS / Windows / Linux):
+pick this service when adding a provider, paste your API key, done —
+no config editing. Switch between providers anytime; running sessions
+keep working without a restart.
+
+Download: https://keyway.one</code></pre>
+
+        <h3>Deep-link button HTML</h3>
+        <p>Swap in your endpoint for <code>base</code> and your brand for <code>name</code> (parameters explained above):</p>
+        <pre><code>&lt;a href="keyway://connect/relay?v=1&amp;amp;base=https%3A%2F%2Fapi.your-domain.com&amp;amp;app=claude&amp;amp;name=YourBrand"&gt;
+  Add to Keyway
+&lt;/a&gt;</code></pre>
+
+        <h3>Brand assets</h3>
+        <ul>
+          <li>Logo: <a href="https://keyway.one/logo.svg">logo.svg</a> — on dark backgrounds, place it on a white rounded tile</li>
+          <li>Always write the name as <strong>Keyway</strong>; link straight to <code>https://keyway.one</code> with no query parameters</li>
+        </ul>
+        <div class="note">Once your page is live, reply on your listing issue with the link; after a quick check it joins the example list below.</div>
+
+        <h2 id="case">A live example</h2>
+        <p><a href="https://teapotrouter.com" target="_blank" rel="noreferrer">TeapotRouter</a> went through the full preset listing: the preset shows its standard gateway <code>https://api.teapotrouter.com</code> and links straight to its console for a key. Disclosure: TeapotRouter and Keyway share the same author; it is the first end-to-end example. Listing order and sponsor rules apply identically to every provider.</p>
+
+        <h2 id="faq">FAQ</h2>
+        <details>
+          <summary>Does listing cost anything?</summary>
+          <p>No. Official endpoints and established third-party services (3+ months, public docs and pricing) are listed free. The sponsored slot is a separate, clearly labelled option — skipping it changes nothing about usability.</p>
+        </details>
+        <details>
+          <summary>How long until it goes live?</summary>
+          <p>After review, the preset ships with the next release; installed users receive it via auto-update.</p>
+        </details>
+        <details>
+          <summary>Deep-link button vs. preset listing?</summary>
+          <p>Not either/or — do both. The preset covers discovery and trust inside Keyway; the button covers one-click setup from your console.</p>
+        </details>
+        <details>
+          <summary>What does Keyway do with my endpoint after a user adds it?</summary>
+          <p>When the user clicks "Test", Keyway sends one minimal request to check availability and latency; otherwise it simply forwards the user's requests per their config. Keyway reads no configuration from your servers and reports nothing to them.</p>
+        </details>
+
+        <div class="cta">
+          <h2>Reach Keyway users in one step</h2>
+          <p>Submit public info and ship with the next release; the deep-link button can go live today.</p>
+          <a class="btn" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Submit a listing</a>
+          <a class="btn ghost" href="https://github.com/anmutu/keyway/discussions" target="_blank" rel="noreferrer">Talk to us first</a>
+        </div>
+      </article>
+      <footer>
+        <p>Keyway is an MIT open-source project, not affiliated with Anthropic, OpenAI or Google. Claude Code is an Anthropic product.</p>
+        <p><a href="./index.html">Home</a> · <a href="./guide.html">Guide</a> · <a href="../guides/provider-integration.html">中文版</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

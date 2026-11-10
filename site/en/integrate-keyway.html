@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Integrate Keyway into your platform: it's one button — tutorial for site owners</title>
+    <meta
+      name="description"
+      content="A hands-on tutorial for platform owners and developers: put an Add to Keyway button in your console or docs so users configure your endpoint into Keyway (the local gateway for Claude Code and other AI CLIs) with one click. Deep-link parameters, a not-installed fallback snippet, and how to test."
+    />
+    <meta name="keywords" content="integrate keyway, add to keyway button, keyway deep link, keyway://connect/relay, claude code client recommendation, api provider integration tutorial" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Keyway" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:url" content="https://keyway.one/en/integrate-keyway.html" />
+    <meta property="og:title" content="Integrate Keyway into your platform: it's one button" />
+    <meta property="og:description" content="An Add to Keyway button in your console configures your endpoint for users in one click — deep-link spec, fallback JS, and testing, all in this tutorial." />
+    <meta property="og:image" content="https://keyway.one/app-light-en.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Integrate Keyway into your platform: it's one button" />
+    <meta name="twitter:description" content="An Add to Keyway button in your console configures your endpoint for users in one click — deep-link spec, fallback JS, and testing, all in this tutorial." />
+    <meta name="twitter:image" content="https://keyway.one/app-light-en.png" />
+    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <link rel="canonical" href="https://keyway.one/en/integrate-keyway.html" />
+    <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/guides/integrate-keyway.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/integrate-keyway.html" />
+    <link rel="alternate" hreflang="x-default" href="https://keyway.one/en/integrate-keyway.html" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Integrate Keyway into your platform",
+      "description": "Add an 'Add to Keyway' button to your console or docs so users configure your service into Keyway in one click.",
+      "step": [
+        { "@type": "HowToStep", "name": "Build the deep link", "text": "Compose keyway://connect/relay?v=1&base=<endpoint>&app=<cli>&name=<brand>; the endpoint must be URL-encoded with no query string." },
+        { "@type": "HowToStep", "name": "Place the button", "text": "Turn the link into an 'Add to Keyway' button on your API-key console page or the client-setup section of your docs." },
+        { "@type": "HowToStep", "name": "Handle the not-installed case", "text": "Use the provided JS snippet: attempt to launch Keyway, and if the page is still visible after ~1.5s, redirect to the Keyway download page." },
+        { "@type": "HowToStep", "name": "Test", "text": "Paste the keyway:// link into the address bar to verify; then run the full flow on a machine with Keyway installed." }
+      ]
+    }
+    </script>
+    <style>
+      :root { --fg: #1d1d1f; --fg-2: #62626d; --fg-3: #86868b; --blue: #0066cc; --bg: #fff; --bg-alt: #f5f5f7; --hair: #d2d2d7; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; color: var(--fg); background: var(--bg); font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 22px; }
+      nav { position: sticky; top: 0; z-index: 50; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+      .nav-inner { max-width: 720px; margin: 0 auto; padding: 10px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+      .nav-inner a { color: var(--fg-2); text-decoration: none; }
+      .nav-inner a:hover { color: #000; }
+      .brand { color: var(--fg); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+      .brand img { border-radius: 4px; }
+      header { padding: 56px 0 8px; }
+      .eyebrow { color: var(--blue); font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+      h1 { font-size: 36px; line-height: 1.15; letter-spacing: -.015em; margin: 10px 0 14px; font-weight: 700; }
+      .meta { color: var(--fg-3); font-size: 14px; }
+      article { padding: 26px 0 40px; }
+      h2 { font-size: 25px; margin: 44px 0 12px; letter-spacing: -.01em; scroll-margin-top: 64px; }
+      h3 { font-size: 19px; margin: 28px 0 8px; }
+      p { margin: 12px 0; color: var(--fg); }
+      ul, ol { margin: 12px 0 12px 22px; }
+      li { margin: 6px 0; }
+      a { color: var(--blue); }
+      code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; background: var(--bg-alt); padding: 2px 6px; border-radius: 6px; }
+      pre { background: #1d1d1f; color: #f5f5f7; border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 14px 0; font-size: 13.5px; line-height: 1.6; }
+      pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+      .note { background: var(--bg-alt); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 15px; color: var(--fg-2); }
+      table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+      th { color: var(--fg-3); font-weight: 600; white-space: nowrap; }
+      .cta { background: var(--bg-alt); border-radius: 16px; padding: 28px; text-align: center; margin: 48px 0 8px; }
+      .cta h2 { margin-top: 0; }
+      .btn { display: inline-block; background: var(--blue); color: #fff; text-decoration: none; padding: 11px 24px; border-radius: 980px; font-weight: 500; margin: 8px 6px 0; }
+      .btn:hover { background: #c25f3f; }
+      .btn.ghost { background: none; color: var(--blue); border: 1px solid var(--hair); }
+      details { border-bottom: 1px solid var(--hair); padding: 14px 0; }
+      summary { font-weight: 600; cursor: pointer; font-size: 17px; }
+      details p { color: var(--fg-2); font-size: 15.5px; }
+      footer { border-top: 1px solid var(--hair); margin-top: 40px; padding: 22px 0 44px; color: var(--fg-3); font-size: 13.5px; }
+      footer a { color: var(--fg-2); }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <a class="brand" href="./index.html"><img src="../logo.svg" width="18" height="18" alt="Keyway logo" />Keyway</a>
+        <span>
+          <a href="./index.html">Home</a> · <a href="./provider-integration.html">Provider integration guide</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../guides/integrate-keyway.html">中文版</a>
+        </span>
+      </div>
+    </nav>
+    <div class="wrap">
+      <header>
+        <p class="eyebrow">Keyway tutorial · for site owners</p>
+        <h1>Integrate Keyway into your platform: it's one button</h1>
+        <p class="meta">Published 2026-11 · For owners and frontend developers of API providers, aggregators and tool platforms</p>
+      </header>
+      <article>
+        <p>Some of your users write code in AI CLIs like Claude Code and Codex. To point those CLIs at your service, they usually copy an endpoint, open a config file, paste a key — and you lose some of them at every step. <a href="./index.html">Keyway</a> is an open-source (MIT) local gateway for AI CLIs. Put an "Add to Keyway" button in your console or docs: one click opens Keyway with <strong>your endpoint pre-filled</strong>; the user pastes an API key and they're done — never leaving your platform.</p>
+        <p>The TeapotRouter site already ships this exact entry point. This tutorial shows you how to build yours — about half an hour of work.</p>
+
+        <h2 id="flow">What your users will experience</h2>
+        <table>
+          <tr><th>User state</th><th>After the click</th></tr>
+          <tr><td>Keyway installed</td><td>Keyway opens a confirmation dialog with endpoint and display name pre-filled; the user pastes an API key to finish. From there they can take over the CLI and switch providers anytime</td></tr>
+          <tr><td>Not installed</td><td>The deep link does nothing — which is why the fallback in step 3 is mandatory (send them to the Keyway download page; after installing, one more click finishes the setup)</td></tr>
+        </table>
+        <div class="note">Security boundary: the deep link carries public connection info only (endpoint, brand name). <strong>Never</strong> put a user's API key into the link — keys are pasted by the user inside Keyway.</div>
+
+        <h2 id="step1">Step 1: build the deep link</h2>
+        <p>Keyway registers the <code>keyway://</code> scheme on install. Link format:</p>
+        <pre><code>keyway://connect/relay?v=1&amp;base=https%3A%2F%2Fapi.your-domain.com&amp;app=claude&amp;name=YourBrand</code></pre>
+        <table>
+          <tr><th>Param</th><th>Required</th><th>Description</th></tr>
+          <tr><td><code>v</code></td><td>yes</td><td>Fixed: <code>1</code></td></tr>
+          <tr><td><code>base</code></td><td>yes</td><td>Your API root, URL-encoded; HTTPS with no userinfo, query string or fragment. For OpenAI-compatible endpoints supply the root — Keyway appends <code>/v1</code> for Codex</td></tr>
+          <tr><td><code>app</code></td><td>yes</td><td><code>claude</code> / <code>codex</code> / <code>opencode</code> / <code>openclaw</code> — one button per CLI you serve</td></tr>
+          <tr><td><code>name</code></td><td>no</td><td>Pre-filled display name, up to 40 characters</td></tr>
+        </table>
+        <p>Full parameter constraints and the security model live in the <a href="./provider-integration.html#deeplink">provider integration guide</a>.</p>
+
+        <h2 id="step2">Step 2: place the button</h2>
+        <p>The simplest form is a plain link:</p>
+        <pre><code>&lt;a href="keyway://connect/relay?v=1&amp;amp;base=https%3A%2F%2Fapi.your-domain.com&amp;amp;app=claude&amp;amp;name=YourBrand"&gt;
+  Add to Keyway
+&lt;/a&gt;</code></pre>
+        <p>Where it converts best, in observed order:</p>
+        <ul>
+          <li><strong>The API-key page in your console</strong> — the moment a user just created a key is peak intent;</li>
+          <li><strong>The "client setup" section of your docs</strong> — next to the manual Claude Code instructions, as the easy option;</li>
+          <li>Home or pricing pages — as a secondary touchpoint.</li>
+        </ul>
+        <p>Brand assets and a ready-made recommendation snippet are in the guide's <a href="./provider-integration.html#recommend">"Recommend us to your users"</a> section.</p>
+
+        <h2 id="step3">Step 3: the not-installed fallback (mandatory)</h2>
+        <p>Users without Keyway click the deep link and nothing happens — a bare link loses them. Use this snippet: on click, attempt to launch; if the page is still visible after ~1.5s (the app never came up), send them to the download page.</p>
+        <pre><code>&lt;script&gt;
+  document.querySelectorAll('a[href^="keyway://"]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var deepLink = btn.href;
+      var start = Date.now();
+      // if the page is still visible after 1.5s, Keyway is not installed
+      setTimeout(function () {
+        if (!document.hidden &amp;&amp; Date.now() - start &lt; 1600) {
+          window.location.href = 'https://keyway.one/download.html';
+        }
+      }, 1500);
+      window.location.href = deepLink;
+    });
+  });
+&lt;/script&gt;</code></pre>
+        <p>When Keyway is installed, the OS brings it forward and your page goes to the background (<code>document.hidden</code> becomes true), so the redirect never fires; only genuinely uninstalled users land on the download page, which covers macOS, Windows and Linux.</p>
+
+        <h2 id="test">Step 4: test it</h2>
+        <ol>
+          <li><strong>Quick link check</strong>: paste the <code>keyway://…</code> link straight into the address bar on a machine with Keyway — the confirmation dialog should appear;</li>
+          <li><strong>Full flow</strong>: paste a test key in the dialog and verify the endpoint and name in Keyway match what you expect (for Codex, check that <code>/v1</code> is appended as intended);</li>
+          <li><strong>Fallback branch</strong>: click the button on a machine without Keyway (or with the scheme temporarily unregistered) and confirm you land on the download page after ~1.5s;</li>
+          <li><strong>Link hygiene</strong>: <code>base</code> must carry no query string or fragment and <code>name</code> no more than 40 characters — otherwise Keyway rejects the connection.</li>
+        </ol>
+
+        <h2 id="faq">FAQ</h2>
+        <details>
+          <summary>Is there an approval process or a fee?</summary>
+          <p>No. The deep link is an open capability of Keyway — no application, no review, no fee; it works the moment you ship it. To also appear in Keyway's preset list (users pick your name directly when adding a provider), use the <a href="./provider-integration.html#preset">listing request</a>; the two complement each other.</p>
+        </details>
+        <details>
+          <summary>Can the link carry the user's API key for a fully automatic setup?</summary>
+          <p>No — and it shouldn't. Deep links carry public connection info only; keys are pasted inside Keyway (an advanced short-lived, single-use handoff grant exists — see the integration guide).</p>
+        </details>
+        <details>
+          <summary>Can I see how many users arrive through this button?</summary>
+          <p>The button lives on your page, so clicks are visible in your own analytics; Keyway reports nothing back to you — it's a local-first tool and never uploads to your servers.</p>
+        </details>
+        <details>
+          <summary>Which CLIs are supported?</summary>
+          <p>The deep link covers Claude Code, Codex, OpenCode and OpenClaw; the remaining groups like Gemini CLI are covered through preset listing.</p>
+        </details>
+
+        <div class="cta">
+          <h2>Half an hour, one more acquisition path</h2>
+          <p>Once live, reply on the listing issue and you can join the guide's example list.</p>
+          <a class="btn" href="./provider-integration.html">Read the full integration guide</a>
+          <a class="btn ghost" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Submit a listing</a>
+        </div>
+      </article>
+      <footer>
+        <p>Keyway is an MIT open-source project, not affiliated with Anthropic, OpenAI or Google. Claude Code is an Anthropic product.</p>
+        <p><a href="./index.html">Home</a> · <a href="./provider-integration.html">Provider integration guide</a> · <a href="../guides/integrate-keyway.html">中文版</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

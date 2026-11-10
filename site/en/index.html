@@ -316,7 +316,7 @@
       .mig-fly { position: absolute; left: 0; width: calc(50% - 12px); height: 52px; border-radius: 10px;
         background: #33333b; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 10px 26px rgba(0,0,0,.35);
         display: flex; align-items: center; gap: 9px; padding: 0 14px; font-size: 13.5px; color: #f0f0f2; }
-      .mig-fly.c1 { top: 26px; } .mig-fly.c2 { top: 90px; }
+      .mig-fly.c1 { top: 26px; } .mig-fly.c2 { top: 90px; } .mig-fly.c3 { top: 154px; }
       .mig-ico { width: 16px; height: 16px; border-radius: 4px; flex: none; }
       .mig-ico-img { object-fit: cover; display: block; }
       .mig-ico.cp { background: #1e1e2e; border: 1px solid #45475a; position: relative; }
@@ -326,10 +326,13 @@
       @media (prefers-reduced-motion: no-preference) {
         .mig-fly.c1 { animation: migFly1 7s ease-in-out infinite; }
         .mig-fly.c2 { animation: migFly2 7s ease-in-out infinite; }
+        .mig-fly.c3 { animation: migFly3 7s ease-in-out infinite; }
         .mig-slot.s1 { animation: migSlot1 7s ease infinite; }
         .mig-slot.s2 { animation: migSlot2 7s ease infinite; }
+        .mig-slot.s3 { animation: migSlot3 7s ease infinite; }
         .mig-slot.s1 .mig-check { animation: migChk1 7s ease infinite; }
         .mig-slot.s2 .mig-check { animation: migChk2 7s ease infinite; }
+        .mig-slot.s3 .mig-check { animation: migChk3 7s ease infinite; }
         .mig-badge { animation: migBadge 7s ease infinite; }
       }
       @keyframes migFly1 { 0%,10% { transform: none; opacity: 1; } 20% { transform: translateX(calc(100% + 24px)); opacity: 1; }
@@ -342,7 +345,12 @@
         42%,90% { opacity: 1; border-color: rgba(48,209,88,.5); border-style: solid; } 96%,100% { opacity: .45; border-color: rgba(255,255,255,.16); border-style: dashed; } }
       @keyframes migChk1 { 0%,20% { opacity: 0; } 26%,90% { opacity: 1; } 96%,100% { opacity: 0; } }
       @keyframes migChk2 { 0%,40% { opacity: 0; } 46%,90% { opacity: 1; } 96%,100% { opacity: 0; } }
-      @keyframes migBadge { 0%,46% { opacity: 0; } 52%,88% { opacity: 1; } 96%,100% { opacity: 0; } }
+      @keyframes migFly3 { 0%,50% { transform: none; opacity: 1; } 60% { transform: translateX(calc(100% + 24px)); opacity: 1; }
+        64%,92% { transform: translateX(calc(100% + 24px)); opacity: 0; } 96%,100% { transform: none; opacity: 1; } }
+      @keyframes migSlot3 { 0%,48% { opacity: .45; border-color: rgba(255,255,255,.16); border-style: dashed; }
+        52%,90% { opacity: 1; border-color: rgba(48,209,88,.5); border-style: solid; } 96%,100% { opacity: .45; border-color: rgba(255,255,255,.16); border-style: dashed; } }
+      @keyframes migChk3 { 0%,50% { opacity: 0; } 56%,90% { opacity: 1; } 96%,100% { opacity: 0; } }
+      @keyframes migBadge { 0%,62% { opacity: 0; } 68%,88% { opacity: 1; } 96%,100% { opacity: 0; } }
       @media (prefers-reduced-motion: reduce) {
         .mig-fly { display: none; }
         .mig-slot { opacity: 1; border-color: rgba(48,209,88,.5); border-style: solid; }
@@ -350,6 +358,7 @@
         .mig-badge { opacity: 1; }
       }
       @media (max-width: 560px) { .mig { padding: 20px 16px; } }
+      .mig-cta { max-width: 560px; margin: 14px auto 0; text-align: center; font-size: 14px; color: var(--fg-2); }
 
       /* 截图双联:图片自带圆角边框,说明文字独立在下方 */
       .qs-shot img, .shot img { cursor: zoom-in; }
@@ -509,26 +518,32 @@
           <img src="../add-dialog-en.png" alt="添加供应商" loading="lazy" />
           <figcaption>Add a provider — presets ready to go, or migrate from another switcher in one click</figcaption>
         </figure>
-        <div class="mig" role="img" aria-label="一键迁移演示">
+        <div class="mig" role="img" aria-label="One-click migration demo">
           <div class="mig-stage">
             <div class="mig-col">
-              <span class="mig-label"><b>外部管理器</b> 里已有的</span>
+              <span class="mig-label">Already in <b>another switcher</b></span>
+              <div class="mig-ghost"></div>
               <div class="mig-ghost"></div>
               <div class="mig-ghost"></div>
             </div>
             <div class="mig-col">
-              <span class="mig-label"><b>Keyway</b> 供应商池</span>
-              <div class="mig-slot s1"><span class="mig-check">✓</span>TeapotRouter</div>
-              <div class="mig-slot s2"><span class="mig-check">✓</span>CoderPlan</div>
+              <span class="mig-label"><b>Keyway</b> provider pool</span>
+              <div class="mig-slot s1"><span class="mig-check">✓</span>CoderPlan</div>
+              <div class="mig-slot s2"><span class="mig-check">✓</span>TeapotRouter</div>
+              <div class="mig-slot s3"><span class="mig-check">✓</span>Claude Official</div>
             </div>
-            <div class="mig-fly c1"><img class="mig-ico mig-ico-img" src="../icons/teapotrouter.png" alt="" width="16" height="16" />TeapotRouter</div>
-            <div class="mig-fly c2"><i class="mig-ico cp"></i>CoderPlan</div>
+            <div class="mig-fly c1"><i class="mig-ico cp"></i>CoderPlan</div>
+            <div class="mig-fly c2"><img class="mig-ico mig-ico-img" src="../icons/teapotrouter.png" alt="" width="16" height="16" />TeapotRouter</div>
+            <div class="mig-fly c3"><img class="mig-ico mig-ico-img" src="../icons/claude.svg" alt="" width="16" height="16" />Claude Official</div>
           </div>
-          <div class="mig-badge">✓ 2 providers migrated · source configs untouched</div>
+          <div class="mig-badge">✓ 3 providers migrated · source configs untouched</div>
         </div>
         <p class="qs-shot figcaption" style="margin-top:14px;">One-click migration: bring providers over from another switcher — just select and import</p>
+        <p class="mig-cta">Coming from another switcher? Scan this machine, pick what to migrate — originals stay untouched — <a href="./guide.html#add">see the migration steps</a></p>
         <div class="links" style="margin-top:36px;">
           <a class="alink" href="./guide.html">Step-by-step guide</a>
+          <a class="alink" href="./integrate-keyway.html">Add-to-Keyway button</a>
+          <a class="alink" href="./provider-integration.html">Provider integration</a>
           <a class="alink" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">Suggest a provider</a>
         </div>
       </div>

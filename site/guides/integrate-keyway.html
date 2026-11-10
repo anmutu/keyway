@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>在你的平台接入 Keyway:一个按钮的事 — 站长教程</title>
+    <meta
+      name="description"
+      content="写给平台站长与开发者的接入教程:在你的控制台或文档页放一个「添加到 Keyway」按钮,用户点击即把你家的端点配置进 Keyway(Claude Code 等 AI CLI 的本地网关),无需手抄地址。含深链参数、未安装兜底 JS、测试方法与最佳放置位置。"
+    />
+    <meta name="keywords" content="keyway 接入, 添加到 keyway 按钮, keyway 深链, keyway://connect/relay, claude code 客户端推荐, 平台接入 keyway, api 供应商 接入教程" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Keyway" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" content="https://keyway.one/guides/integrate-keyway.html" />
+    <meta property="og:title" content="在你的平台接入 Keyway:一个按钮的事" />
+    <meta property="og:description" content="在控制台放一个「添加到 Keyway」按钮,用户点击即配好你家的端点——深链参数、未安装兜底 JS、测试方法,全在这篇。" />
+    <meta property="og:image" content="https://keyway.one/app-light.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="在你的平台接入 Keyway:一个按钮的事" />
+    <meta name="twitter:description" content="在控制台放一个「添加到 Keyway」按钮,用户点击即配好你家的端点——深链参数、未安装兜底 JS、测试方法,全在这篇。" />
+    <meta name="twitter:image" content="https://keyway.one/app-light.png" />
+    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <link rel="canonical" href="https://keyway.one/guides/integrate-keyway.html" />
+    <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/guides/integrate-keyway.html" />
+    <link rel="alternate" hreflang="en" href="https://keyway.one/en/integrate-keyway.html" />
+    <link rel="alternate" hreflang="x-default" href="https://keyway.one/en/integrate-keyway.html" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "在你的平台接入 Keyway",
+      "description": "在自有平台的控制台或文档页添加「添加到 Keyway」按钮,让用户一键把你的服务配置进 Keyway。",
+      "step": [
+        { "@type": "HowToStep", "name": "拼出深链", "text": "用 keyway://connect/relay?v=1&base=端点&app=CLI&name=品牌名 拼出链接,端点需 URL 编码且不带查询参数。" },
+        { "@type": "HowToStep", "name": "放置按钮", "text": "把链接做成「添加到 Keyway」按钮,放在控制台 API Key 页或文档的客户端使用章节。" },
+        { "@type": "HowToStep", "name": "处理未安装兜底", "text": "用提供的 JS 片段:尝试唤起 Keyway,约 1.5 秒后页面仍可见则跳转 Keyway 下载页。" },
+        { "@type": "HowToStep", "name": "测试", "text": "浏览器地址栏直接粘贴 keyway:// 链接验证;再在装有 Keyway 的机器上走完整流程。" }
+      ]
+    }
+    </script>
+    <style>
+      :root { --fg: #1d1d1f; --fg-2: #62626d; --fg-3: #86868b; --blue: #0066cc; --bg: #fff; --bg-alt: #f5f5f7; --hair: #d2d2d7; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; color: var(--fg); background: var(--bg); font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 22px; }
+      nav { position: sticky; top: 0; z-index: 50; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+      .nav-inner { max-width: 720px; margin: 0 auto; padding: 10px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+      .nav-inner a { color: var(--fg-2); text-decoration: none; }
+      .nav-inner a:hover { color: #000; }
+      .brand { color: var(--fg); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+      .brand img { border-radius: 4px; }
+      header { padding: 56px 0 8px; }
+      .eyebrow { color: var(--blue); font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+      h1 { font-size: 36px; line-height: 1.15; letter-spacing: -.015em; margin: 10px 0 14px; font-weight: 700; }
+      .meta { color: var(--fg-3); font-size: 14px; }
+      article { padding: 26px 0 40px; }
+      h2 { font-size: 25px; margin: 44px 0 12px; letter-spacing: -.01em; scroll-margin-top: 64px; }
+      h3 { font-size: 19px; margin: 28px 0 8px; }
+      p { margin: 12px 0; color: var(--fg); }
+      ul, ol { margin: 12px 0 12px 22px; }
+      li { margin: 6px 0; }
+      a { color: var(--blue); }
+      code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; background: var(--bg-alt); padding: 2px 6px; border-radius: 6px; }
+      pre { background: #1d1d1f; color: #f5f5f7; border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 14px 0; font-size: 13.5px; line-height: 1.6; }
+      pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+      .note { background: var(--bg-alt); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 15px; color: var(--fg-2); }
+      table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+      th { color: var(--fg-3); font-weight: 600; white-space: nowrap; }
+      .cta { background: var(--bg-alt); border-radius: 16px; padding: 28px; text-align: center; margin: 48px 0 8px; }
+      .cta h2 { margin-top: 0; }
+      .btn { display: inline-block; background: var(--blue); color: #fff; text-decoration: none; padding: 11px 24px; border-radius: 980px; font-weight: 500; margin: 8px 6px 0; }
+      .btn:hover { background: #c25f3f; }
+      .btn.ghost { background: none; color: var(--blue); border: 1px solid var(--hair); }
+      details { border-bottom: 1px solid var(--hair); padding: 14px 0; }
+      summary { font-weight: 600; cursor: pointer; font-size: 17px; }
+      details p { color: var(--fg-2); font-size: 15.5px; }
+      footer { border-top: 1px solid var(--hair); margin-top: 40px; padding: 22px 0 44px; color: var(--fg-3); font-size: 13.5px; }
+      footer a { color: var(--fg-2); }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <a class="brand" href="../index.html"><img src="../logo.svg" width="18" height="18" alt="Keyway logo" />Keyway</a>
+        <span>
+          <a href="../index.html">主页</a> · <a href="./provider-integration.html">供应商接入指南</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../en/integrate-keyway.html">English</a>
+        </span>
+      </div>
+    </nav>
+    <div class="wrap">
+      <header>
+        <p class="eyebrow">Keyway 教程 · 面向平台站长</p>
+        <h1>在你的平台接入 Keyway:一个按钮的事</h1>
+        <p class="meta">2026-11 发布 · 适用于 API 供应商、聚合网关与工具平台的站长和前端开发者</p>
+      </header>
+      <article>
+        <p>你的用户里,有一批人在 Claude Code、Codex 这类 AI CLI 里写代码。他们要把你的服务配进 CLI,通常要复制端点、打开配置文件、粘贴 Key——每一步都在流失。<a href="../index.html">Keyway</a> 是开源(MIT)的 AI CLI 本地网关,你可以在自己的控制台或文档页放一个「添加到 Keyway」按钮:用户点一下,Keyway 弹出<strong>已预填你家端点</strong>的确认框,用户只粘贴 API Key,完成。全程不离开你的平台。</p>
+        <p>TeapotRouter 官网已上线同样的入口,本文就是教你做这件事——全部工作量约半小时。</p>
+
+        <h2 id="flow">用户会经历什么</h2>
+        <table>
+          <tr><th>用户状态</th><th>点击后</th></tr>
+          <tr><td>已安装 Keyway</td><td>Keyway 窗口弹出确认框:端点、名称已预填,用户粘贴 API Key 即完成添加;之后可一键接管 CLI、随时切换供应商</td></tr>
+          <tr><td>未安装</td><td>深链无反应——所以第 3 步的兜底跳转是必做的(把用户送去 Keyway 下载页,装完回来再点一次即可)</td></tr>
+        </table>
+        <div class="note">安全边界:深链里只放公开连接信息(端点、品牌名),<strong>永远不要</strong>把用户的 API Key 拼进链接——Key 由用户在 Keyway 里自己粘贴。</div>
+
+        <h2 id="step1">第 1 步:拼出深链</h2>
+        <p>Keyway 安装时注册了 <code>keyway://</code> 协议。链接格式:</p>
+        <pre><code>keyway://connect/relay?v=1&amp;base=https%3A%2F%2Fapi.你的域名.com&amp;app=claude&amp;name=你的品牌名</code></pre>
+        <table>
+          <tr><th>参数</th><th>必填</th><th>说明</th></tr>
+          <tr><td><code>v</code></td><td>是</td><td>固定 <code>1</code></td></tr>
+          <tr><td><code>base</code></td><td>是</td><td>你的接口根地址,URL 编码;HTTPS,不带用户名密码、查询参数、锚点。OpenAI 兼容端点填根地址,Codex 场景 Keyway 自动补 <code>/v1</code></td></tr>
+          <tr><td><code>app</code></td><td>是</td><td><code>claude</code> / <code>codex</code> / <code>opencode</code> / <code>openclaw</code>,服务多个 CLI 就放多个按钮</td></tr>
+          <tr><td><code>name</code></td><td>否</td><td>预填显示名,40 字符以内</td></tr>
+        </table>
+        <p>参数的完整约束与安全模型见<a href="./provider-integration.html#deeplink">供应商接入指南</a>。</p>
+
+        <h2 id="step2">第 2 步:放按钮</h2>
+        <p>最简单的形态,一个普通链接就够:</p>
+        <pre><code>&lt;a href="keyway://connect/relay?v=1&amp;amp;base=https%3A%2F%2Fapi.你的域名.com&amp;amp;app=claude&amp;amp;name=你的品牌名"&gt;
+  添加到 Keyway
+&lt;/a&gt;</code></pre>
+        <p>放在哪转化最高(按实测优先级):</p>
+        <ul>
+          <li><strong>控制台 API Key 页</strong>——用户刚生成 Key 的那一刻,意愿最强;</li>
+          <li><strong>接入文档的「客户端使用」节</strong>——和 Claude Code 手动配置教程并排,给用户「省事版」选项;</li>
+          <li>首页/定价页的次要位置——可作补充。</li>
+        </ul>
+        <p>品牌素材与推荐文案模板见接入指南的<a href="./provider-integration.html#recommend">「推荐给你的用户」</a>一节。</p>
+
+        <h2 id="step3">第 3 步:未安装兜底(必做)</h2>
+        <p>未安装 Keyway 的用户点击深链没有反应,直接放裸链接会把这批人丢掉。用这段 JS 兜底:点击时尝试唤起,约 1.5 秒后页面仍可见(说明应用没起来)就送去下载页。</p>
+        <pre><code>&lt;script&gt;
+  document.querySelectorAll('a[href^="keyway://"]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var deepLink = btn.href;
+      var start = Date.now();
+      // 1.5s 后若页面仍可见且未离开,判定未安装 Keyway
+      setTimeout(function () {
+        if (!document.hidden &amp;&amp; Date.now() - start &lt; 1600) {
+          window.location.href = 'https://keyway.one/download.html';
+        }
+      }, 1500);
+      window.location.href = deepLink;
+    });
+  });
+&lt;/script&gt;</code></pre>
+        <p>装好 Keyway 的用户会被系统唤起应用、页面切到后台,<code>document.hidden</code> 为真,不会触发跳转;只有真正没装的用户才会落到下载页。下载页有 macOS / Windows / Linux 全平台安装方式。</p>
+
+        <h2 id="test">第 4 步:测试</h2>
+        <ol>
+          <li><strong>快速验证深链</strong>:浏览器地址栏直接粘贴 <code>keyway://…</code> 链接回车,装了 Keyway 的机器应弹出确认框;</li>
+          <li><strong>走全流程</strong>:确认框里粘贴一个测试 Key,检查 Keyway 里的端点、名称是否与你预期一致(Codex 场景注意 <code>/v1</code> 是否按预期补上);</li>
+          <li><strong>兜底分支</strong>:找一台(或临时改名 <code>keyway</code> 协议所在的)未装 Keyway 的设备点按钮,确认 1.5 秒后落到下载页;</li>
+          <li><strong>链接体检</strong>:<code>base</code> 必须无查询参数和锚点,<code>name</code> 不超过 40 字符,否则 Keyway 会拒绝这次连接。</li>
+        </ol>
+
+        <h2 id="faq">常见问题</h2>
+        <details>
+          <summary>接入有门槛或收费吗?</summary>
+          <p>没有。深链是 Keyway 的开放能力,不申请、不审核、不收费,按本文接入即可用。若还想进入 Keyway 的预设列表(用户添加供应商时直接点你的名字),走<a href="./provider-integration.html#preset">收录申请</a>,两者互补。</p>
+        </details>
+        <details>
+          <summary>链接里能带上用户的 Key,做到全自动吗?</summary>
+          <p>不能,也不应该。深链只承载公开连接信息;Key 涉及机密,由用户在 Keyway 端粘贴(高级场景有短时一次性的 handoff 授权,见接入指南)。</p>
+        </details>
+        <details>
+          <summary>我能知道有多少用户从这个按钮进来吗?</summary>
+          <p>按钮在你自己的页面上,点击量你的埋点/日志天然可见;Keyway 侧不回传数据给你——它是本地优先工具,不向你的服务器上报。</p>
+        </details>
+        <details>
+          <summary>支持哪些 CLI?</summary>
+          <p>深链支持 Claude Code、Codex、OpenCode、OpenClaw 四个;Gemini CLI 等其余分组通过预设收录覆盖。</p>
+        </details>
+
+        <div class="cta">
+          <h2>半小时接完,祝你多一条获客路径</h2>
+          <p>接完欢迎回帖收录 Issue,可列入接入指南的「已接入案例」。</p>
+          <a class="btn" href="./provider-integration.html">查看完整接入指南</a>
+          <a class="btn ghost" href="https://github.com/anmutu/keyway/issues/new?template=provider-submission.yml" target="_blank" rel="noreferrer">提交收录申请</a>
+        </div>
+      </article>
+      <footer>
+        <p>Keyway 是 MIT 开源项目,与 Anthropic、OpenAI、Google 无关联。Claude Code 为 Anthropic 产品。</p>
+        <p><a href="../index.html">主页</a> · <a href="./provider-integration.html">供应商接入指南</a> · <a href="../en/integrate-keyway.html">English version</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
+      </footer>
+    </div>
+  </body>
+</html>
