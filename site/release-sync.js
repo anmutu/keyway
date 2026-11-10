@@ -1,5 +1,5 @@
 (function () {
-  var fallbackTag = "v0.2.23";
+  var fallbackTag = "v0.2.24";
   var repo = "https://github.com/anmutu/keyway";
   var templates = {
     "mac-arm": "Keyway_{version}_aarch64.dmg",
