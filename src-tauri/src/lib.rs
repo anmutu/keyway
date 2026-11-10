@@ -41,6 +41,7 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(
@@ -169,6 +170,33 @@ pub fn run() {
                 })
                 .build(app)?;
 
+            // 套餐徽标心跳:每 60s 重算托盘标题与菜单(倒计时分钟数随时间变化);
+            // 配了政策的供应商窗口缓存到期(≥5min)后台续拉;顺带评估主动提醒
+            // (高峰预警/窗口清仓,去重标签保证每个事件只弹一次)
+            {
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    loop {
+                        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                        let db = handle.state::<state::AppState>().db.clone();
+                        let all: Vec<types::Provider> =
+                            db::provider_dao::list_all(&db).unwrap_or_default();
+                        for p in &all {
+                            if services::billing::get_policy(&db, &p.id).is_some() {
+                                let pool = db.clone();
+                                let p2 = p.clone();
+                                tauri::async_runtime::spawn(async move {
+                                    let _ =
+                                        services::billing::refresh_window(&pool, &p2, false).await;
+                                });
+                            }
+                        }
+                        services::billing::maybe_alert(&db, &handle, &all);
+                        let _ = rebuild_tray_menu(&handle);
+                    }
+                });
+            }
+
             // 3. 周期健康检测(设置里开启才跑):每 interval 分钟测各分组当前供应商,
             // 结果写 last_test(托盘 ✗ / 卡片延迟随之更新)
             {
@@ -279,6 +307,13 @@ pub fn run() {
             commands::profile::apply_profile,
             commands::profile::delete_profile,
             commands::tray::refresh_tray,
+            commands::billing::billing_policies,
+            commands::billing::get_billing_state,
+            commands::billing::get_billing_policy,
+            commands::billing::set_billing_policy,
+            commands::billing::refresh_billing_window,
+            commands::billing::get_billing_alerts,
+            commands::billing::set_billing_alerts,
             commands::backup::export_backup,
             commands::backup::import_backup,
             commands::import::import_existing,
@@ -354,6 +389,31 @@ fn build_tray_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         }
     }
 
+    // 套餐计费状态:当前使用中且配了政策的供应商(峰谷时段 / 窗口余量;禁用项,纯展示)
+    let current_providers: Vec<types::Provider> = db::provider_dao::list_all(&state.db)
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|p| p.is_current)
+        .collect();
+    let mut billing_items: Vec<MenuItem<R>> = Vec::new();
+    for p in &current_providers {
+        if let Some(b) = services::billing::compute_state(&state.db, &p.id) {
+            billing_items.push(MenuItem::with_id(
+                app,
+                format!("billing-{}", p.id),
+                billing_tray_label(&b, &p.name, zh),
+                false,
+                None::<&str>,
+            )?);
+        }
+    }
+    if !billing_items.is_empty() {
+        builder = builder.separator();
+        for item in billing_items {
+            builder = builder.item(&item);
+        }
+    }
+
     // 最近使用:按最近请求排序的前几个供应商(点击即切到该分组的它)
     let recents: std::collections::HashMap<String, String> = db::provider_dao::list_all(&state.db)
         .unwrap_or_default()
@@ -424,9 +484,70 @@ fn build_tray_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     builder.item(&quit).build()
 }
 
-/// 用最新数据重建托盘菜单。
+/// 套餐计费的托盘菜单文案:如「GLM 国内 · 高峰 ×3 · 82 分后回谷 · 窗口已用 42%,58 分后刷新」。
+fn billing_tray_label(b: &services::billing::BillingState, name: &str, zh: bool) -> String {
+    let p = b.peak;
+    let rel = fmt_rel_rate(p.rel_rate);
+    let period = match p.phase {
+        "peak" => {
+            let m = p.minutes_to_change.unwrap_or(0);
+            if zh {
+                format!("高峰 ×{rel} · {m} 分后回谷")
+            } else {
+                format!("Peak ×{rel} · back in {m}m")
+            }
+        }
+        "prePeak" => {
+            let m = p.minutes_to_change.unwrap_or(0);
+            // 即将到来的高峰倍率:prePeak 阶段 rel_rate 还是 1.0,用 next_rel_rate
+            let next = fmt_rel_rate(p.next_rel_rate);
+            if zh {
+                format!("谷 · {m} 分后进峰(×{next})")
+            } else {
+                format!("Off-peak · peak(×{next}) in {m}m")
+            }
+        }
+        _ => {
+            if zh {
+                "谷".to_string()
+            } else {
+                "Off-peak".to_string()
+            }
+        }
+    };
+    let window = match (&b.window, b.window_remaining_min) {
+        (Some(w), Some(m)) => {
+            let pct = w.used_pct.round() as i64;
+            if zh {
+                format!(" · 窗口已用 {pct}%,{m} 分后刷新")
+            } else {
+                format!(" · window {pct}% used, resets in {m}m")
+            }
+        }
+        _ => String::new(),
+    };
+    format!("{name} · {period}{window}")
+}
+
+/// 倍率显示:3.0 → "3",2.5 → "2.5"
+fn fmt_rel_rate(r: f64) -> String {
+    if r.fract() == 0.0 {
+        format!("{}", r as i64)
+    } else {
+        format!("{r:.1}")
+    }
+}
+
+/// 用最新数据重建托盘菜单,并同步托盘标题徽标(峰×N / 窗 Nm;无状态则清空)。
 pub fn rebuild_tray_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     if let Some(tray) = app.tray_by_id("main") {
+        let state = app.state::<state::AppState>();
+        let current: Vec<types::Provider> = db::provider_dao::list_all(&state.db)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|p| p.is_current)
+            .collect();
+        let _ = tray.set_title(services::billing::tray_badge(&state.db, &current).as_deref());
         tray.set_menu(Some(build_tray_menu(app)?))?;
     }
     Ok(())

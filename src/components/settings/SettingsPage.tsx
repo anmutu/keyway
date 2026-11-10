@@ -7,6 +7,8 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarClock,
+  AlarmClock,
+  Hourglass,
   Database,
   Activity,
   FileJson,
@@ -35,7 +37,7 @@ import { useI18n, type LocaleSetting } from "@/i18n";
 import { FlagCN, FlagGB, GlobeAuto } from "@/components/LanguageBadges";
 import { cn } from "@/lib/utils";
 import { ALL_APPS, isAppVisibilityLocked, setAppVisibility, type LayoutMode } from "@/lib/appPrefs";
-import type { AppType } from "@/types";
+import type { AppType, BillingAlerts } from "@/types";
 
 interface AppSettings {
   autostart: boolean;
@@ -96,6 +98,8 @@ export function SettingsPage({
   onAppsChange: (apps: AppType[]) => void;
 }) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
+  /** 套餐提醒配置(高峰预警 / 窗口清仓) */
+  const [billingAlerts, setBillingAlerts] = useState<BillingAlerts | null>(null);
   const [version, setVersion] = useState("…");
   const [backupBusy, setBackupBusy] = useState(false);
   const [healthMin, setHealthMin] = useState(0);
@@ -132,11 +136,25 @@ export function SettingsPage({
     invoke<AppSettings>("get_app_settings")
       .then(setSettings)
       .catch((e) => onError(String(e)));
+    invoke<BillingAlerts>("get_billing_alerts")
+      .then(setBillingAlerts)
+      .catch(() => setBillingAlerts(null));
     getVersion()
       .then(setVersion)
       .catch(() => setVersion(t("about.demoVersion")));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /** 套餐提醒配置:改即存(后端统一收敛范围) */
+  const saveBillingAlerts = async (next: BillingAlerts) => {
+    setBillingAlerts(next);
+    if (IS_DEMO) return;
+    try {
+      await invoke("set_billing_alerts", { config: next });
+    } catch (e) {
+      onError(String(e));
+    }
+  };
 
   const saveRetention = async (days: number) => {
     if (!Number.isInteger(days) || days < 1 || days > 365) {
@@ -410,6 +428,90 @@ export function SettingsPage({
           onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }}
           className="w-20 h-8 text-xs tabular-nums text-right"
         />
+      </Row>
+
+      {/* 套餐提醒:高峰预警(默认开)+ 窗口清仓(默认关,想要的人自己开) */}
+      <Row
+        icon={<AlarmClock className="w-4 h-4" />}
+        title={t("settings.billingPeak")}
+        desc={t("settings.billingPeakDesc")}
+      >
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            min={1}
+            max={120}
+            aria-label={t("settings.billingPeakLead")}
+            defaultValue={billingAlerts?.peakLeadMin ?? 15}
+            key={`peak-${billingAlerts?.peakLeadMin}`}
+            onBlur={(e) => {
+              const v = Number(e.target.value);
+              if (billingAlerts && Number.isFinite(v) && v >= 1 && v <= 120) {
+                void saveBillingAlerts({ ...billingAlerts, peakLeadMin: Math.round(v) });
+              }
+            }}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+            className="w-16 h-8 text-xs tabular-nums text-right"
+          />
+          <span className="text-xs text-muted-foreground">{t("settings.billingPeakLead")}</span>
+          <Switch
+            checked={billingAlerts?.peakEnabled ?? true}
+            onCheckedChange={(v) => {
+              if (billingAlerts) void saveBillingAlerts({ ...billingAlerts, peakEnabled: v });
+            }}
+            aria-label={t("settings.billingPeak")}
+          />
+        </div>
+      </Row>
+
+      <Row
+        icon={<Hourglass className="w-4 h-4" />}
+        title={t("settings.billingWindowAlert")}
+        desc={t("settings.billingWindowDesc")}
+      >
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          <Input
+            type="number"
+            min={10}
+            max={180}
+            aria-label={t("settings.billingWindowMin")}
+            defaultValue={billingAlerts?.windowRemainingMin ?? 60}
+            key={`wmin-${billingAlerts?.windowRemainingMin}`}
+            onBlur={(e) => {
+              const v = Number(e.target.value);
+              if (billingAlerts && Number.isFinite(v) && v >= 10 && v <= 180) {
+                void saveBillingAlerts({ ...billingAlerts, windowRemainingMin: Math.round(v) });
+              }
+            }}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+            className="w-16 h-8 text-xs tabular-nums text-right"
+          />
+          <span className="text-xs text-muted-foreground">{t("settings.billingWindowMin")}</span>
+          <Input
+            type="number"
+            min={5}
+            max={95}
+            aria-label={t("settings.billingWindowPct")}
+            defaultValue={billingAlerts?.windowKeepPct ?? 50}
+            key={`wpct-${billingAlerts?.windowKeepPct}`}
+            onBlur={(e) => {
+              const v = Number(e.target.value);
+              if (billingAlerts && Number.isFinite(v) && v >= 5 && v <= 95) {
+                void saveBillingAlerts({ ...billingAlerts, windowKeepPct: v });
+              }
+            }}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+            className="w-16 h-8 text-xs tabular-nums text-right"
+          />
+          <span className="text-xs text-muted-foreground">{t("settings.billingWindowPct")}</span>
+          <Switch
+            checked={billingAlerts?.windowEnabled ?? false}
+            onCheckedChange={(v) => {
+              if (billingAlerts) void saveBillingAlerts({ ...billingAlerts, windowEnabled: v });
+            }}
+            aria-label={t("settings.billingWindowAlert")}
+          />
+        </div>
       </Row>
 
       <Row

@@ -51,5 +51,6 @@ tauri-plugin-autostart = "2.5.1"
 tauri-plugin-global-shortcut = "2.3.2"
 base64 = "0.22"
 tauri-plugin-dialog = "2.7.2"
+tauri-plugin-notification = "2"
 tauri-plugin-deep-link = "=2.4.5"
 tauri-plugin-single-instance = { version = "=2.3.4", features = ["deep-link"] }

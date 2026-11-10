@@ -64,3 +64,56 @@ export interface UsageSummary {
   input_tokens: number;
   output_tokens: number;
 }
+
+// ---------- 套餐计费(镜像后端 services/billing.rs 的 camelCase 序列化) ----------
+
+export interface BillingPeakState {
+  isPeak: boolean;
+  /** 当前时段相对倍率:高峰 = ×N,非高峰 = 1.0 */
+  relRate: number;
+  /** 政策的高峰相对倍率(「N 分后进峰(×N)」预警用) */
+  nextRelRate: number;
+  /** 当前时段还剩多少分钟结束;null = 今天没有临近变化 */
+  minutesToChange: number | null;
+  phase: "peak" | "prePeak" | "off";
+}
+
+export interface BillingWindow {
+  /** 5h 窗口已用百分比(0-100) */
+  usedPct: number;
+  resetAtMs: number;
+  weeklyUsedPct: number | null;
+  weeklyResetAtMs: number | null;
+  fetchedAtMs: number;
+  /** api = 官方 monitor API;local = 本地估算 */
+  source: string;
+}
+
+export interface BillingState {
+  providerId: string;
+  policyId: string;
+  policyLabelZh: string;
+  policyLabelEn: string;
+  peak: BillingPeakState;
+  window: BillingWindow | null;
+  windowRemainingMin: number | null;
+}
+
+/** 可选政策(billing_policies 命令返回) */
+export interface BillingPolicyInfo {
+  id: string;
+  labelZh: string;
+  labelEn: string;
+}
+
+/** 提醒配置(镜像后端 AlertConfig;心跳评估,去重保证每事件一次) */
+export interface BillingAlerts {
+  /** 高峰预警:工作日高峰开始前提醒一次(仅正在使用的供应商) */
+  peakEnabled: boolean;
+  peakLeadMin: number;
+  /** 窗口清仓:窗口临期且剩余额度仍多时提醒(含闲置套餐;默认关) */
+  windowEnabled: boolean;
+  windowRemainingMin: number;
+  /** 剩余额度百分比阈值(还剩多少没浪费的口径) */
+  windowKeepPct: number;
+}

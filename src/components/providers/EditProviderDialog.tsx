@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { Protocol, Provider } from "@/types";
+import type { BillingPolicyInfo, Protocol, Provider } from "@/types";
 
 interface EditProviderDialogProps {
   provider: Provider | null;
@@ -50,7 +50,7 @@ export function EditProviderDialog({
   onSaved,
   onError,
 }: EditProviderDialogProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [name, setName] = useState("");
   /** 三行端点编辑状态:protocol -> url(url 为空字符串表示该行新增未提交) */
   const [endpoints, setEndpoints] = useState<Record<string, string>>({});
@@ -61,10 +61,22 @@ export function EditProviderDialog({
   const [submitting, setSubmitting] = useState(false);
   /** /v1/responses → chat/completions 桥接(仅 codex 供应商有意义) */
   const [bridge, setBridge] = useState(false);
+  /** 套餐计费政策:空串 = 未关联(功能静默) */
+  const [billingPolicy, setBillingPolicy] = useState("");
+  const [policyOptions, setPolicyOptions] = useState<BillingPolicyInfo[]>([]);
+
+  useEffect(() => {
+    invoke<BillingPolicyInfo[]>("billing_policies")
+      .then(setPolicyOptions)
+      .catch(() => setPolicyOptions([]));
+  }, []);
 
   useEffect(() => {
     if (provider) {
       setName(provider.name);
+      invoke<string | null>("get_billing_policy", { providerId: provider.id })
+        .then((p) => setBillingPolicy(p ?? ""))
+        .catch(() => setBillingPolicy(""));
       if (provider.app_type === "codex") {
         invoke<boolean>("get_responses_bridge", { id: provider.id })
           .then(setBridge)
@@ -157,6 +169,11 @@ export function EditProviderDialog({
       await invoke("set_provider_models", {
         id: provider.id,
         models: models.split(",").map((m) => m.trim()).filter(Boolean),
+      });
+      // 套餐计费政策(空 = 取消关联;写 KV,托盘/卡片随之亮起或静默)
+      await invoke("set_billing_policy", {
+        providerId: provider.id,
+        policyId: billingPolicy === "" ? null : billingPolicy,
       });
       onSaved({ ...provider, name: name.trim() });
       onOpenChange(false);
@@ -261,6 +278,25 @@ export function EditProviderDialog({
               onChange={(e) => setModels(e.target.value)}
               placeholder={t("dialog.modelsPh")}
             />
+          </div>
+
+          {/* 套餐计费:关联后托盘/卡片显示峰谷时段与 5h 窗口余量 */}
+          <div className="grid gap-2">
+            <Label htmlFor="edit-billing">{t("billing.policyLabel")}</Label>
+            <select
+              id="edit-billing"
+              value={billingPolicy}
+              onChange={(e) => setBillingPolicy(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">{t("billing.policyOff")}</option>
+              {policyOptions.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {locale === "zh" ? p.labelZh : p.labelEn}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">{t("billing.policyHint")}</p>
           </div>
 
           {provider?.app_type === "codex" && (

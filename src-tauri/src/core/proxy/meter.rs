@@ -160,6 +160,37 @@ impl UsageMeter {
                 });
             }
         }
+
+        // 套餐窗口状态续拉:该供应商配了计费政策且缓存到期(≥5min)
+        // → 后台拉官方 monitor API 并刷新托盘(失败静默,保留旧缓存;仅真实应用环境)
+        if ctx.app.is_some() {
+            let pool = ctx.pool.clone();
+            let pid = ctx.provider_id.clone();
+            let app = ctx.app.clone();
+            tauri::async_runtime::spawn(async move {
+                let cache_stale = crate::services::billing::cached_window(&pool, &pid)
+                    .map(|w| {
+                        crate::services::billing::window_stale(
+                            &w,
+                            chrono::Utc::now().timestamp_millis(),
+                        )
+                    })
+                    .unwrap_or(true);
+                if !cache_stale || crate::services::billing::get_policy(&pool, &pid).is_none() {
+                    return;
+                }
+                if let Ok(Some(p)) = crate::db::provider_dao::get_by_id(&pool, &pid) {
+                    if crate::services::billing::refresh_window(&pool, &p, false)
+                        .await
+                        .is_ok()
+                    {
+                        if let Some(app) = app {
+                            let _ = crate::rebuild_tray_menu(&app);
+                        }
+                    }
+                }
+            });
+        }
     }
 }
 

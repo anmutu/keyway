@@ -1,4 +1,4 @@
-import type { AppType, Provider, UsageSummary } from "@/types";
+import type { AppType, BillingState, Provider, UsageSummary } from "@/types";
 import { APP_PROTOCOL } from "@/types";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -78,6 +78,42 @@ export function ProviderCard({
       setBridged(false);
     }
   }, [provider.id, provider.app_type]);
+
+  // 套餐计费状态(编辑对话框关联政策后才出现;60s 轻量轮询跟随倒计时)
+  const [billing, setBilling] = useState<BillingState | null>(null);
+  const [billingBusy, setBillingBusy] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      invoke<BillingState | null>("get_billing_state", { providerId: provider.id })
+        .then((s) => {
+          if (alive) setBilling(s);
+        })
+        .catch(() => {
+          if (alive) setBilling(null);
+        });
+    load();
+    const timer = window.setInterval(load, 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [provider.id]);
+  const refreshBilling = async () => {
+    setBillingBusy(true);
+    try {
+      setBilling(
+        await invoke<BillingState | null>("refresh_billing_window", {
+          providerId: provider.id,
+          force: true,
+        }),
+      );
+    } catch (e) {
+      onError?.(String(e));
+    } finally {
+      setBillingBusy(false);
+    }
+  };
 
   return (
     <div
@@ -187,6 +223,73 @@ export function ProviderCard({
               {batchResult?.ok && <span className="tabular-nums">{batchResult.latency_ms}ms</span>}
               {provider.models.length > 0 && <span>{t("provider.modelsCount", { n: provider.models.length })}</span>}
             </div>
+
+            {/* 套餐计费:峰谷徽标 + 5h 窗口(已用% / 刷新倒计时);关联政策后才出现 */}
+            {billing && (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
+                    billing.peak.isPeak
+                      ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                  title={
+                    billing.peak.isPeak
+                      ? billing.peak.minutesToChange != null
+                        ? `${t("billing.peakTitle")} · ${t("billing.endsIn", { min: billing.peak.minutesToChange })}`
+                        : t("billing.peakTitle")
+                      : billing.peak.phase === "prePeak" && billing.peak.minutesToChange != null
+                        ? t("billing.startsIn", {
+                            min: billing.peak.minutesToChange,
+                            rate: fmtRel(billing.peak.nextRelRate),
+                          })
+                        : t("billing.offpeakTitle")
+                  }
+                >
+                  {billing.peak.isPeak
+                    ? t("billing.peakBadge", { rate: fmtRel(billing.peak.relRate) })
+                    : t("billing.offpeakBadge")}
+                </span>
+                {billing.window != null && billing.windowRemainingMin != null ? (
+                  <button
+                    type="button"
+                    onClick={refreshBilling}
+                    disabled={billingBusy}
+                    title={t("billing.refreshTitle")}
+                    className={cn(
+                      "tabular-nums transition-colors hover:text-blue-500 dark:hover:text-blue-400 disabled:opacity-50",
+                      // 清仓预警:窗口将刷新且用量很低 → 不用就作废,琥珀色提醒
+                      billing.windowRemainingMin <= 60 && billing.window.usedPct <= 20
+                        ? "font-medium text-amber-600 dark:text-amber-400"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {t("billing.windowLine", {
+                      pct: Math.round(billing.window.usedPct),
+                      min: billing.windowRemainingMin,
+                    })}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={refreshBilling}
+                    disabled={billingBusy}
+                    className="text-muted-foreground transition-colors hover:text-blue-500 dark:hover:text-blue-400 disabled:opacity-50"
+                  >
+                    {billingBusy ? "…" : t("billing.query")}
+                  </button>
+                )}
+                {billing.window != null && billing.window.weeklyUsedPct != null && (
+                  <span
+                    className="tabular-nums text-muted-foreground"
+                    title={t("billing.weeklyTitle")}
+                  >
+                    {t("billing.weekly", { pct: Math.round(billing.window.weeklyUsedPct) })}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -283,4 +386,9 @@ function fmtTokens(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
   return String(n);
+}
+
+/** 峰谷倍率显示:3 → "3",2.5 → "2.5" */
+function fmtRel(r: number): string {
+  return Number.isInteger(r) ? String(r) : r.toFixed(1);
 }
