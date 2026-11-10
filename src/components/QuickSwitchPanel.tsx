@@ -51,12 +51,19 @@ export function QuickSwitchPanel({
     }
     return j === query.length ? hit : null;
   };
-  // 跨分组时扁平化(编号/键盘导航按全局顺序),渲染时再按分组分组
+  // 跨分组时扁平化(编号/键盘导航按全局顺序),渲染时再按分组分组;
+  // 当前分组置顶:刚在某个分组上的人,大概率要切的就是该分组的供应商
+  const orderedGroups = useMemo(
+    () => groups?.some((g) => g.app === app)
+      ? [...groups.filter((g) => g.app === app), ...groups.filter((g) => g.app !== app)]
+      : groups,
+    [app, groups],
+  );
   const flat: FlatEntry[] = useMemo(
-    () => groups
-      ? groups.flatMap((g) => g.providers.map((p) => ({ p, app: g.app })))
+    () => orderedGroups
+      ? orderedGroups.flatMap((g) => g.providers.map((p) => ({ p, app: g.app })))
       : providers.map((p) => ({ p, app })),
-    [app, groups, providers],
+    [app, orderedGroups, providers],
   );
   const query = q.trim().toLowerCase();
   const filtered = query

@@ -12,6 +12,7 @@ import { ProviderCard } from "@/components/providers/ProviderCard";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
 import { RelayConnectDialog } from "@/components/providers/RelayConnectDialog";
 import { parseRelayDeepLink, type RelayConnectRequest } from "@/lib/relayDeepLink";
+import { useLongPressWindowDrag } from "@/lib/longPressWindowDrag";
 import { GatewayStatusStrip } from "@/components/providers/GatewayStatusStrip";
 import { RoutePreviewCard } from "@/components/providers/RoutePreviewCard";
 import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
@@ -219,6 +220,8 @@ function App() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
+  // 长按任意位置拖动窗口(空白区原有的直接拖动不受影响)
+  useLongPressWindowDrag(true);
   // 拖拽排序:被拖卡片 id 与悬停目标 id
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);

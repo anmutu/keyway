@@ -43,11 +43,12 @@ const APPS: AppType[] = ["claude", "codex", "gemini"];
 
 /** 浏览器演示模式(?demo=1):mock 扫描结果,便于官网/文档截图 */
 const IS_DEMO = new URLSearchParams(location.search).has("demo");
-const DEMO_ITEMS: CcSwitchProvider[] = [
-  { source_id: "d1", app_type: "claude", name: "TeapotRouter", base_url: "https://teapotrouter.com", has_key: true, is_current: true, importable: true, reason: null },
-  { source_id: "d2", app_type: "claude", name: "CoderPlan", base_url: "https://api.coderplan.ai", has_key: true, is_current: false, importable: true, reason: null },
-  { source_id: "d3", app_type: "claude", name: "GLM 官方", base_url: "https://open.bigmodel.cn/api/anthropic", has_key: true, is_current: false, importable: true, reason: null },
-  { source_id: "d4", app_type: "claude", name: "旧中转站", base_url: "http://127.0.0.1:8080", has_key: true, is_current: false, importable: false, reason: "local_proxy" },
+/** 浏览器演示模式(?demo=1):mock 扫描结果,便于官网/文档截图;名称跟随界面语言 */
+const demoItemsFor = (locale: "zh" | "en"): CcSwitchProvider[] => [
+  { source_id: "d1", app_type: "claude", name: "CoderPlan", base_url: "https://api.coderplan.ai", has_key: true, is_current: false, importable: true, reason: null },
+  { source_id: "d2", app_type: "claude", name: "TeapotRouter", base_url: "https://api.teapotrouter.com", has_key: true, is_current: true, importable: true, reason: null },
+  { source_id: "d3", app_type: "claude", name: locale === "zh" ? "Claude 官方" : "Claude Official", base_url: "https://api.anthropic.com", has_key: true, is_current: false, importable: true, reason: null },
+  { source_id: "d4", app_type: "claude", name: locale === "zh" ? "本地代理" : "Local proxy", base_url: "http://127.0.0.1:8080", has_key: true, is_current: false, importable: false, reason: "local_proxy" },
 ];
 
 function safeUrl(value: string): string {
@@ -86,7 +87,8 @@ export function CcSwitchImportDialog({
   onManageTakeover: (app: AppType) => void;
   onError: (message: string) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const demoItems = demoItemsFor(locale);
   const [items, setItems] = useState<CcSwitchProvider[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<Filter>("all");
@@ -101,8 +103,8 @@ export function CcSwitchImportDialog({
     setResult(null);
     try {
       if (IS_DEMO) {
-        setItems(DEMO_ITEMS);
-        setSelected(selectionForFilter(DEMO_ITEMS, selectionFilter));
+        setItems(demoItems);
+        setSelected(selectionForFilter(demoItems, selectionFilter));
         return;
       }
       const found = await invoke<CcSwitchProvider[]>("scan_cc_switch_providers");
@@ -172,7 +174,7 @@ export function CcSwitchImportDialog({
     try {
       let importedResult: ImportResult;
       if (IS_DEMO) {
-        const byId = new Map(DEMO_ITEMS.map((item) => [item.source_id, item]));
+        const byId = new Map(demoItems.map((item) => [item.source_id, item]));
         importedResult = {
           imported: requests.map((r) => ({ source_id: r.source_id, app_type: r.app_type, name: byId.get(r.source_id)?.name ?? r.source_id })),
           skipped: [],

@@ -296,7 +296,7 @@ export function AddProviderDialog({
                           )}
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          {p.requiresBaseUrl ? t("relay.presetDesc") : p.baseUrl}
+                          {p.baseUrl || t("relay.presetDesc")}
                         </span>
                       </span>
                     </button>

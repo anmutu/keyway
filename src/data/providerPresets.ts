@@ -37,22 +37,27 @@ export interface ProviderPreset {
 const relayPreset: ProviderPreset = {
   name: "TeapotRouter",
   icon: "teapotrouter",
-  baseUrl: "",
+  // 标准网关地址,预设里直接展示与预填;用户仍可改成自己的接入地址
+  baseUrl: "https://api.teapotrouter.com",
+  websiteUrl: "https://teapotrouter.com",
+  apiKeyUrl: "https://teapotrouter.com/dashboard/keys",
   category: "aggregator",
   requiresBaseUrl: true,
 };
 
+/** CoderPlan 的 OpenAI 兼容端点(codex/opencode/openclaw/qwen/crush 分组置顶用) */
+const coderPlanOpenai: ProviderPreset = {
+  name: "CoderPlan",
+  icon: "coderplan",
+  baseUrl: "https://api.coderplan.ai/v1",
+  category: "aggregator",
+  websiteUrl: "https://coderplan.ai",
+  apiKeyUrl: "https://coderplan.ai/dashboard/keys",
+  models: ["gpt-5.5", "gpt-5.4-mini", "deepseek-v4-pro", "minimax-m2.5"],
+};
+
 /** OpenAI 兼容通用端点,opencode / openclaw 共用 */
 const openaiCompatible: ProviderPreset[] = [
-  {
-    name: "CoderPlan",
-    icon: "coderplan",
-    baseUrl: "https://api.coderplan.ai/v1",
-    category: "aggregator",
-    websiteUrl: "https://coderplan.ai",
-    apiKeyUrl: "https://coderplan.ai/dashboard/keys",
-    models: ["gpt-5.5", "gpt-5.4-mini", "deepseek-v4-pro", "minimax-m2.5"],
-  },
   {
     name: "DeepSeek",
     icon: "deepseek",
@@ -87,17 +92,19 @@ const openaiCompatible: ProviderPreset[] = [
     },
   ];
 
+/** CoderPlan 的 Anthropic 兼容端点(claude/iflow/droid 分组置顶用) */
+const coderPlanAnthropic: ProviderPreset = {
+  name: "CoderPlan",
+  icon: "coderplan",
+  baseUrl: "https://api.coderplan.ai",
+  category: "aggregator",
+  websiteUrl: "https://coderplan.ai",
+  apiKeyUrl: "https://coderplan.ai/dashboard/keys",
+  models: ["claude-sonnet-5", "gpt-5.5", "deepseek-v4-pro", "minimax-m2.5"],
+};
+
 /** Anthropic 兼容端点预设(Claude / iFlow / Droid 分组共用) */
 const anthropicCompatible: ProviderPreset[] = [
-  {
-    name: "CoderPlan",
-    icon: "coderplan",
-    baseUrl: "https://api.coderplan.ai",
-    category: "aggregator",
-    websiteUrl: "https://coderplan.ai",
-    apiKeyUrl: "https://coderplan.ai/dashboard/keys",
-    models: ["claude-sonnet-5", "gpt-5.5", "deepseek-v4-pro", "minimax-m2.5"],
-  },
   {
     name: "Claude 官方",
     icon: "claude",
@@ -208,10 +215,12 @@ const anthropicCompatible: ProviderPreset[] = [
 ];
 
 export const providerPresets: Record<AppType, ProviderPreset[]> = {
-  // Claude 分组:Anthropic 兼容端点
-  claude: [relayPreset, ...anthropicCompatible],
+  // Claude 分组:Anthropic 兼容端点;CoderPlan、TeapotRouter 按展示顺序置顶
+  claude: [coderPlanAnthropic, relayPreset, ...anthropicCompatible],
   // Codex 分组:OpenAI 兼容 / Responses 端点
   codex: [
+    coderPlanOpenai,
+    relayPreset,
     {
       name: "OpenAI 官方",
       icon: "openai",
@@ -220,7 +229,6 @@ export const providerPresets: Record<AppType, ProviderPreset[]> = {
       websiteUrl: "https://chatgpt.com/codex",
       apiKeyUrl: "https://platform.openai.com/api-keys",
     },
-    relayPreset,
     ...openaiCompatible,
   ],
   // Gemini 分组:Gemini 原生端点
@@ -234,8 +242,8 @@ export const providerPresets: Record<AppType, ProviderPreset[]> = {
       apiKeyUrl: "https://aistudio.google.com/apikey",
     },
   ],
-  opencode: [relayPreset, ...openaiCompatible],
-  openclaw: [relayPreset, ...openaiCompatible],
+  opencode: [coderPlanOpenai, relayPreset, ...openaiCompatible],
+  openclaw: [coderPlanOpenai, relayPreset, ...openaiCompatible],
   // Qwen Code CLI:OpenAI 兼容端点
   qwen: [
     {
@@ -246,14 +254,15 @@ export const providerPresets: Record<AppType, ProviderPreset[]> = {
       websiteUrl: "https://bailian.console.aliyun.com",
       apiKeyUrl: "https://bailian.console.aliyun.com/",
     },
+    coderPlanOpenai,
     ...openaiCompatible,
   ],
   // iFlow CLI:Anthropic 兼容端点
-  iflow: anthropicCompatible,
+  iflow: [coderPlanAnthropic, ...anthropicCompatible],
   // Crush CLI:OpenAI 兼容端点
-  crush: openaiCompatible,
+  crush: [coderPlanOpenai, ...openaiCompatible],
   // Droid CLI:Anthropic 兼容端点
-  droid: anthropicCompatible,
+  droid: [coderPlanAnthropic, ...anthropicCompatible],
 };
 
 /** 类别展示顺序(custom 固定在最后,由对话框自行追加) */
