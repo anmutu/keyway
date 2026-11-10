@@ -999,9 +999,11 @@ function App() {
         )}
         {currentView === "providers" && (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden px-4 pt-4 sm:px-8 sm:pt-6">
-          <div ref={providerScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
+          {/* 裸属性:内容列(mx-auto 居中)两侧的空白边距可直接拖动窗口 */}
+          <div ref={providerScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1" data-tauri-drag-region>
             <div className="mx-auto flex min-h-full w-full max-w-[1040px] flex-col space-y-4 animate-fade-in" key={activeApp}>
-              <div className="flex items-start justify-between gap-4">
+              {/* 裸属性:本行空白处(标题与按钮之间/两侧)可直接拖动窗口,与左侧栏一致 */}
+              <div className="flex items-start justify-between gap-4" data-tauri-drag-region>
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                     {t("provider.workspace")}
@@ -1187,7 +1189,7 @@ function App() {
               )}
 
               {providers.length > 0 && (
-                <div className="flex flex-col gap-3 border-b border-border/70 pb-3 pt-1 lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex flex-col gap-3 border-b border-border/70 pb-3 pt-1 lg:flex-row lg:items-end lg:justify-between" data-tauri-drag-region>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold">{t("provider.poolTitle")}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">

@@ -44,16 +44,22 @@ export function useLongPressWindowDrag(enabled: boolean) {
       if (Math.hypot(e.clientX - sx, e.clientY - sy) > MOVE_TOLERANCE) cancel();
     };
 
+    // 卡片排序等 HTML5 拖拽开始后,指针事件会被拖拽会话吞掉(pointerup 不再派发),
+    // 长按计时器若继续跑会在拖拽会话中途调用 startDragging——务必取消,排序本身不受影响
+    const onDragStart = () => cancel();
+
     window.addEventListener("pointerdown", onDown);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", cancel);
     window.addEventListener("pointercancel", cancel);
+    window.addEventListener("dragstart", onDragStart);
     return () => {
       cancel();
       window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", cancel);
       window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("dragstart", onDragStart);
     };
   }, [enabled]);
 }
