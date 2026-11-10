@@ -161,13 +161,25 @@ impl UsageMeter {
             }
         }
 
-        // 套餐窗口状态续拉:该供应商配了计费政策且缓存到期(≥5min)
-        // → 后台拉官方 monitor API 并刷新托盘(失败静默,保留旧缓存;仅真实应用环境)
-        if ctx.app.is_some() {
+        // 套餐联动(仅成功请求、真实应用环境):
+        // ① 高峰内首次使用该供应商 → 系统提醒一次(补 T−15 预警的洞:下午才开始用的场景)
+        // ② 窗口缓存到期(≥5min)→ 后台拉官方 monitor API 并刷新托盘(失败静默,保留旧缓存)
+        if ctx.app.is_some() && ctx.status < 400 {
             let pool = ctx.pool.clone();
             let pid = ctx.provider_id.clone();
             let app = ctx.app.clone();
             tauri::async_runtime::spawn(async move {
+                if crate::services::billing::get_policy(&pool, &pid).is_none() {
+                    return;
+                }
+                let Ok(Some(p)) = crate::db::provider_dao::get_by_id(&pool, &pid) else {
+                    return;
+                };
+                if let Some(app) = &app {
+                    if crate::services::billing::maybe_peak_use_alert(&pool, app, &p) {
+                        tracing::info!(provider = %pid, "高峰首次使用提醒已发送");
+                    }
+                }
                 let cache_stale = crate::services::billing::cached_window(&pool, &pid)
                     .map(|w| {
                         crate::services::billing::window_stale(
@@ -176,17 +188,13 @@ impl UsageMeter {
                         )
                     })
                     .unwrap_or(true);
-                if !cache_stale || crate::services::billing::get_policy(&pool, &pid).is_none() {
-                    return;
-                }
-                if let Ok(Some(p)) = crate::db::provider_dao::get_by_id(&pool, &pid) {
-                    if crate::services::billing::refresh_window(&pool, &p, false)
+                if cache_stale
+                    && crate::services::billing::refresh_window(&pool, &p, false)
                         .await
                         .is_ok()
-                    {
-                        if let Some(app) = app {
-                            let _ = crate::rebuild_tray_menu(&app);
-                        }
+                {
+                    if let Some(app) = &app {
+                        let _ = crate::rebuild_tray_menu(app);
                     }
                 }
             });

@@ -510,8 +510,58 @@ fn fmt_rate(r: f64) -> String {
     }
 }
 
+/// 高峰内首次使用提醒:请求成功流过峰时计费的供应商时弹一次(每供应商每高峰日一次)。
+/// 补 T−15 预警的洞:「13:45 没在用 → 不预警;下午才切回来用」的场景由真实请求触发。
+/// 返回是否发出了提醒(日志用)。
+pub fn maybe_peak_use_alert(pool: &Pool, app: &tauri::AppHandle, provider: &Provider) -> bool {
+    use tauri_plugin_notification::NotificationExt;
+    let cfg = alert_config(pool);
+    if !cfg.peak_enabled {
+        return false;
+    }
+    let Some(policy) = get_policy(pool, &provider.id) else {
+        return false;
+    };
+    let st = peak_state(policy, Utc::now());
+    if !st.is_peak {
+        return false;
+    }
+    let tag = format!(
+        "peakuse:{}",
+        Utc::now().with_timezone(&cn_tz()).date_naive()
+    );
+    let key = fired_key("peakuse", &provider.id);
+    if kv::get(pool, &key).ok().flatten().as_deref() == Some(&tag) {
+        return false;
+    }
+    let zh = kv::get(pool, "locale").ok().flatten().as_deref() != Some("en");
+    let rate = fmt_rate(st.rel_rate);
+    let (title, body) = if zh {
+        (
+            format!("{} · 高峰使用中(×{})", provider.name, rate),
+            format!("本请求起额度按 ×{rate} 消耗(工作日 14:00–18:00)。切非高峰供应商或稍后可省额度,今天不再提醒。"),
+        )
+    } else {
+        (
+            format!("{} · in peak hours (×{})", provider.name, rate),
+            format!("Quota now burns at ×{rate} (weekdays 14:00–18:00). Switch or wait to save; won't remind again today."),
+        )
+    };
+    let sent = app
+        .notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show()
+        .is_ok();
+    if sent {
+        let _ = kv::set(pool, &key, &tag);
+    }
+    sent
+}
+
 /// 心跳里评估并发系统通知(每 60s 调一次;由去重标签保证每个事件只弹一次)。
-/// providers 传全量:高峰预警只看 is_current,窗口清仓对全部配了政策的供应商生效。
+/// providers 传全量:高峰预警与窗口清仓都对「全部配了政策的供应商」生效,不看是否在使用。
 pub fn maybe_alert(pool: &Pool, app: &tauri::AppHandle, providers: &[Provider]) {
     use tauri_plugin_notification::NotificationExt;
     let cfg = alert_config(pool);
@@ -527,8 +577,9 @@ pub fn maybe_alert(pool: &Pool, app: &tauri::AppHandle, providers: &[Provider]) 
             continue;
         };
 
-        // 1) 高峰预警(去重标签 = 北京日期,一天最多一次)
-        if p.is_current {
+        // 1) 高峰预警(去重标签 = 北京日期,一天最多一次)。
+        //    口径(用户定稿):开关开了就提醒所有配了政策的供应商,不管当前是否在使用。
+        {
             let st = peak_state(policy, now);
             if peak_alert_hit(&cfg, &st) {
                 let tag = format!("peak:{}", now.with_timezone(&cn_tz()).date_naive());
