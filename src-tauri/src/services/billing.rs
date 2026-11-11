@@ -10,6 +10,7 @@
 
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Datelike, FixedOffset, Timelike, Utc};
+use rusqlite::{Connection, OptionalExtension, TransactionBehavior};
 use serde::{Deserialize, Serialize};
 
 use crate::db::{kv, Pool};
@@ -467,18 +468,49 @@ impl AlertConfig {
 
 const ALERT_CFG_KEY: &str = "billing.alert.config";
 
-pub fn alert_config(pool: &Pool) -> AlertConfig {
-    kv::get(pool, ALERT_CFG_KEY)
-        .ok()
-        .flatten()
+fn alert_config_from(conn: &Connection) -> Result<AlertConfig> {
+    let raw: Option<String> = conn
+        .query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            [ALERT_CFG_KEY],
+            |row| row.get(0),
+        )
+        .optional()?;
+    Ok(raw
         .and_then(|v| serde_json::from_str::<AlertConfig>(&v).ok())
         .unwrap_or_default()
-        .clamped()
+        .clamped())
 }
 
-pub fn set_alert_config(pool: &Pool, cfg: &AlertConfig) -> Result<()> {
+pub fn alert_config(pool: &Pool) -> AlertConfig {
+    pool.get()
+        .ok()
+        .and_then(|conn| alert_config_from(&conn).ok())
+        .unwrap_or_default()
+}
+
+/// 保存配置;窗口提醒条件实际改变时重新安排提醒,返回是否需要立即评估。
+pub fn set_alert_config(pool: &Pool, cfg: &AlertConfig) -> Result<bool> {
     let c = cfg.clamped();
-    kv::set(pool, ALERT_CFG_KEY, &serde_json::to_string(&c)?)
+    let mut conn = pool.get()?;
+    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
+    let previous = alert_config_from(&tx)?;
+    let window_changed = previous.window_enabled != c.window_enabled
+        || previous.window_remaining_min != c.window_remaining_min
+        || previous.window_keep_pct != c.window_keep_pct;
+    tx.execute(
+        "INSERT INTO settings(key, value) VALUES(?1, ?2)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        rusqlite::params![ALERT_CFG_KEY, serde_json::to_string(&c)?],
+    )?;
+    if window_changed {
+        tx.execute(
+            "DELETE FROM settings WHERE key GLOB 'billing.alert.fired.win.*'",
+            [],
+        )?;
+    }
+    tx.commit()?;
+    Ok(window_changed)
 }
 
 fn fired_key(kind: &str, provider_id: &str) -> String {
@@ -500,6 +532,97 @@ fn window_alert_hit(cfg: &AlertConfig, w: &WindowState, now_ms: i64) -> bool {
     let remaining = (w.reset_at_ms - now_ms) / 60_000;
     let keep_pct = 100.0 - w.used_pct;
     (0..=cfg.window_remaining_min).contains(&remaining) && keep_pct >= cfg.window_keep_pct
+}
+
+/// 即时检查与心跳共用事务,避免同时检查重复发送;适配器返回错误时保留重试机会。
+fn maybe_window_alert_with(
+    pool: &Pool,
+    provider_id: &str,
+    now_ms: i64,
+    send: impl FnOnce(&WindowState) -> Result<()>,
+) -> Result<bool> {
+    let mut conn = pool.get()?;
+    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
+    let cfg = alert_config_from(&tx)?;
+    if !cfg.window_enabled {
+        return Ok(false);
+    }
+    let raw: Option<String> = tx
+        .query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            [window_key(provider_id)],
+            |row| row.get(0),
+        )
+        .optional()?;
+    let Some(w) = raw.and_then(|v| serde_json::from_str::<WindowState>(&v).ok()) else {
+        return Ok(false);
+    };
+    if !window_alert_hit(&cfg, &w, now_ms) {
+        return Ok(false);
+    }
+    let key = fired_key("win", provider_id);
+    let tag = format!("win:{}", w.reset_at_ms);
+    let fired: Option<String> = tx
+        .query_row("SELECT value FROM settings WHERE key = ?1", [&key], |row| {
+            row.get(0)
+        })
+        .optional()?;
+    if fired.as_deref() == Some(&tag) {
+        return Ok(false);
+    }
+    send(&w)?;
+    tx.execute(
+        "INSERT INTO settings(key, value) VALUES(?1, ?2)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        rusqlite::params![key, tag],
+    )?;
+    tx.commit()?;
+    Ok(true)
+}
+
+fn maybe_window_alert(
+    pool: &Pool,
+    app: &tauri::AppHandle,
+    provider: &Provider,
+    now_ms: i64,
+    zh: bool,
+) {
+    use tauri_plugin_notification::NotificationExt;
+    if let Err(e) = maybe_window_alert_with(pool, &provider.id, now_ms, |w| {
+        let remaining = ((w.reset_at_ms - now_ms) / 60_000).max(0);
+        let keep = (100.0 - w.used_pct).round() as i64;
+        let (title, body) = if zh {
+            (
+                format!("{} · 窗口 {} 分钟后刷新", provider.name, remaining),
+                format!("剩余额度还有 {keep}%,不用就作废了。"),
+            )
+        } else {
+            (
+                format!("{} · window resets in {} min", provider.name, remaining),
+                format!("{keep}% of the quota is still unused — it expires with the window."),
+            )
+        };
+        // Tauri 在后台提交原生通知;Ok 仅表示已排队,不保证系统实际显示了横幅。
+        app.notification()
+            .builder()
+            .title(title)
+            .body(body)
+            .show()?;
+        Ok(())
+    }) {
+        tracing::warn!("窗口清仓通知发送失败: {e}");
+    }
+}
+
+/// 修改窗口提醒设置后立即检查,不触发与本次修改无关的高峰提醒。
+pub fn maybe_window_alerts(pool: &Pool, app: &tauri::AppHandle, providers: &[Provider]) {
+    let zh = kv::get(pool, "locale").ok().flatten().as_deref() != Some("en");
+    let now_ms = Utc::now().timestamp_millis();
+    for provider in providers {
+        if get_policy(pool, &provider.id).is_some() {
+            maybe_window_alert(pool, app, provider, now_ms, zh);
+        }
+    }
 }
 
 fn fmt_rate(r: f64) -> String {
@@ -606,32 +729,8 @@ pub fn maybe_alert(pool: &Pool, app: &tauri::AppHandle, providers: &[Provider]) 
             }
         }
 
-        // 2) 窗口清仓(去重标签 = 该窗口 reset_at,一个窗口最多一次)
-        if let Some(w) = cached_window(pool, &p.id) {
-            if window_alert_hit(&cfg, &w, now_ms) {
-                let tag = format!("win:{}", w.reset_at_ms);
-                let key = fired_key("win", &p.id);
-                if kv::get(pool, &key).ok().flatten().as_deref() != Some(&tag) {
-                    let remaining = ((w.reset_at_ms - now_ms) / 60_000).max(0);
-                    let keep = (100.0 - w.used_pct).round() as i64;
-                    let (title, body) = if zh {
-                        (
-                            format!("{} · 窗口 {} 分钟后刷新", p.name, remaining),
-                            format!("剩余额度还有 {keep}%,不用就作废了。"),
-                        )
-                    } else {
-                        (
-                            format!("{} · window resets in {} min", p.name, remaining),
-                            format!("{keep}% of the quota is still unused — it expires with the window."),
-                        )
-                    };
-                    if let Err(e) = app.notification().builder().title(title).body(body).show() {
-                        tracing::warn!("窗口清仓通知发送失败: {e}");
-                    }
-                    let _ = kv::set(pool, &key, &tag);
-                }
-            }
-        }
+        // 2) 窗口清仓:条件未修改时每窗口一次;修改条件后可重新提醒。
+        maybe_window_alert(pool, app, p, now_ms, zh);
     }
 }
 
@@ -796,3 +895,6 @@ mod tests {
         assert_eq!(p.rel_rate(), 2.0);
     }
 }
+
+#[cfg(test)]
+mod alert_tests;

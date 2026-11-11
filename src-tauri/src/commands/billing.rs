@@ -88,5 +88,13 @@ pub fn set_billing_alerts(
     state: State<'_, AppState>,
     config: svc::AlertConfig,
 ) -> Result<(), String> {
-    svc::set_alert_config(&state.db, &config).map_err(|e| e.to_string())
+    let window_changed = svc::set_alert_config(&state.db, &config).map_err(|e| e.to_string())?;
+    if window_changed {
+        if let Some(app) = state.app.as_ref() {
+            let providers =
+                crate::db::provider_dao::list_all(&state.db).map_err(|e| e.to_string())?;
+            svc::maybe_window_alerts(&state.db, app, &providers);
+        }
+    }
+    Ok(())
 }
