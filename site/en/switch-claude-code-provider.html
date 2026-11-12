@@ -98,7 +98,7 @@
         <p class="meta">Updated Oct 2026 · Applies to Claude Code / GLM / Kimi / DeepSeek / relay endpoints</p>
       </header>
       <article>
-        <p>Want to move Claude Code from the official API to GLM, Kimi, DeepSeek or a relay provider — without editing config files and restarting the session every time? This guide covers both approaches: the <strong>manual settings.json edit</strong> (to understand how it works), and switching providers from your menu bar with the open-source app <strong><a href="./index.html">Keyway</a></strong>, where <strong>running sessions keep working</strong>.</p>
+        <p>Want to move Claude Code from the official API to GLM, Kimi, DeepSeek or a relay provider — without editing config files and restarting the session every time? This guide covers both approaches: the <strong>manual settings.json edit</strong> (to understand how it works), and switching providers from your menu bar with the open-source app <strong><a href="./">Keyway</a></strong>, where <strong>running sessions keep working</strong>.</p>
 
         <h2 id="why">Why switch providers at all</h2>
         <ul>
@@ -126,7 +126,7 @@
         <div class="note">⚠️ The manual pain points: you must <strong>restart the Claude Code session</strong> for changes to apply; juggling several providers means constant JSON editing with typo risk; keys sit in plain text; and when something breaks you debug by squinting at config files.</div>
 
         <h2 id="keyway">Option B: switch with Keyway (recommended)</h2>
-        <p><a href="./index.html">Keyway</a> (MIT open source, macOS / Windows / Linux) runs a local proxy on <code>127.0.0.1:9527</code> that forwards Claude Code requests to whichever provider you select. Set it up once, and switching is a menu-bar click:</p>
+        <p><a href="./">Keyway</a> (MIT open source, macOS / Windows / Linux) runs a local proxy on <code>127.0.0.1:9527</code> that forwards Claude Code requests to whichever provider you select. Set it up once, and switching is a menu-bar click:</p>
         <ol>
           <li><strong>Add providers</strong> — pick presets like GLM or Kimi, enter any custom base URL, or import from your existing Claude Code config;</li>
           <li><strong>One-click takeover</strong> — Keyway rewrites <code>settings.json</code> to point at the local proxy (<strong>backing up the original first</strong>, restorable anytime);</li>
@@ -161,7 +161,7 @@
       </article>
       <footer>
         <p>Keyway is an MIT-licensed open-source project, not affiliated with Anthropic, OpenAI or Google. Claude Code is an Anthropic product.</p>
-        <p><a href="./index.html">Home</a> · <a href="../guides/claude-code-switch-provider.html">中文版</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
+        <p><a href="./">Home</a> · <a href="../guides/claude-code-switch-provider.html">中文版</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
       </footer>
     </div>
   <script src="/shared-header.js?v=6"></script>

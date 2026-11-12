@@ -93,9 +93,9 @@
   <body>
     <nav>
       <div class="nav-inner">
-        <a class="brand" href="../index.html"><img src="../logo.svg" width="18" height="18" alt="Keyway logo" />Keyway</a>
+        <a class="brand" href="../"><img src="../logo.svg" width="18" height="18" alt="Keyway logo" />Keyway</a>
         <span>
-          <a href="../index.html">主页</a> · <a href="../guide.html">使用指南</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../en/switch-claude-code-provider.html">English</a>
+          <a href="../">主页</a> · <a href="../guide.html">使用指南</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a> · <a href="../en/switch-claude-code-provider.html">English</a>
         </span>
       </div>
     </nav>
@@ -106,7 +106,7 @@
         <p class="meta">2026-10 更新 · 适用于 Claude Code / GLM / Kimi / DeepSeek / 各类中转站</p>
       </header>
       <article>
-        <p>想把 Claude Code 从官方 API 切到 GLM Coding Plan、Kimi 或某个中转站,却发现每次都要改配置文件、重启会话?这篇教程给出两种做法:先讲<strong>手动改配置</strong>的原生方式(理解原理),再讲用开源工具 <strong><a href="../index.html">Keyway</a></strong> 在菜单栏一键切换、<strong>已运行的会话不用重启</strong>的省事方式。</p>
+        <p>想把 Claude Code 从官方 API 切到 GLM Coding Plan、Kimi 或某个中转站,却发现每次都要改配置文件、重启会话?这篇教程给出两种做法:先讲<strong>手动改配置</strong>的原生方式(理解原理),再讲用开源工具 <strong><a href="../">Keyway</a></strong> 在菜单栏一键切换、<strong>已运行的会话不用重启</strong>的省事方式。</p>
 
         <h2 id="why">为什么需要切换供应商</h2>
         <ul>
@@ -134,7 +134,7 @@
         <div class="note">⚠️ 手动方式的痛点:改完要<strong>重启 Claude Code 会话</strong>才生效;多家供应商来回切时反复编辑 JSON 容易出错;API Key 明文躺在配置文件里;切错了只能靠肉眼排查。</div>
 
         <h2 id="keyway">方式二:用 Keyway 一键切换(推荐)</h2>
-        <p><a href="../index.html">Keyway</a>(MIT 开源,macOS / Windows / Linux)在本地跑一个代理 <code>127.0.0.1:9527</code>,把 Claude Code 的请求转发给你选定的供应商。配置一次之后,切换就是菜单栏里点一下的事:</p>
+        <p><a href="../">Keyway</a>(MIT 开源,macOS / Windows / Linux)在本地跑一个代理 <code>127.0.0.1:9527</code>,把 Claude Code 的请求转发给你选定的供应商。配置一次之后,切换就是菜单栏里点一下的事:</p>
         <ol>
           <li><strong>添加供应商</strong> — 预设直选 GLM、Kimi 等,或填任意自定义 Base URL,也可从现有 Claude Code 配置一键导入;</li>
           <li><strong>一键接管</strong> — Keyway 自动改写 <code>settings.json</code> 指向本地代理(<strong>改写前自动备份</strong>,随时可还原);</li>
@@ -169,7 +169,7 @@
       </article>
       <footer>
         <p>Keyway 是 MIT 开源项目,与 Anthropic、OpenAI、Google 无关联。Claude Code 为 Anthropic 产品。</p>
-        <p><a href="../index.html">主页</a> · <a href="../guide.html">详细使用指南</a> · <a href="../en/switch-claude-code-provider.html">English version</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
+        <p><a href="../">主页</a> · <a href="../guide.html">详细使用指南</a> · <a href="../en/switch-claude-code-provider.html">English version</a> · <a href="https://github.com/anmutu/keyway" target="_blank" rel="noreferrer">GitHub</a></p>
       </footer>
     </div>
   </body>

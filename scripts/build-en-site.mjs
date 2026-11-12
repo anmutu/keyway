@@ -251,7 +251,7 @@ const enHead = `    <title>Keyway — Local gateway for Claude Code, Codex & Gem
     <link rel="canonical" href="https://keyway.one/en/" />
     <link rel="alternate" hreflang="en" href="https://keyway.one/en/" />
     <link rel="alternate" hreflang="zh-CN" href="https://keyway.one/" />
-    <link rel="alternate" hreflang="x-default" href="https://keyway.one/" />
+    <link rel="alternate" hreflang="x-default" href="https://keyway.one/en/" />
 `;
 html = html.slice(0, headStart) + enHead + html.slice(headEnd);
 
