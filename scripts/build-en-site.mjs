@@ -276,7 +276,7 @@ const enLd = `    <script type="application/ld+json">
       "name": "Keyway",
       "operatingSystem": "macOS, Windows, Linux",
       "applicationCategory": "DeveloperApplication",
-      "softwareVersion": "0.2.28",
+      "softwareVersion": "0.2.29",
       "downloadUrl": "https://github.com/anmutu/keyway/releases",
       "screenshot": "https://keyway.one/app-light.png",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
