@@ -420,6 +420,7 @@ function App() {
       try {
         const window = getCurrentWindow();
         await window.show();
+        await window.unminimize();
         await window.setFocus();
       } catch {
         // The browser build and older desktop runtimes do not expose window
